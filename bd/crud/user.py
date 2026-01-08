@@ -50,3 +50,8 @@ def login_user(name: str, passw: str) -> Tuple[bool, Optional[User]]:
         logging.exception("Error authenticating user %s", name)
         return False, None
     
+def obtener_usuario(user_id: str) -> Optional[User]:
+    with Session(engine) as session:
+        user = session.get(User, user_id)
+        return user
+    
