@@ -24,3 +24,11 @@ def get_sesion() -> User | None:
         user = session.get(User, user_id)
 
         return user
+def eliminar_sesion_bd() -> None:
+    with Session(engine) as session:
+        stmt = select(Sesion)
+        sesion = session.exec(stmt).first()
+
+        if sesion:
+            session.delete(sesion)
+            session.commit()

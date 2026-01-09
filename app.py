@@ -8,7 +8,15 @@ from rich.align import Align
 console = Console()
 userId = None
 userConnect = get_sesion()
+path_app =""
 
+def path_interno(agregar: bool, ruta : str):
+    global path_app
+    if(agregar):
+        path_app = path_app + "/" + ruta
+    else:
+        #eliminar la ultima parte del path
+        path_app = "/".join(path_app.split("/")[:-1])
 
 def guardarsesion(user_id: str):
     guardar_sesion_bd(user_id)
@@ -47,7 +55,7 @@ def cuadro_centro(name : str):
 
     panel = Panel(
         Align.center(
-            f"Hello, {name}",
+            f"{name}",
             vertical="middle"
         ),
         width=width - 4,
@@ -71,7 +79,10 @@ else:
     Login()
 
 
-def menu_gastos():    
+def menu_gastos():  
+    console.clear() 
+    path_interno(True, "Gastos")
+    print(path_app)
     while True:
         answer = questionary.select(
             "¿Qué deseas hacer en Gastos?",
@@ -88,11 +99,16 @@ def menu_gastos():
                 print("Funcionalidad para ver gastos (pendiente de implementar).")
             case "Volver al menú principal":
                 console.clear()
+                path_interno(False, "gastos")
                 break
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
 
 def menu_categorias():
+    console.clear()
+    path_interno(True, "Categorías")
+    print(path_app)
+    
     while True:
         answer = questionary.select(
             "¿Qué deseas hacer en Categorías?",
@@ -109,12 +125,15 @@ def menu_categorias():
                 print("Funcionalidad para ver categorías (pendiente de implementar).")
             case "Volver al menú principal":
                 console.clear()
+                path_interno(False, "Categorías")
+
                 break
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
 
 def menu_principal():
     while True:
+        print(path_app)
         answer = questionary.select(
             "¿Qué deseas hacer?",
             choices=[
@@ -122,6 +141,7 @@ def menu_principal():
                 "Gastos",
                 "Categorías",
                 "Salir",
+                "Cerrar sesión"
             ]
         ).ask()
         match answer:
@@ -139,10 +159,15 @@ def menu_principal():
             case "Salir":
                 print("Saliendo...")
                 break
+            case "Cerrar sesión":
+                eliminar_sesion_bd()
+                console.clear()
+                print("Sesión cerrada.")
+                print("No Volvera a iniciar sesión automaticamente")
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
 #####################################################################################################
-
+path_interno(True, "menu")
 menu_principal()
 
 
