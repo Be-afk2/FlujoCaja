@@ -7,5 +7,7 @@ if TYPE_CHECKING:
 class Tipo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str
+    descripcion: Optional[str] = None
 
     registros: List["Registro"] = Relationship(back_populates="tipo")
+

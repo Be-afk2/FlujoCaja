@@ -1,3 +1,4 @@
+from sqlalchemy import case
 from bd.database import init_db
 from bd.crud.user import *
 import questionary
@@ -5,7 +6,11 @@ from rich.console import Console
 from bd.crud.sesion import *
 from rich.panel import Panel
 from rich.align import Align
+from rich.table import Table
+from bd.crud.tipo import *
 console = Console()
+
+
 userId = None
 userConnect = get_sesion()
 path_app =""
@@ -104,6 +109,49 @@ def menu_gastos():
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
 
+def formulario_agregar_categoria():
+    nombre = questionary.text("Nombre de la categoría:").ask()
+    descripcion = questionary.text("Descripción de la categoría (opcional):").ask()
+
+    nuevo_tipo = crear_tipo_bd(nombre, descripcion)
+    print(f"Categoría creada: {nuevo_tipo.id} - {nuevo_tipo.nombre}")
+
+def tabla_categorias(lista):
+    table = Table(title="Tipos")
+    table.add_column("ID")
+    table.add_column("Nombre")
+    table.add_column("Descripción")
+
+    for item in lista:
+        table.add_row(
+            str(item.id),
+            item.nombre,
+            item.descripcion if item.descripcion else "N/A",
+        )
+    console.print(table)
+
+def vista_categorias():
+    while True:
+        page = questionary.text("Página (número):", default="1").ask()
+        try:
+            page_num = int(page)
+            if page_num < 1:
+                raise ValueError
+        except ValueError:
+            print("Por favor, ingresa un número de página válido.")
+            continue
+
+        categorias = get_tipos_bd(page=page_num, page_size=5)
+        if not categorias:
+            print("No hay más categorías para mostrar.")
+            continue
+
+        tabla_categorias(categorias)
+
+        otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
+        if not otra_pagina:
+            break
+
 def menu_categorias():
     console.clear()
     path_interno(True, "Categorías")
@@ -120,9 +168,9 @@ def menu_categorias():
         ).ask()
         match answer:
             case "Agregar categoría":
-                print("Funcionalidad para agregar categoría (pendiente de implementar).")
+                formulario_agregar_categoria()
             case "Ver categorías":
-                print("Funcionalidad para ver categorías (pendiente de implementar).")
+                vista_categorias()
             case "Volver al menú principal":
                 console.clear()
                 path_interno(False, "Categorías")
@@ -130,6 +178,12 @@ def menu_categorias():
                 break
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
+
+def pruebas():
+    console.clear()
+    path_interno(True, "Pruebas")
+    print(path_app)
+    print("Funcionalidad de pruebas (pendiente de implementar).")
 
 def menu_principal():
     while True:
@@ -140,6 +194,7 @@ def menu_principal():
                 "Crear usuario",
                 "Gastos",
                 "Categorías",
+                "Pruebas",
                 "Salir",
                 "Cerrar sesión"
             ]
@@ -164,8 +219,17 @@ def menu_principal():
                 console.clear()
                 print("Sesión cerrada.")
                 print("No Volvera a iniciar sesión automaticamente")
+            case "Pruebas":
+                pruebas()
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
+
+
+
+
+
+
+
 #####################################################################################################
 path_interno(True, "menu")
 menu_principal()
