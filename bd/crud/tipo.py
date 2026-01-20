@@ -19,3 +19,4 @@ def crear_tipo_bd(nombre: str, descripcion: str = None) -> Tipo:
         session.commit()
         session.refresh(nuevo_tipo)
     return nuevo_tipo
+
