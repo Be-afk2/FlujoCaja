@@ -24,8 +24,8 @@ Proyecto de registro y reporte de gastos con backend en Python usando SQLite y f
    - Script de inicialización (schema.sql) o migraciones simples
    - Seed inicial: tipos de gasto comunes
 3. Capa de acceso a datos
-   - Implementar repository usando sqlite3 o SQLAlchemy (recomiendo sqlite3 + queries simples para desktop) 
-   - Funciones: crear_usuario, autenticar_usuario, crear_gasto, listar_gastos(filtros), crear_tipo_gasto, listar_tipos
+   - Implementar repository usando sqlite3 o SQLAlchemy (recomiendo sqlite3 + queries simples para desktop)  x
+   - Funciones: crear_usuario, autenticar_usuario, crear_gasto, listar_gastos(filtros), crear_tipo_gasto, listar_tipos x
 4. Servicios / lógica de negocio
    - Validaciones (monto positivo, fecha válida, categoría existente)
    - Manejo de transacciones y errores

@@ -1,5 +1,5 @@
 import questionary
-from sqlalchemy import Table
+from rich.table import Table
 from bd.crud.tipo import crear_tipo_bd , get_tipos_bd
 from rich.console import Console
 import menus.path as path_interno       
@@ -17,7 +17,6 @@ def tabla_categorias(lista):
     table.add_column("ID")
     table.add_column("Nombre")
     table.add_column("Descripción")
-
     for item in lista:
         table.add_row(
             str(item.id),
@@ -41,7 +40,9 @@ def vista_categorias():
         if not categorias:
             print("No hay más categorías para mostrar.")
             continue
-
+        print("-------------------------------")
+        print(categorias)
+        print("-------------------------------")
         tabla_categorias(categorias)
 
         otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
@@ -50,7 +51,7 @@ def vista_categorias():
 
 def menu_categorias():
     console.clear()
-    path_interno(True, "Categorías")
+    path_interno.path_interno(True, "Categorías")
     path_interno.print_path()
     
     while True:
@@ -69,7 +70,7 @@ def menu_categorias():
                 vista_categorias()
             case "Volver al menú principal":
                 console.clear()
-                path_interno(False, "Categorías")
+                path_interno.path_interno(False, "Categorías")
 
                 break
             case _:

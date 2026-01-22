@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, TYPE_CHECKING
 
@@ -15,3 +16,6 @@ class Registro(SQLModel, table=True):
 
     user_id: str = Field(foreign_key="user.id")
     user: Optional["User"] = Relationship(back_populates="registros")
+
+    #fecha de solo dd/mm/aaaa
+    fecha: datetime = Field(default_factory=datetime.now)

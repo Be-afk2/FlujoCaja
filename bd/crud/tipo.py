@@ -20,3 +20,10 @@ def crear_tipo_bd(nombre: str, descripcion: str = None) -> Tipo:
         session.refresh(nuevo_tipo)
     return nuevo_tipo
 
+def get_tipo_lista() -> list[str]:
+    tipos = get_tipos_bd(page=1, page_size=100)
+    lista = []
+    for tipo in tipos:
+        lista.append(tipo.nombre)
+    return lista
+
