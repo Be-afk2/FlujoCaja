@@ -23,6 +23,7 @@ Proyecto de registro y reporte de gastos con backend en Python usando SQLite y f
 2. Crear la base de datos
    - Script de inicialización (schema.sql) o migraciones simples
    - Seed inicial: tipos de gasto comunes
+   - Asegurar guardo de bd en %appdata%
 3. Capa de acceso a datos
    - Implementar repository usando sqlite3 o SQLAlchemy (recomiendo sqlite3 + queries simples para desktop)  x
    - Funciones: crear_usuario, autenticar_usuario, crear_gasto, listar_gastos(filtros), crear_tipo_gasto, listar_tipos x
