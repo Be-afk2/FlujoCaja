@@ -27,3 +27,9 @@ def get_tipo_lista() -> list[str]:
         lista.append(tipo.nombre)
     return lista
 
+def get_one_tipo(nombre: str) -> Tipo | None:
+    with Session(engine) as session:
+        statement = select(Tipo).where(Tipo.nombre == nombre)
+        tipo = session.exec(statement).first()
+        return tipo
+
