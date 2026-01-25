@@ -10,6 +10,7 @@ from bd.crud.tipo import *
 from rich.console import Console
 import menus.path as path_interno
 from menus.principal import menu_principal
+import widget.widget as widget
 console = Console()
 
 
@@ -49,26 +50,13 @@ def Login():
             console.clear()
             print("Nombre o contraseña incorrecta. Inténtalo de nuevo.")
 
-def cuadro_centro(name : str):
-    width, height = console.size
 
-    panel = Panel(
-        Align.center(
-            f"{name}",
-            vertical="middle"
-        ),
-        width=width - 4,
-        height=5 ,
-        border_style="green",
-        title="Welcome"
-    )
-    console.print(Align.center(panel))
 
 comprobar_conexion()
 
 if(userConnect):
     #console.clear()
-    cuadro_centro(f"Bienvenido {userConnect.name} {userConnect.apellido}")
+    widget.cuadro_centro(f"Bienvenido {userConnect.name} {userConnect.apellido}")
     userId = userConnect.id
 else:
     #console.clear()

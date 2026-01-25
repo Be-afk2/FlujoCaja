@@ -11,7 +11,7 @@ def fecha_hoy() -> tuple[int, int, int]:
     return hoy.day, hoy.month, hoy.year
 
 
-def crear_registro(monto:float,tipo:str) :
+def crear_registro(monto:float,tipo:str, fecha:datetime=None) -> Registro:
     ingreso = True if monto > 0 else False
     
     with Session(engine) as session:
@@ -20,6 +20,7 @@ def crear_registro(monto:float,tipo:str) :
             es_ingreso=ingreso,
             tipo_id=get_one_tipo(tipo).id,
             user_id=str(get_sesion().id),
+            fecha=fecha
         )
         session.add(nuevo_registro)
         session.commit()

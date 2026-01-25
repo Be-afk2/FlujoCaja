@@ -4,7 +4,7 @@ import questionary
 from bd.crud.registro import crear_registro
 from bd.crud.tipo import get_tipo_lista
 from menus.path import *
-
+from datetime import datetime
 console = Console()
 
         
@@ -46,8 +46,20 @@ def agregar_gasto():
             "¿Qué tipo de gasto es?",
             choices=get_tipo_lista()
         ).ask()
+
+        fecha_str = questionary.text(
+            "Ingrese fecha (dd/mm/yyyy)",
+        ).ask()
+         
+        # si es none o cadena vacia dejarlo en none y no parcear    
+        if(fecha_str is None or fecha_str.strip() == ""):
+            fecha = None
+        else:
+            fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
+        print(fecha)
+        print("----------------------")
         try:
             monto = float(monto)
-            crear_registro(monto, tipo)
+            crear_registro(monto, tipo, fecha)
         except ValueError:
             console.print("[red]Por favor, ingrese un número válido.[/red]")
