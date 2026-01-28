@@ -8,3 +8,6 @@ def path_interno(agregar: bool, ruta : str):
         path_app = "/".join(path_app.split("/")[:-1])
 def print_path():
     print(path_app)
+
+def get_path():
+    return path_app

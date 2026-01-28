@@ -3,7 +3,7 @@ from rich.align import Align
 from rich.console import Console
 console = Console()
 
-def cuadro_centro(name : str):
+def cuadro_centro(name : str,title: str = "Welcome"):
     width, height = console.size
 
     panel = Panel(
@@ -14,6 +14,6 @@ def cuadro_centro(name : str):
         width=width - 4,
         height=5 ,
         border_style="green",
-        title="Welcome"
+        title=title
     )
     console.print(Align.center(panel))
