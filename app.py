@@ -1,3 +1,4 @@
+from time import sleep
 from bd.database import init_db
 from bd.crud.user import *
 import questionary
@@ -25,6 +26,10 @@ def Login():
     global userConnect
     while True:
         name = questionary.text("Nombre:").ask()
+        if(name == "exit"):
+            console.clear()
+            print("Saliendo del programa...")
+            exit()
         passw = questionary.password("Contraseña:").ask()
         recoradar =questionary.confirm("Recordar Sesion?").ask()
 

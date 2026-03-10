@@ -1,10 +1,11 @@
 import uuid
 from rich.console import Console
 import questionary
-from bd.crud.registro import crear_registro
+from bd.crud.registro import crear_registro, registros_paguinados
 from bd.crud.tipo import get_tipo_lista
 from menus.path import *
 from datetime import datetime
+from rich.table import Table
 console = Console()
 
         
@@ -26,11 +27,14 @@ def menu_gastos():
                 agregar_gasto()
                 console.clear()
             case "Ver gastos":
-                print("Funcionalidad para ver gastos (pendiente de implementar).")
+                VerGastos()
+                console.clear()
             case "Volver al menú principal":
                 console.clear()
                 path_interno(False, "gastos")
                 break
+            case "Configuración":
+                print("Funcionalidad de configuración (pendiente de implementar).")
             case _:
                 print("Opción no válida. Inténtalo de nuevo.")
 
@@ -63,3 +67,44 @@ def agregar_gasto():
             crear_registro(monto, tipo, fecha)
         except ValueError:
             console.print("[red]Por favor, ingrese un número válido.[/red]")
+
+def VerGastos():
+    while True:
+        page = questionary.text("Página (número):", default="1").ask()
+        try:
+            page_num = int(page)
+            if page_num < 1:
+                raise ValueError
+        except ValueError:
+            print("Por favor, ingresa un número de página válido.")
+            continue
+
+        gastos = registros_paguinados(page=page_num, page_size=5)
+        if not gastos:
+            print("No hay más categorías para mostrar.")
+            continue
+        print("-------------------------------")
+        print(gastos)
+        print("-------------------------------")
+        tabla_gastos(gastos)
+
+        otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
+        if not otra_pagina:
+            break
+
+def tabla_gastos(lista):
+    table = Table(title="Gastos")
+    table.add_column("Monto")
+    table.add_column("Fecha")
+    table.add_column("Tipo")
+    for item in lista:
+        print("-----------------------")
+        print(item)
+        print(item.monto)
+        print("-------------------------")
+        table.add_row(
+            item.monto,  # monto
+            item.fecha.strftime("%d/%m/%Y") if item.fecha else "N/A",  # fecha
+            item.tipo.nombre  # tipo
+        )
+    console.print(table)

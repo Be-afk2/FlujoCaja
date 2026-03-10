@@ -19,3 +19,5 @@ class Registro(SQLModel, table=True):
 
     #fecha de solo dd/mm/aaaa
     fecha: datetime = Field(default_factory=datetime.now)
+    
+    tipo: "Tipo" = Relationship()

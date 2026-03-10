@@ -21,14 +21,13 @@ Proyecto de registro y reporte de gastos con backend en Python usando SQLite y f
    - TipoGasto(id, nombre, descripcion, created_at) x
    - Constraints: foreign keys, índices en user_id y fecha x
 2. Crear la base de datos
-   - Script de inicialización (schema.sql) o migraciones simples
-   - Seed inicial: tipos de gasto comunes
-   - Asegurar guardo de bd en %appdata%
+   - Script de inicialización (schema.sql) o migraciones simples x 
+   - Asegurar guardo de bd en %appdata% 
 3. Capa de acceso a datos
    - Implementar repository usando sqlite3 o SQLAlchemy (recomiendo sqlite3 + queries simples para desktop)  x
    - Funciones: crear_usuario, autenticar_usuario, crear_gasto, listar_gastos(filtros), crear_tipo_gasto, listar_tipos x
 4. Servicios / lógica de negocio
-   - Validaciones (monto positivo, fecha válida, categoría existente)
+   - Validaciones (monto positivo, fecha válida, categoría existente) x 
    - Manejo de transacciones y errores
 5. API local opcional
    - Si se quiere separar UI/Backend: pequeño API con Flask o FastAPI (endpoints POST/GET)
