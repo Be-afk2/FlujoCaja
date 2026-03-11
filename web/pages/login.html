@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b981",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "0.75rem",
+                        "xl": "1rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-background-dark min-h-screen flex items-center justify-center p-4">
+<div class="w-full max-w-md">
+<!-- Login Card -->
+<div class="bg-white dark:bg-slate-900 shadow-xl rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800">
+<!-- Header Section with Logo -->
+<div class="pt-10 pb-6 flex flex-col items-center">
+<div class="bg-primary/10 p-3 rounded-lg mb-4">
+<span class="material-symbols-outlined text-primary text-4xl">
+                        account_balance_wallet
+                    </span>
+</div>
+<h1 class="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">CashFlow</h1>
+<p class="text-slate-500 dark:text-slate-400 mt-2 text-sm">Gestiona tus finanzas con inteligencia</p>
+</div>
+<!-- Login Form -->
+<div class="px-8 pb-10">
+<form action="#" class="space-y-5" method="POST">
+<!-- Email Field -->
+<div class="space-y-2">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1" for="email">
+                            Correo electrónico
+                        </label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
+                                mail
+                            </span>
+<input class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" id="email" name="email" placeholder="tu@ejemplo.com" required="" type="email"/>
+</div>
+</div>
+<!-- Password Field -->
+<div class="space-y-2">
+<div class="flex justify-between items-center px-1">
+<label class="text-sm font-semibold text-slate-700 dark:text-slate-300" for="password">
+                                Contraseña
+                            </label>
+<a class="text-xs font-medium text-primary hover:underline" href="#">
+                                ¿Olvidaste tu contraseña?
+                            </a>
+</div>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
+                                lock
+                            </span>
+<input class="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400" id="password" name="password" placeholder="••••••••" required="" type="password"/>
+<button class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" type="button">
+<span class="material-symbols-outlined text-xl">
+                                    visibility
+                                </span>
+</button>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-2" type="submit">
+                        Iniciar Sesión
+                    </button>
+</form>
+<!-- Footer Links -->
+<div class="mt-8 text-center">
+<p class="text-slate-500 dark:text-slate-400 text-sm">
+                        ¿No tienes una cuenta? 
+                        <a class="text-primary font-bold hover:underline ml-1" href="#">Regístrate gratis</a>
+</p>
+</div>
+</div>
+</div>
+<!-- Decorative background elements (subtle) -->
+<div class="fixed top-0 left-0 -z-10 w-full h-full opacity-30 pointer-events-none">
+<div class="absolute top-[10%] left-[15%] w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[10%] right-[15%] w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+</div>
+</div>
+</body></html>
