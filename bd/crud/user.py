@@ -29,10 +29,6 @@ def borrar_usuario(user_id: str) -> bool:
         return True
     
 def login_user(name: str, passw: str) -> Tuple[bool, Optional[User]]:
-    """Authenticate a user by name and password.
-
-    Returns a tuple (success: bool, user: User|None).
-    """
     try:
         with Session(engine) as session:
             stmt = select(User).where(User.name == name)
@@ -41,7 +37,7 @@ def login_user(name: str, passw: str) -> Tuple[bool, Optional[User]]:
             if not user:
                 return False, None
 
-            # verify password hash
+           
             if not bcrypt.verify(passw, user.passw):
                 return False, None
 

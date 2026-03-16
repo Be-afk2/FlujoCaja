@@ -4,9 +4,9 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fastapi import APIRouter
 
-from bd.crud.user import crear_usuario
+from bd.crud.user import login_user,crear_usuario
 
-from .dtos.userDto import UserDTO
+from .dtos.userDto import UserDTO,UserLogin
 
 
 router = APIRouter()
@@ -21,3 +21,6 @@ def users():
 def create_user(newUser:UserDTO):
     return crear_usuario(newUser.name,newUser.apellido,newUser.passw)
  
+@router.post("/login")
+def login(user:UserLogin):
+    return login_user(user.name,user.passw)

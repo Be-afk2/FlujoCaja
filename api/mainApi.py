@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from api.routers import gastos, users
+from api.routers import auth, gastos
 
 app = FastAPI()
 
@@ -17,6 +17,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     )
 
 app.include_router(gastos.router)
-app.include_router(users.router)
+app.include_router(auth.router)
 
 ##uvicorn api.mainApi:app --reload
