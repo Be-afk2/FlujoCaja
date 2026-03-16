@@ -1,4 +1,6 @@
+import uuid
 from pydantic import BaseModel
+from sqlmodel import SQLModel
 
 class UserDTO(BaseModel):
     name: str
@@ -7,3 +9,8 @@ class UserDTO(BaseModel):
 class UserLogin(BaseModel):
     name : str
     passw: str
+    recordar: bool 
+
+class UserPublic(SQLModel):
+    id: uuid.UUID
+    name: str

@@ -28,23 +28,19 @@ def borrar_usuario(user_id: str) -> bool:
         session.commit()
         return True
     
-def login_user(name: str, passw: str) -> Tuple[bool, Optional[User]]:
-    try:
-        with Session(engine) as session:
-            stmt = select(User).where(User.name == name)
-            user = session.exec(stmt).first()
+def login_user(name: str, passw: str):
+    with Session(engine) as session:
+        stmt = select(User).where(User.name == name)
+        user = session.exec(stmt).first()
 
-            if not user:
-                return False, None
+        if not user:
+            return None
 
-           
-            if not bcrypt.verify(passw, user.passw):
-                return False, None
+        if not bcrypt.verify(passw, user.passw):
+            return None
 
-            return True, user
-    except Exception as exc:
-        logging.exception("Error authenticating user %s", name)
-        return False, None
+        return user
+    
     
 def obtener_usuario(user_id: str) -> Optional[User]:
     with Session(engine) as session:
