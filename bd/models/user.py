@@ -15,3 +15,6 @@ class User(SQLModel, table=True):
 
     registros: List["Registro"] = Relationship(back_populates="user")
     cuentas: List["Cuenta"] = Relationship(back_populates="user")
+
+
+    ## user pues

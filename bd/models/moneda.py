@@ -10,3 +10,5 @@ class Moneda(SQLModel, table=True):
     nombre: str
 
     cuentas: List["Cuenta"] = Relationship(back_populates="moneda")
+
+##las cuentas pueden tener diferentes tipos de monedas ( lo mas probable es que solo se use una)

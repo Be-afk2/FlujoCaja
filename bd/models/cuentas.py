@@ -2,10 +2,13 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional, TYPE_CHECKING
 
 
+
 if TYPE_CHECKING:
     from bd.models.user import User
     from bd.models.moneda import Moneda
     from bd.models.tipoCuenta import TipoCuenta
+    from bd.models.registro import Registro
+
 
 
 class Cuenta(SQLModel, table=True):
@@ -23,3 +26,10 @@ class Cuenta(SQLModel, table=True):
     user_id: str = Field(foreign_key="user.id")
     user: Optional["User"] = Relationship(back_populates="cuentas")
 
+    registros: List["Registro"] = Relationship(back_populates="cuenta")
+
+
+
+
+## aqui se guardan las cuentas de casa usuario , un usuario puede tener varias cuentas
+## estas pueden ser como "efectivo , ahorro , etc" ellos podran personalizar esto

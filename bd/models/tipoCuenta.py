@@ -8,3 +8,5 @@ class TipoCuenta(SQLModel, table=True):
     tipo: str
 
     cuentas: List["Cuenta"] = Relationship(back_populates="tipo_cuenta")
+
+#si la cuenta , efectivo, .... RECORDAR O RECONSIDERAR PARA QUE USAR ESTA TABLA !!

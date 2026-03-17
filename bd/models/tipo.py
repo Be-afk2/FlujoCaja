@@ -11,3 +11,4 @@ class Tipo(SQLModel, table=True):
 
     registros: List["Registro"] = Relationship(back_populates="tipo")
 
+#tipos de gastos ej: comida , electronica , sueldo , etc 
