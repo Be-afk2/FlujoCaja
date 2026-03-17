@@ -6,6 +6,11 @@ from uuid import UUID
 
 def guardar_sesion_bd(user_id: str) -> None:
     with Session(engine) as session:
+
+        oldsesion = get_sesion()
+        if(oldsesion):
+            eliminar_sesion_bd()
+
         sesion = Sesion(
             idUser=str(user_id),
         )
@@ -32,3 +37,4 @@ def eliminar_sesion_bd() -> None:
         if sesion:
             session.delete(sesion)
             session.commit()
+    return "ok"
