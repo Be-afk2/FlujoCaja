@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
-from bd.crud.tipo import get_one_tipo, get_tipo_lista, get_tipos_bd,crear_tipo_bd
+from bd.crud.tipo import get_one_tipo, get_sub_tipos, get_tipo_lista, get_tipos_bd,crear_tipo_bd
 
 from .dtos.paguinador import PaguinadorDto
-from .dtos.tipos import TipoCreateDto
+from .dtos.tipos import OneId, TipoCreateDto
 
 
 router = APIRouter()
@@ -26,3 +26,8 @@ def crear_tipo(tipoNew:TipoCreateDto):
 @router.get("/one/name")
 def get_one():
     return get_one_tipo()
+
+
+@router.get("/subtipo/{tipo_id}")
+def get_sub(tipo_id: int):
+    return get_sub_tipos(tipo_id)

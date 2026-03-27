@@ -1,6 +1,9 @@
+import uuid
 from sqlmodel import Session, select
 from bd.database import engine
 from bd.models.tipo import Tipo
+from sqlmodel import select
+from sqlalchemy.orm import selectinload
 
 def get_tipos_bd(page: int = 1, page_size: int = 10):
     offset = (page - 1) * page_size
@@ -33,3 +36,15 @@ def get_one_tipo(nombre: str) -> Tipo | None:
         tipo = session.exec(statement).first()
         return tipo
 
+def get_sub_tipos(tipoId : int):
+
+    with Session(engine) as session:
+        statement = (
+            select(Tipo)
+            .where(Tipo.id == tipoId)
+            .options(
+                selectinload(Tipo.subtipos),
+            )
+        )
+        result = session.exec(statement).first()
+        return result
