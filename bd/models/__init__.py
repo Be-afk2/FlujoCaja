@@ -5,6 +5,7 @@ from .sesion import Sesion
 from .cuentas import Cuenta
 from .tipoCuenta import TipoCuenta
 from .moneda import Moneda
+from .subTipo import Subtipo
 
 
-__all__ = ["User", "Registro", "Tipo","Sesion","Cuenta","TipoCuenta","Moneda"]
+__all__ = ["User", "Registro", "Tipo","Sesion","Cuenta","TipoCuenta","Moneda","Subtipo"]

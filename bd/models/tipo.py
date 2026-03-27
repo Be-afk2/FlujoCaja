@@ -3,6 +3,8 @@ from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bd.models.registro import Registro
+    from bd.models.subTipo import Subtipo
+
 
 class Tipo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -10,5 +12,4 @@ class Tipo(SQLModel, table=True):
     descripcion: Optional[str] = None
 
     registros: List["Registro"] = Relationship(back_populates="tipo")
-
-#tipos de gastos ej: comida , electronica , sueldo , etc 
+    subtipos: List["Subtipo"] = Relationship(back_populates="tipo")
