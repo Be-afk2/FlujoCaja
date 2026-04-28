@@ -21,4 +21,3 @@ app.include_router(auth.router)
 app.include_router(tipos.router)
 app.include_router(subtipos.router)
 
-##uvicorn api.mainApi:app --reload

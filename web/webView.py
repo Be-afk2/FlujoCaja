@@ -6,19 +6,42 @@ from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineCore import QWebEngineSettings
 
-app = QApplication(sys.argv)
 
-view = QWebEngineView()
+def main():
+    app = QApplication(sys.argv)
 
-view.settings().setAttribute(
-    QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True
-    
-)
-view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
-ruta = os.path.abspath("index.html")
-view.load(QUrl.fromLocalFile(ruta))
-view.setZoomFactor(0.9)
-view.showMaximized()
-view.show()
+    view = QWebEngineView()
 
-app.exec()
+    # ⚙️ Configuración
+    settings = view.settings()
+    settings.setAttribute(
+        QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls,
+        True
+    )
+
+    # ❌ Desactivar click derecho
+    view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
+
+    # 📄 Ruta absoluta del HTML
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    ruta = os.path.join(base_dir, "index.html")
+
+    if not os.path.exists(ruta):
+        print(f"Archivo no encontrado: {ruta}")
+        sys.exit(1)
+
+    # 🌐 Cargar archivo local
+    view.load(QUrl.fromLocalFile(ruta))
+
+    # 🔍 Zoom
+    view.setZoomFactor(0.9)
+
+    # 🖥️ Mostrar ventana
+    view.showMaximized()
+
+    # ▶️ Ejecutar app
+    sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
