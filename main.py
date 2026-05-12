@@ -1,6 +1,8 @@
 import threading
-import multiprocessing
+import subprocess
 import os
+import argparse
+import sys
 
 # Importar la función de comprobación de BD
 from bd.bd import comprobar_y_crear_bd
@@ -10,6 +12,16 @@ from web.webView import main as web_main
 
 # Importar la app de FastAPI
 from api.mainApi import app
+
+def iniciar_api():
+    # Iniciar uvicorn en un subprocess para reload
+    proceso_api = subprocess.Popen([
+        "uvicorn", "api.mainApi:app",
+        "--host", "127.0.0.1",
+        "--port", "8000",
+        "--reload"
+    ])
+    return proceso_api
 
 def iniciar_aplicacion():
     """
@@ -23,34 +35,31 @@ def iniciar_aplicacion():
     # 1. Comprobar y crear BD si no existe
     comprobar_y_crear_bd()
 
-    # 2. Iniciar el servidor API en un proceso separado
-    def iniciar_api():
-        import uvicorn
-        uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    # 2. Iniciar el servidor API en un subprocess
+    proceso_api = iniciar_api()
 
-    # 3. Iniciar la vista web en un hilo separado
-    def iniciar_web():
-        try:
-            web_main()
-        except Exception as e:
-            print(f"Error al iniciar la vista web: {e}")
-
-    # Crear proceso para la API
-    proceso_api = multiprocessing.Process(target=iniciar_api)
-    proceso_api.start()
-
-    # Crear hilo para la web
-    hilo_web = threading.Thread(target=iniciar_web, daemon=True)
-    hilo_web.start()
-
-    # Esperar a que terminen
+    # 3. Iniciar la vista web en el hilo principal (para evitar warning de PyQt6)
     try:
-        proceso_api.join()
-        hilo_web.join()
+        web_main()
     except KeyboardInterrupt:
         print("Aplicación detenida por el usuario.")
+    finally:
         proceso_api.terminate()
-        hilo_web.join(timeout=1)
+        proceso_api.wait()
 
 if __name__ == "__main__":
-    iniciar_aplicacion()
+    parser = argparse.ArgumentParser(description='FlujoCaja - Gestor de Flujo de Caja')
+    parser.add_argument('--api', action='store_true', help='Iniciar solo la API')
+    
+    args = parser.parse_args()
+    
+    if args.api:
+        print("Iniciando solo la API...")
+        subprocess.run([
+            sys.executable, "-m", "uvicorn", "api.mainApi:app",
+            "--host", "127.0.0.1",
+            "--port", "8000",
+            "--reload"
+        ])
+    else:
+        iniciar_aplicacion()

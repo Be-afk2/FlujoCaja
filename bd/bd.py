@@ -21,6 +21,3 @@ def comprobar_conexion():
         console.clear()
     except Exception as e:
         print(f"Error al conectar a la base de datos: {e}")
-
-comprobar_y_crear_bd()
-print("----------------------------------------")

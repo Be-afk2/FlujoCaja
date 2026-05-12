@@ -8,7 +8,6 @@ if TYPE_CHECKING:
 class Subtipo(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     nombre: str
-    descripcion: Optional[str] = None
 
     tipo_id: int = Field(foreign_key="tipo.id")
 

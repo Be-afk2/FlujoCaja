@@ -8,4 +8,4 @@ router = APIRouter(prefix="/subTipos")
 
 @router.post("/create")
 def crear_tipo(tipoNew:SubTipoCreate):
-    return crear_subTipo_bd(tipoNew.nombre,tipoNew.descripcion,tipoNew.tipo) 
+    return crear_subTipo_bd(tipoNew.nombre,tipoNew.tipo) 

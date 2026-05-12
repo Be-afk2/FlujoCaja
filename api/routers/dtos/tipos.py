@@ -18,7 +18,6 @@ class SubtipoResponse(BaseModel):
 
 class SubTipoCreate(BaseModel):
     nombre: str
-    descripcion : str
     tipo : int
 
 class TipoResponse(BaseModel):

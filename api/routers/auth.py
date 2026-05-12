@@ -38,3 +38,7 @@ def getSesion():
 @router.delete("")
 def borrar_sesion():
     return eliminar_sesion_bd()
+
+@router.get("/life")
+def life():
+    return {"message":"alive"}
