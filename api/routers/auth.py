@@ -20,6 +20,9 @@ def users():
 
 @router.post("/create")
 def create_user(newUser:UserDTO):
+    print("...................................")
+    print(newUser)
+    print("...................................")
     return crear_usuario(newUser.name,newUser.apellido,newUser.passw)
  
 @router.post("/login",response_model=UserPublic)

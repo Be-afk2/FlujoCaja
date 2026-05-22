@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from api.routers import auth, gastos, tipos,subtipos
+from api.routers import auth, cuenta, gastos, moneda, tipos,subtipos
 
 app = FastAPI()
 
@@ -30,4 +30,6 @@ app.include_router(gastos.router)
 app.include_router(auth.router)
 app.include_router(tipos.router)
 app.include_router(subtipos.router)
+app.include_router(cuenta.router)
+app.include_router(moneda.router)
 
