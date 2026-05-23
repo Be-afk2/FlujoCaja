@@ -55,6 +55,8 @@ if __name__ == "__main__":
     
     if args.api:
         print("Iniciando solo la API...")
+        comprobar_y_crear_bd()
+        
         subprocess.run([
             sys.executable, "-m", "uvicorn", "api.mainApi:app",
             "--host", "127.0.0.1",

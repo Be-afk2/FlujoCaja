@@ -19,3 +19,8 @@ def crear_moneda(nombre:str, simbolo:str) -> Moneda:
         session.commit()
         session.refresh(nueva_moneda)
     return nueva_moneda
+
+def get_one_moneda(id: int) -> Moneda:
+    with Session(engine) as session:
+        statement = select(Moneda).where(Moneda.id == id)
+        return session.exec(statement).first()

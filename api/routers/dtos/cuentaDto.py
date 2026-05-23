@@ -14,5 +14,5 @@ class SubCuentaDTO(BaseModel):
 class CuentaDTO(BaseModel):
     nombre: str
     descripcion: str
-    tipo: str
-    moneda:str
+    tipo: int
+    moneda:int
