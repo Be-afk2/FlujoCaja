@@ -1,8 +1,9 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from api.routers import auth, cuenta, gastos, moneda, tipos,subtipos
+from api.dependencies import validate_token
 
 app = FastAPI()
 
@@ -26,10 +27,10 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         }
     )
 
-app.include_router(gastos.router)
+app.include_router(gastos.router, dependencies=[Depends(validate_token)])
 app.include_router(auth.router)
-app.include_router(tipos.router)
-app.include_router(subtipos.router)
-app.include_router(cuenta.router)
-app.include_router(moneda.router)
+app.include_router(tipos.router, dependencies=[Depends(validate_token)])
+app.include_router(subtipos.router, dependencies=[Depends(validate_token)])
+app.include_router(cuenta.router, dependencies=[Depends(validate_token)])
+app.include_router(moneda.router, dependencies=[Depends(validate_token)])
 

@@ -9,5 +9,6 @@ class Sesion(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         nullable=False
     )
+    token: str
 
 ## sesion actual en recordar

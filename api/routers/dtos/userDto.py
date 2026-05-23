@@ -14,3 +14,7 @@ class UserLogin(BaseModel):
 class UserPublic(SQLModel):
     id: uuid.UUID
     name: str
+
+class UserWithToken(BaseModel):
+    user: UserPublic
+    token: str
