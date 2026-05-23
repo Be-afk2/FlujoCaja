@@ -37,13 +37,20 @@ async function post(path, data = {}) {
     return await response.json();
 }
 
-document.getElementById('btnGet').addEventListener('click', async () => {
-    const response = await get('auth/life'); // Cambia '/ruta/especifica' a la ruta correcta
-    console.log(response);
-});
+// Event listeners para botones (si existen en el HTML)
+const btnGet = document.getElementById('btnGet');
+if (btnGet) {
+    btnGet.addEventListener('click', async () => {
+        const response = await get('auth/life');
+        console.log(response);
+    });
+}
 
-document.getElementById('btnPost').addEventListener('click', async () => {
-    const data = { clave: 'valor' }; // Cambia esto según los datos que necesites enviar
-    const response = await post('/ruta/especifica', data); // Cambia '/ruta/especifica' a la ruta correcta
-    console.log(response);
-});
+const btnPost = document.getElementById('btnPost');
+if (btnPost) {
+    btnPost.addEventListener('click', async () => {
+        const data = { clave: 'valor' };
+        const response = await post('/ruta/especifica', data);
+        console.log(response);
+    });
+}
