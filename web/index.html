@@ -1,16 +1,235 @@
 <!DOCTYPE html>
-<html lang="en">
+
+<html class="dark" lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>NombrePendiente | Loading</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&amp;family=Inter:wght@400&amp;family=JetBrains+Mono:wght@500;600&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed-dim": "#b9c7e0",
+                        "on-surface-variant": "#bbcabf",
+                        "on-surface": "#dce1fb",
+                        "primary-fixed-dim": "#4edea3",
+                        "emerald-glow": "#34D399",
+                        "error-container": "#93000a",
+                        "surface-bright": "#33394c",
+                        "surface": "#0c1324",
+                        "secondary-fixed": "#d5e3fd",
+                        "outline-variant": "#3c4a42",
+                        "surface-container-high": "#23293c",
+                        "secondary": "#b9c7e0",
+                        "navy-surface": "#0F172A",
+                        "on-secondary-fixed-variant": "#3a485c",
+                        "on-secondary": "#233144",
+                        "on-secondary-container": "#abb9d2",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#c9e6ff",
+                        "error": "#ffb4ab",
+                        "inverse-on-surface": "#2a3043",
+                        "surface-container-lowest": "#070d1f",
+                        "error-red": "#EF4444",
+                        "primary": "#4edea3",
+                        "surface-container-highest": "#2e3447",
+                        "primary-container": "#10b981",
+                        "surface-container-low": "#151b2d",
+                        "on-secondary-fixed": "#0d1c2f",
+                        "primary-fixed": "#6ffbbe",
+                        "tertiary": "#89ceff",
+                        "on-tertiary-fixed": "#001e2f",
+                        "on-tertiary-fixed-variant": "#004c6e",
+                        "secondary-container": "#3c4a5e",
+                        "tertiary-fixed-dim": "#89ceff",
+                        "surface-variant": "#2e3447",
+                        "surface-dim": "#0c1324",
+                        "outline": "#86948a",
+                        "warning-amber": "#F59E0B",
+                        "on-tertiary-container": "#003d59",
+                        "inverse-primary": "#006c49",
+                        "on-primary-container": "#00422b",
+                        "on-tertiary": "#00344d",
+                        "navy-border": "#1E293B",
+                        "on-primary": "#003824",
+                        "inverse-surface": "#dce1fb",
+                        "surface-container": "#191f31",
+                        "on-primary-fixed": "#002113",
+                        "tertiary-container": "#23acf1",
+                        "surface-tint": "#4edea3",
+                        "on-background": "#dce1fb",
+                        "on-primary-fixed-variant": "#005236",
+                        "background": "#0c1324",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "stack-md": "16px",
+                        "container-margin": "24px",
+                        "gutter": "16px",
+                        "base": "4px",
+                        "stack-lg": "32px"
+                    },
+                    "fontFamily": {
+                        "data-display": ["JetBrains Mono"],
+                        "headline-lg": ["Hanken Grotesk"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-xl": ["Hanken Grotesk"]
+                    },
+                    "fontSize": {
+                        "data-display": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                },
+            },
+        }
+    </script>
+    <style>
+        @keyframes subtle-pulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes progress-slide {
+            0% {
+                transform: translateX(-100%);
+            }
+
+            50% {
+                transform: translateX(0%);
+            }
+
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .animate-logo {
+            animation: subtle-pulse 3s ease-in-out infinite;
+        }
+
+        .loading-bar-inner {
+            animation: progress-slide 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+        }
+
+        .glass-blur {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
 </head>
-<body>
-        <h1>ventana de prueba</h1>
-</body> 
+
+<body
+    class="bg-surface dark:bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+    <main class="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden">
+        <!-- Ambient Atmospheric Background -->
+        <div class="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            <div class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] rounded-full bg-primary/5 blur-[120px]"></div>
+            <div
+                class="absolute -bottom-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-secondary-container/10 blur-[100px]">
+            </div>
+        </div>
+        <!-- Central Branding Container -->
+        <div class="relative z-10 flex flex-col items-center gap-stack-lg animate-logo">
+            <!-- NombrePendiente Logo Cluster -->
+            <div class="flex items-center gap-base">
+                <div
+                    class="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-[0px_0px_20px_rgba(78,222,163,0.3)]">
+                    <span class="material-symbols-outlined text-on-primary text-[28px]"
+                        style="font-variation-settings: 'FILL' 1;">
+                        account_balance
+                    </span>
+                </div>
+                <h1 class="font-headline-xl text-headline-xl text-primary tracking-tight">
+                    NombrePendiente
+                </h1>
+            </div>
+            <!-- Loading Indicator -->
+            <div class="flex flex-col items-center gap-stack-sm w-48">
+                <!-- Track -->
+                <div class="h-[2px] w-full bg-navy-border overflow-hidden rounded-full relative">
+                    <!-- Progress Element -->
+                    <div
+                        class="loading-bar-inner absolute top-0 left-0 h-full w-1/2 bg-emerald-glow shadow-[0px_0px_8px_rgba(52,211,153,0.6)]">
+                    </div>
+                </div>
+                <!-- Status Text -->
+                <span
+                    class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest opacity-60">
+                    Securing Connection
+                </span>
+            </div>
+        </div>
+        <!-- Subtle Footer Branding (Optional/Contextual) -->
+        <div class="absolute bottom-12 flex flex-col items-center opacity-40">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-[16px]">verified_user</span>
+                <span class="font-body-sm text-body-sm">Enterprise Grade Encryption</span>
+            </div>
+        </div>
+    </main>
+    <!-- Micro-interaction Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const statusText = document.querySelector('.text-label-caps');
+            const messages = [
+                "Securing Connection",
+                "Loading Portfolio",
+                "Syncing Accounts",
+                "Optimizing View"
+            ];
+            let index = 0;
+
+            // Simple text rotation for the loading state
+            setInterval(() => {
+                index = (index + 1) % messages.length;
+                statusText.style.opacity = '0';
+                setTimeout(() => {
+                    statusText.textContent = messages[index];
+                    statusText.style.opacity = '0.6';
+                }, 400);
+            }, 3000);
+        });
+    </script>
+</body>
+
 </html>
 <script src="js/funciones.js"></script>
-<script src="js/login.js"></script>
-<script>
-    
-</script>
+
+<script src="js/index.js"></script>
