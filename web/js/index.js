@@ -1,79 +1,169 @@
-document.addEventListener('DOMContentLoaded', async function () {
-    const data = verificarSesionLocal();
 
-    if  (data) {
-        console.log("Sesión activa, redirigiendo...");
-        verificarTokenLife()
-        //return window.location.href = 'pages/panelControl.html';
-    } else {
-        console.log("No hay sesión activa, permaneciendo en la página de inicio de sesión.");
-        if(await verificarSesionApi()){
-            console.log("Sesión activa en API, redirigiendo...");
-            //return window.location.href = 'pages/panelControl.html';
-        } else {
-            console.log("No hay sesión activa en API, permaneciendo en la página de inicio de sesión.");
+// ==================== CONSTANTES ====================
+const STORAGE_KEYS = {
+    TOKEN: "token",
+    REMEMBER_SESSION: "remember_session",
+};
+
+const ROUTES = {
+    PANEL_CONTROL: "pages/panelControl.html",
+    LOGIN: "pages/login.html",
+};
+
+const API_ENDPOINTS = {
+    AUTH_CHECK: "auth/",
+    TOKEN_LIFE: "auth/life/token",
+};
+
+
+// ==================== INICIALIZACIÓN ====================
+document.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const sesionValida = await validarYRedireccionarSesion();
+        if (!sesionValida) {
+            redirigir(ROUTES.LOGIN);
         }
+    } catch (error) {
+        console.error("Error en validación de sesión:", error);
+        redirigir(ROUTES.LOGIN);
     }
-    
-    //return window.location.href = 'pages/login.html';
-
 });
 
-function verificarTokenLife() {
-    const token = sessionStorage.getItem("token")
-    console.log("Verificando token:", token);
-        if (token === null) {
-            console.log("Token no encontrado.");
-            cerrarSesion()
-            return false;
-        }
-        const response = await get(`auth/life/token?token=${token}`)
-        if (!response.ok) {
-            cerrarSesion()
-            return false;
-        }
-        return true;
-}
 
-async function verificarSesionApi() {
-    const sesion =await get("auth/")
-    console.log(sesion);
-    if (sesion && sesion.token) {
-        console.log("Sesión verificada.");
-        guardarSesion(sesion.token);
-        return true;
-    }
-    else{  
-        return false;
-    }
-}
-function verificarSesionLocal() {
-    const data = localStorage.getItem("remember_session");
-    if (data && data === "true" ) {
-        console.log("Sesión verificada.");
+// ==================== GESTIÓN DE SESIÓN ====================
+
+/**
+ * Valida la sesión y redirige al panel de control si es válida.
+ * Verifica primero el almacenamiento local, luego la API.
+ * @returns {Promise<boolean>} - True si la sesión es válida
+ */
+async function validarYRedireccionarSesion() {
+    // Verificar sesión local primero
+    if (verificarSesionLocal()) {
+        console.log("✓ Sesión local activa");
+        
+        // Validar que el token siga siendo válido en la API
+        if (await verificarTokenLife()) {
+            redirigir(ROUTES.PANEL_CONTROL);
             return true;
-    } else {
-        console.log("No hay sesión activa.");
+        }
+    }
+
+    // Si no hay sesión local, verificar en la API
+    console.log("⚠ No hay sesión local, verificando API...");
+    if (await verificarSesionApi()) {
+        console.log("✓ Sesión API activa");
+        redirigir(ROUTES.PANEL_CONTROL);
+        return true;
+    }
+
+    console.log("✗ No hay sesión activa en ningún lugar");
+    return false;
+}
+
+/**
+ * Verifica si hay sesión recordada en localStorage.
+ * @returns {boolean} - True si hay sesión recordada
+ */
+function verificarSesionLocal() {
+    return localStorage.getItem(STORAGE_KEYS.REMEMBER_SESSION) === "true";
+}
+
+/**
+ * Verifica la sesión contra la API.
+ * @returns {Promise<boolean>} - True si la sesión es válida en la API
+ */
+async function verificarSesionApi() {
+    try {
+        const sesion = await get(API_ENDPOINTS.AUTH_CHECK);
+        
+        if (sesion?.token) {
+            guardarSesion(sesion.token);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Error verificando sesión en API:", error);
         return false;
     }
 }
-function guardarSesion(token) {
-    sessionStorage.setItem("token", token);
-    localStorage.setItem("remember_session","true")
-    console.log("Sesión guardada.");
-}
 
-function cerrarSesion() {
-    sessionStorage.removeItem("token");
-    localStorage.removeItem("remember_session");
-    console.log("Sesión cerrada.");
-}
+/**
+ * Verifica que el token sea válido en la API.
+ * @returns {Promise<boolean>} - True si el token es válido
+ */
+async function verificarTokenLife() {
+    try {
+        const token = obtenerToken();
+        
+        if (!token) {
+            console.warn("⚠ Token no encontrado");
+            cerrarSesion();
+            return false;
+        }
 
-function lista(lista = []) {
-    var newLista = []
-    for (let i = 0; i < lista.length; i++) {
-        newLista.push(lista[i] * 2)
+        const response = await get(`${API_ENDPOINTS.TOKEN_LIFE}?token=${token}`);
+        
+        if (!response?.ok) {
+            console.warn("⚠ Token inválido o expirado");
+            cerrarSesion();
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.error("Error verificando vida del token:", error);
+        cerrarSesion();
+        return false;
     }
-    return newLista;
+}
+
+/**
+ * Obtiene el token del almacenamiento de sesión.
+ * @returns {string|null} - El token o null si no existe
+ */
+function obtenerToken() {
+    return sessionStorage.getItem(STORAGE_KEYS.TOKEN);
+}
+
+/**
+ * Guarda la sesión en el almacenamiento.
+ * @param {string} token - El token a guardar
+ */
+function guardarSesion(token) {
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
+    localStorage.setItem(STORAGE_KEYS.REMEMBER_SESSION, "true");
+    console.log("✓ Sesión guardada");
+}
+
+/**
+ * Cierra la sesión del usuario eliminando los datos del almacenamiento.
+ */
+function cerrarSesion() {
+    sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REMEMBER_SESSION);
+    console.log("✓ Sesión cerrada");
+}
+
+
+// ==================== UTILIDADES ====================
+
+/**
+ * Redirige a la URL especificada.
+ * @param {string} url - La URL a la que redirigir
+ */
+function redirigir(url) {
+    window.location.href = url;
+}
+
+/**
+ * Muestra información de depuración sobre la sesión.
+ */
+function mostrarInfoDebug() {
+    console.group("📊 Información de Sesión");
+    console.log("Token:", obtenerToken() || "No disponible");
+    console.log("Sesión recordada:", localStorage.getItem(STORAGE_KEYS.REMEMBER_SESSION));
+    console.log("Memoria:", performance.memory || "No disponible");
+    console.groupEnd();
 }
 
