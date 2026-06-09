@@ -60,26 +60,27 @@
             </div>
             <!-- Login Form -->
             <div class="px-8 pb-10">
-                <form action="#" class="space-y-5" method="POST">
-                    <!-- Email Field -->
+                <form id="formLogin" class="space-y-5">
+                    <!-- Username Field -->
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1" for="email">
-                            Correo electrónico
+                        <label class="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">
+                            Nombre de usuario
                         </label>
                         <div class="relative">
                             <span
                                 class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">
-                                mail
+                                person
                             </span>
                             <input 
+                                id="inputUsername"
                                 class="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
-                                id="emailInput" name="email" placeholder="tu@ejemplo.com" required="" type="email" />
+                                name="username" placeholder="tu_usuario" type="text" />
                         </div>
                     </div>
                     <!-- Password Field -->
                     <div class="space-y-2">
                         <div class="flex justify-between items-center px-1">
-                            <label class="text-sm font-semibold text-slate-700 dark:text-slate-300" for="password">
+                            <label class="text-sm font-semibold text-slate-700 dark:text-slate-300" for="inputPassword">
                                 Contraseña
                             </label>
                             <a class="text-xs font-medium text-primary hover:underline" href="#">
@@ -92,9 +93,11 @@
                                 lock
                             </span>
                             <input
+                                id="inputPassword"
                                 class="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
-                                id="password" name="password" placeholder="••••••••" required="" type="password" />
+                                name="password" placeholder="••••••••" type="password" />
                             <button
+                                id="btnTogglePassword"
                                 class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                                 type="button">
                                 <span class="material-symbols-outlined text-xl">
@@ -103,10 +106,21 @@
                             </button>
                         </div>
                     </div>
+                    <!-- Remember Me Checkbox -->
+                    <div class="flex items-center gap-2">
+                        <input 
+                            id="inputRecordar"
+                            type="checkbox" 
+                            class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 text-primary cursor-pointer" />
+                        <label for="inputRecordar" class="text-sm text-slate-600 dark:text-slate-400 cursor-pointer">
+                            Recordar contraseña
+                        </label>
+                    </div>
                     <!-- Submit Button -->
                     <button
+                        id="btnLogin"
                         class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-lg shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-2"
-                        type="submit">
+                        type="button">
                         Iniciar Sesión
                     </button>
                 </form>

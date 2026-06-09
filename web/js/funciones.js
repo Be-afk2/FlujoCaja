@@ -39,10 +39,17 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
         
         // Validar que la respuesta sea exitosa
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ 
-                message: `HTTP ${response.status}: ${response.statusText}` 
+            const errorData = await response.json().catch(() => ({ 
+                error: `HTTP ${response.status}: ${response.statusText}`,
+                status: response.status,
+                path: url
             }));
-            throw new Error(error.message || error.detail || 'Error en la petición');
+            
+            // Crear un error personalizado que contiene toda la información
+            const error = new Error(errorData.error || errorData.message || errorData.detail || 'Error en la petición');
+            error.status = errorData.status || response.status;
+            error.data = errorData;
+            throw error;
         }
 
         return await response.json();
