@@ -40,6 +40,10 @@
         }
     </script>
     <style data-purpose="global-styles">
+        @view-transition {
+            navigation: auto;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             background-color: #020617;
@@ -50,12 +54,13 @@
 
 <body class="flex h-screen overflow-hidden text-slate-200">
     <!-- BEGIN: Sidebar Navigation -->
-  <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex border-r border-slate-800"  data-component="../components/sidemenu.html"  data-purpose="sidebar"> </aside>
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex border-r border-slate-800"
+        data-component="../components/sidemenu.html" data-purpose="sidebar"> </aside>
     <!-- END: Sidebar Navigation -->
     <!-- BEGIN: Main Content -->
     <main class="flex-1 overflow-y-auto bg-slate-950" data-purpose="main-dashboard-area">
         <!-- BEGIN: Header -->
-         <!--
+        <!--
         <header
             class="bg-slate-900 border-b border-slate-800 px-8 py-4 flex items-center justify-between sticky top-0 z-10">
             <div>

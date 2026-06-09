@@ -18,6 +18,7 @@ const API_ENDPOINTS = {
 
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener("DOMContentLoaded", async () => {
+    mostrarInfoDebug()
     try {
         const sesionValida = await validarYRedireccionarSesion();
         if (!sesionValida) {
@@ -103,7 +104,7 @@ async function verificarTokenLife() {
         }
 
         const response = await get(`${API_ENDPOINTS.TOKEN_LIFE}?token=${token}`);
-        
+        console.log("Respuesta de vida del token:", response);
         if (!response?.ok) {
             console.warn("⚠ Token inválido o expirado");
             cerrarSesion();
@@ -153,7 +154,7 @@ function cerrarSesion() {
  * @param {string} url - La URL a la que redirigir
  */
 function redirigir(url) {
-    window.location.href = url;
+    //window.location.href = url;
 }
 
 /**
