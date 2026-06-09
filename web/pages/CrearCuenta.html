@@ -56,25 +56,27 @@
                     </p>
                 </div>
                 <!-- Form Fields -->
-                <form class="flex flex-col gap-5">
+                <form class="flex flex-col gap-5" id="formCrearCuenta">
                     <div class="flex flex-col gap-2">
-                        <label class="text-slate-200 text-sm font-semibold ml-1">Nombre completo</label>
+                        <label class="text-slate-200 text-sm font-semibold ml-1">Nombre</label>
                         <div class="relative">
                             <span
                                 class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
-                            <input
+                            <input 
+                                id="inputNombre"
                                 class="w-full h-14 pl-12 pr-4 rounded-xl border border-navy-light bg-navy-muted text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                 placeholder="Ingresa tu nombre" type="text" />
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label class="text-slate-200 text-sm font-semibold ml-1">Correo electrónico</label>
+                        <label class="text-slate-200 text-sm font-semibold ml-1">Apellido</label>
                         <div class="relative">
                             <span
-                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">mail</span>
-                            <input
+                                class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
+                            <input 
+                                id="inputApellido"
                                 class="w-full h-14 pl-12 pr-4 rounded-xl border border-navy-light bg-navy-muted text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
-                                placeholder="ejemplo@correo.com" type="email" />
+                                placeholder="Ingresa tu apellido" type="text" />
                         </div>
                     </div>
                     <div class="flex flex-col gap-2">
@@ -82,17 +84,20 @@
                         <div class="relative">
                             <span
                                 class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">lock</span>
-                            <input
+                            <input 
+                                id="inputPassword"
                                 class="w-full h-14 pl-12 pr-12 rounded-xl border border-navy-light bg-navy-muted text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                                 placeholder="Crea una contraseña" type="password" />
                             <button class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                                type="button">
+                                type="button" id="btnTogglePassword">
                                 <span class="material-symbols-outlined text-xl">visibility</span>
                             </button>
                         </div>
                     </div>
                     <!-- Submit Button -->
-                    <button
+                    <button 
+                        id="btnCrearCuenta"
+                        type="button"
                         class="mt-4 w-full h-14 bg-primary hover:bg-emerald-500 text-background-light font-bold text-lg rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 group">
                         Crear Cuenta
                         <span
@@ -103,7 +108,7 @@
                 <div class="flex flex-col items-center gap-4 text-sm">
                     <p class="text-slate-400">
                         ¿Ya tienes una cuenta?
-                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="#">Inicia
+                        <a class="text-primary font-bold hover:underline underline-offset-4 ml-1" href="./login.html">Inicia
                             sesión</a>
                     </p>
                     <div class="flex items-center gap-4 w-full py-4">
@@ -153,3 +158,5 @@
 </body>
 
 </html>
+<script src="../js/funciones.js"></script>
+<script src="../js/CrearCuenta.js"></script>

@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fastapi import APIRouter, HTTPException
 
 from bd.crud.user import login_user,crear_usuario
-from bd.crud.sesion import guardar_sesion_bd,get_sesion,eliminar_sesion_bd, tokenLife
+from bd.crud.sesion import guardar_sesion_bd, obtener_sesion, eliminar_sesion_bd
 
 from .dtos.userDto import UserDTO,UserLogin, UserPublic, UserWithToken
 
@@ -38,7 +38,7 @@ def login(user:UserLogin):
        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 @router.get("",response_model=UserWithToken)
 def getSesion():
-    result = get_sesion()
+    result = obtener_sesion()
     if not result:
         raise HTTPException(status_code=404, detail="No hay sesión activa")
     user, token = result

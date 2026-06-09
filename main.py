@@ -2,6 +2,8 @@ import subprocess
 import sys
 import argparse
 import atexit
+import signal
+import os
 from typing import List, Optional
 from rich.console import Console
 
@@ -14,18 +16,36 @@ console = Console()
 
 # ==================== CONFIGURACIÓN GLOBAL ====================
 PROCESOS_ACTIVOS: List[subprocess.Popen] = []
-CONFIGURACION_SERVICIOS = {
-    "api": {
-        "comando": [sys.executable, "-m", "uvicorn", "api.mainApi:app", "--host", "127.0.0.1", "--port", "8000", "--reload"],
-        "nombre": "API",
-    },
-}
+DEBUG_MODE: bool = False
+
+def obtener_config_api():
+    """Retorna la configuración del API según el modo debug."""
+    comando = [sys.executable, "-m", "uvicorn", "api.mainApi:app", "--host", "127.0.0.1", "--port", "8000", "--reload"]
+    if DEBUG_MODE:
+        comando.append("--log-level")
+        comando.append("debug")
+    return {
+        "api": {
+            "comando": comando,
+            "nombre": "API",
+        },
+    }
+
+CONFIGURACION_SERVICIOS = obtener_config_api()
 
 
 # ==================== FUNCIONES DE GESTIÓN DE PROCESOS ====================
 def registrar_limpieza():
     """Registra la función de limpieza para ejecutar al finalizar."""
     atexit.register(limpiar_procesos)
+
+
+def manejar_signal_interrupt(signum, frame):
+    """Maneja Ctrl+C para limpiar procesos correctamente."""
+    console.print("\n[yellow]→ Recibido Ctrl+C, deteniendo servicios...[/yellow]")
+    limpiar_procesos()
+    console.print("[green]✓ Todos los servicios han sido terminados.[/green]")
+    sys.exit(0)
 
 
 def limpiar_procesos():
@@ -66,12 +86,28 @@ def iniciar_api() -> Optional[subprocess.Popen]:
         subprocess.Popen: Objeto del proceso si se inicia correctamente, None en caso contrario.
     """
     try:
-        console.print("[cyan]→ Iniciando API (puerto 8000)...[/cyan]")
+        # Actualizar configuración según modo debug
+        config = obtener_config_api()
+        comando = config["api"]["comando"]
+        
+        if DEBUG_MODE:
+            console.print("[cyan]→ Iniciando API (puerto 8000) en modo DEBUG...[/cyan]")
+        else:
+            console.print("[cyan]→ Iniciando API (puerto 8000)...[/cyan]")
+        
+        # Preparar variables de entorno
+        env = None
+        if DEBUG_MODE:
+            import os
+            env = os.environ.copy()
+            env["DEBUG"] = "1"
+        
         proceso = subprocess.Popen(
-            CONFIGURACION_SERVICIOS["api"]["comando"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            comando,
+            stdout=None if DEBUG_MODE else subprocess.PIPE,
+            stderr=None if DEBUG_MODE else subprocess.PIPE,
             text=True,
+            env=env,
         )
         # Verificar que el proceso se inició correctamente
         import time
@@ -122,7 +158,10 @@ def modo_solo_api() -> None:
         sys.exit(1)
     
     try:
-        proceso_api.wait()
+        # Usar un loop para permitir que Ctrl+C se capture correctamente
+        import time
+        while proceso_api.poll() is None:
+            time.sleep(0.1)
     except KeyboardInterrupt:
         console.print("[yellow]→ Deteniendo API...[/yellow]")
         limpiar_procesos()
@@ -177,6 +216,8 @@ def modo_completo() -> None:
     # 3. Iniciar Web (bloquea hasta que se cierre)
     try:
         iniciar_web()
+    except KeyboardInterrupt:
+        console.print("[yellow]→ Deteniendo servicios...[/yellow]")
     except Exception as e:
         console.print(f"[red]Error en la aplicación: {e}[/red]")
     finally:
@@ -195,6 +236,7 @@ def main():
 Ejemplos de uso:
   python main.py               # Inicia API, BD y Web
   python main.py --api         # Inicia solo la API
+  python main.py --api --debug # Inicia API en modo debug
   python main.py --bd          # Inicia solo la BD
   python main.py --web         # Inicia solo la Web
         """
@@ -214,11 +256,26 @@ Ejemplos de uso:
         action='store_true',
         help='Iniciar solo la interfaz web'
     )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Activar modo debug (muestra logs detallados del API)'
+    )
     
     args = parser.parse_args()
     
+    # Configurar modo debug global
+    global DEBUG_MODE
+    DEBUG_MODE = args.debug
+    
+    if DEBUG_MODE:
+        console.print("[yellow]⚠ Modo DEBUG activado[/yellow]")
+    
     # Registrar limpieza al finalizar
     registrar_limpieza()
+    
+    # Registrar manejador de Ctrl+C
+    signal.signal(signal.SIGINT, manejar_signal_interrupt)
     
     # Determinar qué modo ejecutar
     if args.api:

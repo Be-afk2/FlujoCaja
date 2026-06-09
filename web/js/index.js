@@ -154,7 +154,7 @@ function cerrarSesion() {
  * @param {string} url - La URL a la que redirigir
  */
 function redirigir(url) {
-    //window.location.href = url;
+    window.location.href = url;
 }
 
 /**
