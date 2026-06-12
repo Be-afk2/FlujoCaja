@@ -121,7 +121,7 @@ def validar_token(token: str) -> bool:
         return False
 
 
-def obtener_sesion() -> tuple[User, str] | None:
+def obtener_sesion(actualizar: bool = False) -> tuple[User, str] | None:
     """
     Obtiene la sesión activa con la información del usuario y el token.
     

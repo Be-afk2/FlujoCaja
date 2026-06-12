@@ -1,10 +1,13 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
+from pygments import console
+
+from bd.crud.sesion import obtener_sesion, obtener_sesion_db, obtener_session_bd, validar_token, validar_token
 
 security = HTTPBearer()
 
 
-async def validate_token(credentials = Depends(security)) -> str:
+def validate_token(credentials = Depends(security)) -> str:
     """
     Decorator para validar el token en cada petición.
     
@@ -30,7 +33,7 @@ async def validate_token(credentials = Depends(security)) -> str:
     # 3. Verificar que el token no haya expirado
     # 4. Si falla cualquier validación, lanzar excepción
     
-    is_valid = await validate_token_logic(token)
+    is_valid = validar_token(token)
     
     if not is_valid:
         raise HTTPException(
@@ -55,8 +58,9 @@ async def validate_token_logic(token: str) -> bool:
     Returns:
         bool: True si el token es válido, False en caso contrario
     """
-    
-    # Aquí va tu lógica de validación
+
+
+
     return False  # Placeholder, reemplaza con la lógica real
 
 
