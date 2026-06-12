@@ -24,7 +24,7 @@ def crear_cuenta(nombre:str, descripcion:str, tipo:int, moneda_id:int) -> Cuenta
             nombre=nombre,
             descripcion=descripcion,
             tipo_id=tipo,
-            user_id=str(get_sesion().id),
+            user_id=str(obtener_sesion().id),
             moneda_id= moneda_id,
             saldo=0.0
         )

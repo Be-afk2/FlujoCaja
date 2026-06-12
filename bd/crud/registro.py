@@ -19,7 +19,7 @@ def crear_registro(monto:float,tipo:str, fecha:datetime=None) -> Registro:
             monto=monto,
             es_ingreso=ingreso,
             tipo_id=get_one_tipo(tipo).id,
-            user_id=str(get_sesion().id),
+            user_id=str(obtener_sesion().id),
             fecha=fecha
         )
         session.add(nuevo_registro)
@@ -33,7 +33,7 @@ def registros_paguinados(page: int = 1, page_size: int = 10):
         statement = (
             select(Registro)
             .options(selectinload(Registro.tipo))
-            .where(Registro.user_id == str(get_sesion().id))
+            .where(Registro.user_id == str(obtener_sesion().id))
             .offset(offset)
             .limit(page_size)
             .order_by(Registro.fecha.desc())

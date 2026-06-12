@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fastapi import APIRouter, HTTPException
 
 from bd.crud.user import login_user,crear_usuario
-from bd.crud.sesion import guardar_sesion_bd, obtener_sesion, eliminar_sesion_bd
+from bd.crud.sesion import guardar_sesion_bd, obtener_sesion, eliminar_sesion_bd, validar_token
 
 from .dtos.userDto import UserDTO,UserLogin, UserPublic, UserWithToken
 
@@ -54,7 +54,7 @@ def life():
 
 @router.get("/life/token")
 def life_token(token:str):
-        result = tokenLife(token)
+        result = validar_token(token)
         if  result == false:
             raise HTTPException(status_code=401, detail="Token inválido o expirado")
         return {"message":"Token válido","status":"true"}
