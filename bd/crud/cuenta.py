@@ -13,7 +13,7 @@ def get_cuentas():
         statement = (
             select(Cuenta)
             .options(selectinload(Cuenta.tipo_cuenta))
-            .where(Cuenta.user_id == str(get_sesion().id))
+            .where(Cuenta.user_id == str(obtener_sesion().id))
         )
 
         return session.exec(statement).all()
