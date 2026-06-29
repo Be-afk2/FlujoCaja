@@ -1,95 +1,242 @@
-# Flujo de caja — Plan de trabajo ordenado (Python + SQLite)
+# FlujoCaja - Roadmap tecnico
 
-## Visión general
-Proyecto de registro y reporte de gastos con backend en Python usando SQLite y frontend de escritorio en Python (Tkinter). Diseñar capas: datos (SQLite), lógica (servicios/repository), API/local access, UI (Tkinter).
+## Vision
 
-## Prioridad (mínimo viable -> mejoras)
-1. Modelo de datos y acceso (SQLite)  x
-2. CRUD básico backend (servicios/repository)
-3. UI mínima: login y formulario modal para registrar gasto
-4. Listado/Reporte de gastos con filtros
-5. Gestión de tipos de gasto
-6. Robustez, tests y documentación
-7. Mejoras UX/funcionalidades avanzadas
+Convertir el prototipo actual en una aplicacion local mantenible para registrar,
+consultar y analizar flujo de caja personal.
 
----
+La arquitectura objetivo es:
 
-## Backend (SQLite, consola / servicios locales)
-1. Planificar la base de datos (esquema SQLite)
-   - Entidades: Usuario(id, username, password_hash, created_at) x
-   - Gasto(id, user_id, monto, fecha, categoria_id, descripcion, created_at) x
-   - TipoGasto(id, nombre, descripcion, created_at) x
-   - Constraints: foreign keys, índices en user_id y fecha x
-2. Crear la base de datos
-   - Script de inicialización (schema.sql) o migraciones simples x 
-   - Asegurar guardo de bd en %appdata% 
-3. Capa de acceso a datos
-   - Implementar repository usando sqlite3 o SQLAlchemy (recomiendo sqlite3 + queries simples para desktop)  x
-   - Funciones: crear_usuario, autenticar_usuario, crear_gasto, listar_gastos(filtros), crear_tipo_gasto, listar_tipos x
-4. Servicios / lógica de negocio
-   - Validaciones (monto positivo, fecha válida, categoría existente) x 
-   - Manejo de transacciones y errores
-5. API local opcional
-   - Si se quiere separar UI/Backend: pequeño API con Flask o FastAPI (endpoints POST/GET)
-   - Endpoints mínimos: POST /auth, POST /users, POST /gastos, GET /gastos, POST /tipo-gastos, GET /tipo-gastos
-6. Robustez backend
-   - Validación y sanitización
-   - Manejo de errores consistente
-   - Tests unitarios para repositorios y servicios
-   - Documentación (README, OpenAPI si se creó API)
+- Backend local con FastAPI.
+- Persistencia con SQLite y SQLModel.
+- Interfaz web en HTML, JavaScript y Tailwind CSS.
+- Ventana de escritorio con PyQt6 WebEngine.
+- Version CLI conservada solo como legado o herramienta auxiliar.
 
 ---
 
-## Front (Tkinter) — tareas mapeadas al backend
-Nota: la UI puede consumir directamente la capa de repositorio si no hay API HTTP.
+## Estado actual
 
-1. Estructura general / bootstrap
-   - App principal con gestor de ventanas (ventana con botón que abre modal completo)
-   - Carpeta gui/ con módulos: auth.py, gastos.py, tipos.py, dashboard.py, services_client.py
-2. Autenticación (consumir create/auth)
-   - Login dialog (username, password) -> llama a autenticar_usuario
-   - Registro dialog opcional -> create usuario
-   - Guardar sesión en memoria (user_id, token si hay API)
-3. Formulario modal "Registrar gasto" (mapeado a POST /gastos o crear_gasto)
-   - Campos: Monto (Entry numérico), Fecha (Entry/DatePicker), Categoría (Combobox cargada desde listar_tipos), Descripción (Text)
-   - Validaciones: monto > 0, fecha en formato válido, categoría seleccionada
-   - Botones: Guardar (llama a crear_gasto), Cancelar
-   - Modal debe ser Toplevel con grab_set() y wait_window() (ya hay ejemplo)
-4. Gestión de "Tipo de gasto" (mapeado a POST/GET tipo-gastos)
-   - Diálogo para crear tipo (nombre, descripción)
-   - Selector reutilizable: actualizar combobox en formularios al crear un nuevo tipo
-5. Dashboard / Lista de gastos (mapeado a GET /gastos)
-   - Tabla/listbox con columnas: fecha, monto, categoría, descripción
-   - Filtros: rango de fecha, categoría, monto mínimo/máximo
-   - Paginación o scroll
-   - Exportar a CSV opcional
-6. Integración UI <-> Backend
-   - services_client.py que llama a repositorio o API (funciones sincrónicas)
-   - Manejo de errores con toasts/dialogs
-   - Indicadores de carga (cursor o estado) para operaciones largas
-7. Validaciones y UX
-   - Mensajes de error claros en formularios
-   - Confirmación al eliminar/editar gasto
-   - Validaciones en cliente además de backend
-8. Tests y calidad
-   - Tests unitarios para lógica UI mínima y servicios (pueden mockear repositorio)
-   - Scripts: run_app.bat, init_db.py
-9. Documentación/instalación
-   - README con pasos: crear entorno, pip install, init_db.py, run_app.bat
-   - Ejemplos de uso y estructura de carpetas
+El proyecto ya cuenta con:
+
+- API REST local.
+- Modelos SQLModel para usuarios, cuentas, monedas, tipos, subtipos y registros.
+- Base de datos SQLite.
+- Interfaz web inicial.
+- Login, creacion de usuario y algunas pantallas conectadas parcialmente.
+- Arranque integrado desde `main.py`.
+
+Pendientes principales:
+
+- Completar el CRUD de gastos/transacciones.
+- Conectar todas las pantallas web con datos reales.
+- Fortalecer sesiones y autenticacion.
+- Ordenar configuracion, rutas de datos y estructura de capas.
+- Agregar tests.
+- Preparar empaquetado como aplicacion de escritorio.
 
 ---
 
-## Tareas auxiliares / scripts
-- init_db.py: crear DB y seeds
-- run_app.bat: activar venv y ejecutar main.py
-- requirements.txt (si hay paquetes: flask/fastapi/sqlalchemy/pyyaml)
-- tests/ con pytest para backend y lógica
+## Fase 0 - Cerrar deuda del prototipo
+
+Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
+
+- [ ] Declarar oficialmente la arquitectura actual en la documentacion.
+- [ ] Marcar `app.py`, `menus/` y `widget/` como version CLI heredada.
+- [ ] Revisar archivos con textos o caracteres de codificacion rota.
+- [ ] Eliminar imports duplicados o no usados.
+- [ ] Reemplazar `print()` de depuracion por logging.
+- [ ] Separar datos de ejemplo de datos reales.
+- [ ] Revisar nombres inconsistentes: gasto, registro, transaccion.
+- [ ] Definir si el termino principal sera `transaccion` o `registro`.
 
 ---
 
-## Siguientes pasos sugeridos (inmediatos)
-1. Crear schema.sql / init_db.py con tablas y seeds.
-2. Implementar pequeño repositorio sqlite3 con funciones básicas (crear/leer).
-3. Esqueleto UI: ventana principal con botón que abre modal "Registrar gasto" (formulario completo).
-4. Conectar formulario al repositorio y verificar inserciones en DB.
+## Fase 1 - Configuracion y base tecnica
+
+Objetivo: hacer que la app arranque y persista datos de manera predecible.
+
+- [ ] Crear un modulo de configuracion centralizado.
+- [ ] Mover valores hardcodeados a configuracion:
+  - host API,
+  - puerto API,
+  - ruta de base de datos,
+  - modo debug,
+  - timeout del frontend.
+- [ ] Mover `database.db` fuera del repo, idealmente a `%APPDATA%/FlujoCaja/`.
+- [ ] Asegurar que `database.db` no se versiona.
+- [ ] Separar inicializacion de tablas y carga de datos iniciales.
+- [ ] Crear seeds controlados para monedas, tipos y tipos de cuenta.
+- [ ] Preparar una estrategia simple de migraciones.
+- [ ] Mejorar manejo de puerto ocupado al iniciar la API.
+- [ ] Ejecutar Uvicorn sin `--reload` en modo normal.
+
+---
+
+## Fase 2 - Dominio financiero
+
+Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
+
+- [ ] Definir modelo final para movimientos financieros.
+- [ ] Completar campos del movimiento:
+  - monto,
+  - fecha,
+  - ingreso o gasto,
+  - cuenta,
+  - tipo,
+  - subtipo opcional,
+  - descripcion opcional,
+  - usuario propietario.
+- [ ] Completar CRUD de gastos/transacciones en backend.
+- [ ] Crear endpoints:
+  - `GET /gastos`,
+  - `POST /gastos`,
+  - `GET /gastos/{id}`,
+  - `PUT /gastos/{id}`,
+  - `DELETE /gastos/{id}`.
+- [ ] Agregar filtros:
+  - fecha desde/hasta,
+  - cuenta,
+  - tipo,
+  - subtipo,
+  - ingreso/gasto,
+  - paginacion.
+- [ ] Actualizar saldo de cuenta al crear un movimiento.
+- [ ] Recalcular saldo al editar un movimiento.
+- [ ] Revertir saldo al eliminar un movimiento.
+- [ ] Validar que cuenta, tipo y subtipo pertenezcan o sean visibles para el usuario.
+- [ ] Agregar una capa de servicios para reglas de negocio.
+
+---
+
+## Fase 3 - Autenticacion y sesiones
+
+Objetivo: tener un modelo de sesion claro y seguro para una app local.
+
+- [ ] Verificar que las contrasenas se guarden siempre hasheadas.
+- [ ] Evitar guardar o devolver contrasenas en respuestas de API.
+- [ ] Decidir estrategia definitiva:
+  - token opaco guardado en SQLite,
+  - o JWT local.
+- [ ] Cambiar `validate_token()` para devolver el usuario autenticado.
+- [ ] Evitar depender de una sesion global con `obtener_sesion()`.
+- [ ] Leer el usuario actual desde el token `Authorization: Bearer`.
+- [ ] Agregar expiracion o renovacion de token.
+- [ ] Agregar logout confiable.
+- [ ] Manejar `401 Unauthorized` desde el frontend redirigiendo al login.
+
+---
+
+## Fase 4 - API mantenible
+
+Objetivo: ordenar contratos HTTP y respuestas.
+
+- [ ] Revisar prefijos y nombres de rutas.
+- [ ] Normalizar respuestas de error.
+- [ ] Crear DTOs de entrada y salida para cada recurso.
+- [ ] Evitar devolver modelos internos directamente cuando no convenga.
+- [ ] Agregar codigos HTTP correctos:
+  - `201` al crear,
+  - `400` para validaciones,
+  - `401` para sesion invalida,
+  - `404` para recursos inexistentes.
+- [ ] Documentar endpoints principales con OpenAPI.
+- [ ] Revisar CORS y limitarlo al uso local si corresponde.
+
+---
+
+## Fase 5 - Frontend conectado
+
+Objetivo: que cada pantalla trabaje con datos reales y estados claros.
+
+- [ ] Mejorar `web/js/funciones.js` como cliente API unico.
+- [ ] Agregar automaticamente `Authorization: Bearer <token>`.
+- [ ] Centralizar manejo de errores de API.
+- [ ] Reemplazar `alert()` por mensajes visuales consistentes.
+- [ ] Agregar estados de carga.
+- [ ] Agregar estados vacios.
+- [ ] Conectar dashboard con metricas reales.
+- [ ] Conectar pantalla de cuentas con API real.
+- [ ] Conectar pantalla de transacciones con API real.
+- [ ] Crear formulario completo para registrar movimiento.
+- [ ] Crear formulario para editar movimiento.
+- [ ] Agregar confirmacion para eliminar.
+- [ ] Crear componentes compartidos:
+  - menu lateral,
+  - selector de cuenta,
+  - selector de tipo,
+  - tabla de movimientos,
+  - mensajes de error/exito.
+
+---
+
+## Fase 6 - Tests y calidad
+
+Objetivo: poder modificar la app sin romper comportamiento basico.
+
+- [ ] Agregar `pytest`.
+- [ ] Crear base SQLite temporal para tests.
+- [ ] Testear creacion de usuario.
+- [ ] Testear login.
+- [ ] Testear creacion de cuenta.
+- [ ] Testear creacion de movimiento.
+- [ ] Testear actualizacion de saldo al crear/editar/eliminar movimientos.
+- [ ] Testear filtros de movimientos.
+- [ ] Testear que un usuario no pueda acceder a datos de otro.
+- [ ] Agregar script o comando para correr tests.
+- [ ] Agregar chequeo basico de formato/lint.
+
+---
+
+## Fase 7 - Reportes y analisis
+
+Objetivo: convertir los datos registrados en informacion util.
+
+- [ ] Dashboard con saldo total por cuenta.
+- [ ] Ingresos del mes.
+- [ ] Gastos del mes.
+- [ ] Flujo neto mensual.
+- [ ] Grafico de evolucion por mes.
+- [ ] Grafico por categorias.
+- [ ] Filtros por cuenta y rango de fecha.
+- [ ] Exportar movimientos a CSV.
+- [ ] Preparar importacion desde CSV.
+
+---
+
+## Fase 8 - Empaquetado
+
+Objetivo: distribuir la app como aplicacion local usable.
+
+- [ ] Definir modo desarrollo y modo produccion.
+- [ ] Empaquetar con PyInstaller u otra herramienta.
+- [ ] Incluir frontend estatico en el paquete.
+- [ ] Incluir inicializacion de base de datos.
+- [ ] Guardar base de datos y logs en carpeta de usuario.
+- [ ] Crear backup manual de la base de datos.
+- [ ] Documentar instalacion y ejecucion final.
+
+---
+
+## Prioridad inmediata
+
+1. Ordenar configuracion y ruta de base de datos.
+2. Completar CRUD de gastos/transacciones.
+3. Corregir sesiones para resolver usuario desde token.
+4. Conectar pantalla de transacciones con datos reales.
+5. Agregar tests del nucleo financiero.
+6. Construir dashboard real.
+7. Preparar empaquetado.
+
+---
+
+## Regla de avance
+
+Antes de agregar funciones nuevas, cada cambio importante debe cumplir:
+
+- Tener datos persistidos correctamente.
+- Tener validaciones en backend.
+- Tener manejo de error en frontend.
+- No depender de datos de ejemplo.
+- Mantener separada la logica de negocio de los routers.
+- Poder probarse manualmente desde la app.
