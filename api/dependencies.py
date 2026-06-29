@@ -1,8 +1,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from pygments import console
 
-from bd.crud.sesion import obtener_sesion, obtener_sesion_db, obtener_session_bd, validar_token, validar_token
+from bd.crud.sesion import validar_token
 
 security = HTTPBearer()
 

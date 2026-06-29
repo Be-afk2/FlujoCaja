@@ -4,6 +4,7 @@ import argparse
 import atexit
 import signal
 import os
+import time
 from typing import List, Optional
 from rich.console import Console
 
@@ -98,7 +99,6 @@ def iniciar_api() -> Optional[subprocess.Popen]:
         # Preparar variables de entorno
         env = None
         if DEBUG_MODE:
-            import os
             env = os.environ.copy()
             env["DEBUG"] = "1"
         
@@ -110,7 +110,6 @@ def iniciar_api() -> Optional[subprocess.Popen]:
             env=env,
         )
         # Verificar que el proceso se inició correctamente
-        import time
         time.sleep(1)
         if proceso.poll() is not None:
             stdout, stderr = proceso.communicate()
@@ -159,7 +158,6 @@ def modo_solo_api() -> None:
     
     try:
         # Usar un loop para permitir que Ctrl+C se capture correctamente
-        import time
         while proceso_api.poll() is None:
             time.sleep(0.1)
     except KeyboardInterrupt:
@@ -178,7 +176,6 @@ def modo_solo_bd() -> None:
     
     console.print("[green]Base de datos lista. Presione Ctrl+C para salir.[/green]")
     try:
-        import time
         while True:
             time.sleep(1)
     except KeyboardInterrupt:

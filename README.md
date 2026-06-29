@@ -31,6 +31,19 @@ Actualmente incluye:
 
 Algunas pantallas web todavia contienen datos de ejemplo o se encuentran en desarrollo.
 
+## Arquitectura actual
+
+La aplicacion funciona hoy con esta estructura real:
+
+- `main.py` como punto de entrada principal.
+- `bd/` como capa de persistencia con SQLite y SQLModel.
+- `api/` como API local FastAPI.
+- `web/` como frontend estatico consumido con `fetch`.
+- `app.py`, `menus/` y `widget/` como version CLI heredada.
+- `database.db` como archivo SQLite local en la raiz del proyecto.
+
+Esta es la arquitectura vigente del prototipo, aunque algunas partes siguen en proceso de limpieza y consolidacion.
+
 ## Tecnologias utilizadas
 
 ### Backend
@@ -78,13 +91,15 @@ FlujoCaja/
 |   |-- pages/
 |   |-- components/
 |   `-- js/
-|-- menus/                # Menus de la version por consola
-|-- widget/               # Utilidades visuales para consola
-|-- app.py                # Entrada de la version CLI
+|-- menus/                # Menus de la version CLI heredada
+|-- widget/               # Utilidades visuales de la version CLI heredada
+|-- app.py                # Entrada de la version CLI heredada
 |-- main.py               # Entrada principal actual
 |-- database.db           # Base de datos SQLite local
 `-- requirements.txt      # Dependencias Python
 ```
+
+La version CLI heredada queda conservada en `app.py`, `menus/` y `widget/`.
 
 ## Componentes principales
 
@@ -123,7 +138,7 @@ Modelos importantes:
 
 - `User`: usuarios del sistema.
 - `Cuenta`: cuentas financieras del usuario.
-- `Registro`: ingresos o gastos registrados.
+- `Movimiento`: ingresos o gastos registrados. El modelo actual en codigo sigue llamandose `Registro`.
 - `Tipo`: categorias principales.
 - `Subtipo`: subcategorias.
 - `Moneda`: monedas disponibles.
@@ -138,11 +153,11 @@ Contiene la interfaz visual. Incluye pantallas para:
 - Panel de control.
 - Cuentas.
 - Creacion de cuentas.
-- Transacciones.
+- Movimientos.
 
 La interfaz consume la API local usando `fetch` desde los archivos JavaScript.
 
-### `app.py` 
+### `app.py`  (legacy CLI)
 
 Corresponde a la version por consola. Permite iniciar sesion, recordar usuario y entrar a menus internos usando `questionary` y `rich`.
 
@@ -233,7 +248,7 @@ Algunos grupos de rutas disponibles:
 
 ## Pendiente / roadmap
 
-- Completar CRUD de gastos y transacciones.
+- Completar CRUD de gastos y movimientos.
 - Conectar todas las pantallas web con datos reales de la API.
 - Mejorar dashboard con metricas reales.
 - Agregar graficos y reportes.

@@ -20,7 +20,7 @@ La arquitectura objetivo es:
 El proyecto ya cuenta con:
 
 - API REST local.
-- Modelos SQLModel para usuarios, cuentas, monedas, tipos, subtipos y registros.
+- Modelos SQLModel para usuarios, cuentas, monedas, tipos, subtipos y movimientos.
 - Base de datos SQLite.
 - Interfaz web inicial.
 - Login, creacion de usuario y algunas pantallas conectadas parcialmente.
@@ -28,7 +28,7 @@ El proyecto ya cuenta con:
 
 Pendientes principales:
 
-- Completar el CRUD de gastos/transacciones.
+- Completar el CRUD de gastos/movimientos.
 - Conectar todas las pantallas web con datos reales.
 - Fortalecer sesiones y autenticacion.
 - Ordenar configuracion, rutas de datos y estructura de capas.
@@ -41,14 +41,14 @@ Pendientes principales:
 
 Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 
-- [ ] Declarar oficialmente la arquitectura actual en la documentacion.
-- [ ] Marcar `app.py`, `menus/` y `widget/` como version CLI heredada.
+- [x] Declarar oficialmente la arquitectura actual en la documentacion.
+- [x] Marcar `app.py`, `menus/` y `widget/` como version CLI heredada.
 - [ ] Revisar archivos con textos o caracteres de codificacion rota.
-- [ ] Eliminar imports duplicados o no usados.
+- [x] Eliminar imports duplicados o no usados.
 - [ ] Reemplazar `print()` de depuracion por logging.
 - [ ] Separar datos de ejemplo de datos reales.
-- [ ] Revisar nombres inconsistentes: gasto, registro, transaccion.
-- [ ] Definir si el termino principal sera `transaccion` o `registro`.
+- [ ] Revisar nombres inconsistentes: gasto, registro, movimiento.
+- [x] Definir si el termino principal sera `movimiento`.
 
 ---
 
@@ -87,7 +87,7 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
   - subtipo opcional,
   - descripcion opcional,
   - usuario propietario.
-- [ ] Completar CRUD de gastos/transacciones en backend.
+- [ ] Completar CRUD de gastos/movimientos en backend.
 - [ ] Crear endpoints:
   - `GET /gastos`,
   - `POST /gastos`,
@@ -157,7 +157,7 @@ Objetivo: que cada pantalla trabaje con datos reales y estados claros.
 - [ ] Agregar estados vacios.
 - [ ] Conectar dashboard con metricas reales.
 - [ ] Conectar pantalla de cuentas con API real.
-- [ ] Conectar pantalla de transacciones con API real.
+- [ ] Conectar pantalla de movimientos con API real.
 - [ ] Crear formulario completo para registrar movimiento.
 - [ ] Crear formulario para editar movimiento.
 - [ ] Agregar confirmacion para eliminar.
@@ -221,9 +221,9 @@ Objetivo: distribuir la app como aplicacion local usable.
 ## Prioridad inmediata
 
 1. Ordenar configuracion y ruta de base de datos.
-2. Completar CRUD de gastos/transacciones.
+2. Completar CRUD de gastos/movimientos.
 3. Corregir sesiones para resolver usuario desde token.
-4. Conectar pantalla de transacciones con datos reales.
+4. Conectar pantalla de movimientos con datos reales.
 5. Agregar tests del nucleo financiero.
 6. Construir dashboard real.
 7. Preparar empaquetado.
