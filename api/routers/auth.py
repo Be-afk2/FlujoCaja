@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 
 from sqlmodel import false
 
@@ -10,6 +11,8 @@ from bd.crud.user import login_user,crear_usuario
 from bd.crud.sesion import guardar_sesion_bd, obtener_sesion, eliminar_sesion_bd, validar_token
 
 from .dtos.userDto import UserDTO,UserLogin, UserPublic, UserWithToken
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -22,9 +25,7 @@ def users():
 
 @router.post("/create")
 def create_user(newUser:UserDTO):
-    print("...................................")
-    print(newUser)
-    print("...................................")
+    logger.debug("Creando usuario: %s", newUser)
     return crear_usuario(newUser.name,newUser.apellido,newUser.passw)
  
 @router.post("/login",response_model=UserPublic)

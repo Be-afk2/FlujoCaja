@@ -1,10 +1,13 @@
 import sys
 import os
+import logging
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtWebEngineCore import QWebEngineSettings
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -27,7 +30,7 @@ def main():
     ruta = os.path.join(base_dir, "index.html")
 
     if not os.path.exists(ruta):
-        print(f"Archivo no encontrado: {ruta}")
+        logger.error("Archivo no encontrado: %s", ruta)
         sys.exit(1)
 
     # 🌐 Cargar archivo local

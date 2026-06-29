@@ -7,6 +7,7 @@ import os
 import time
 from typing import List, Optional
 from rich.console import Console
+from config import API_HOST, API_PORT, API_STARTUP_DELAY_SECONDS, DEBUG_ENV_VAR, build_api_command
 
 # Importar funciones de módulos
 from bd.bd import comprobar_y_crear_bd
@@ -18,21 +19,6 @@ console = Console()
 # ==================== CONFIGURACIÓN GLOBAL ====================
 PROCESOS_ACTIVOS: List[subprocess.Popen] = []
 DEBUG_MODE: bool = False
-
-def obtener_config_api():
-    """Retorna la configuración del API según el modo debug."""
-    comando = [sys.executable, "-m", "uvicorn", "api.mainApi:app", "--host", "127.0.0.1", "--port", "8000", "--reload"]
-    if DEBUG_MODE:
-        comando.append("--log-level")
-        comando.append("debug")
-    return {
-        "api": {
-            "comando": comando,
-            "nombre": "API",
-        },
-    }
-
-CONFIGURACION_SERVICIOS = obtener_config_api()
 
 
 # ==================== FUNCIONES DE GESTIÓN DE PROCESOS ====================
@@ -88,19 +74,18 @@ def iniciar_api() -> Optional[subprocess.Popen]:
     """
     try:
         # Actualizar configuración según modo debug
-        config = obtener_config_api()
-        comando = config["api"]["comando"]
+        comando = build_api_command(sys.executable, DEBUG_MODE)
         
         if DEBUG_MODE:
-            console.print("[cyan]→ Iniciando API (puerto 8000) en modo DEBUG...[/cyan]")
+            console.print(f"[cyan]→ Iniciando API ({API_HOST}:{API_PORT}) en modo DEBUG...[/cyan]")
         else:
-            console.print("[cyan]→ Iniciando API (puerto 8000)...[/cyan]")
+            console.print(f"[cyan]→ Iniciando API ({API_HOST}:{API_PORT})...[/cyan]")
         
         # Preparar variables de entorno
         env = None
         if DEBUG_MODE:
             env = os.environ.copy()
-            env["DEBUG"] = "1"
+            env[DEBUG_ENV_VAR] = "1"
         
         proceso = subprocess.Popen(
             comando,
@@ -110,7 +95,7 @@ def iniciar_api() -> Optional[subprocess.Popen]:
             env=env,
         )
         # Verificar que el proceso se inició correctamente
-        time.sleep(1)
+        time.sleep(API_STARTUP_DELAY_SECONDS)
         if proceso.poll() is not None:
             stdout, stderr = proceso.communicate()
             console.print(f"[red]✗ Error al iniciar la API: {stderr}[/red]")

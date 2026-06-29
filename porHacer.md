@@ -45,7 +45,7 @@ Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 - [x] Marcar `app.py`, `menus/` y `widget/` como version CLI heredada.
 - [ ] Revisar archivos con textos o caracteres de codificacion rota.
 - [x] Eliminar imports duplicados o no usados.
-- [ ] Reemplazar `print()` de depuracion por logging.
+- [x] Reemplazar `print()` de depuracion por logging.
 - [ ] Separar datos de ejemplo de datos reales.
 - [ ] Revisar nombres inconsistentes: gasto, registro, movimiento.
 - [x] Definir si el termino principal sera `movimiento`.
@@ -56,8 +56,8 @@ Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 
 Objetivo: hacer que la app arranque y persista datos de manera predecible.
 
-- [ ] Crear un modulo de configuracion centralizado.
-- [ ] Mover valores hardcodeados a configuracion:
+- [x] Crear un modulo de configuracion centralizado.
+- [x] Mover valores hardcodeados a configuracion:
   - host API,
   - puerto API,
   - ruta de base de datos,

@@ -1,8 +1,10 @@
 from sqlmodel import SQLModel, create_engine, Session
+import logging
 from bd.models.user import User     # uso explícito
+from config import DATABASE_URL
 
-DATABASE_URL = "sqlite:///database.db"
 engine = create_engine(DATABASE_URL, echo=False)
+logger = logging.getLogger(__name__)
 
 def init_db():
     SQLModel.metadata.create_all(engine)
@@ -20,7 +22,7 @@ with Session(engine) as session:
     session.commit()
     session.refresh(user)
 
-    print(user.id)
+    logger.debug("Usuario semilla creado con id=%s", user.id)
 
 def CrearUsuario(name: str, apellido: str, passw: str):
     with Session(engine) as session:

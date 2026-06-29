@@ -1,12 +1,13 @@
 from bd.database import init_db
+import logging
 from rich.console import Console
-import os
+from config import DATABASE_PATH
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 def comprobar_y_crear_bd():
-    db_path = "database.db"
-    if not os.path.exists(db_path):
+    if not DATABASE_PATH.exists():
         console.print("[yellow]La base de datos no existe. Creando base de datos...[/yellow]")
         init_db()
         console.print("[green]Base de datos creada exitosamente.[/green]")
@@ -17,7 +18,7 @@ def comprobar_conexion():
     try:
         # Intentar conectarse a la base de datos
         init_db()
-        print("Conexión a la base de datos exitosa.")
+        logger.info("Conexión a la base de datos exitosa")
         console.clear()
     except Exception as e:
-        print(f"Error al conectar a la base de datos: {e}")
+        logger.error("Error al conectar a la base de datos: %s", e)

@@ -1,4 +1,3 @@
-import os
 import logging
 from fastapi import FastAPI, Request, Depends
 from fastapi.responses import JSONResponse
@@ -6,9 +5,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from api.routers import auth, cuenta, gastos, moneda, tipos,subtipos
 from api.dependencies import validate_token
+from config import is_debug_enabled
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
-DEBUG_MODE = os.environ.get("DEBUG", "0") == "1"
+DEBUG_MODE = is_debug_enabled()
 
 if DEBUG_MODE:
     logging.basicConfig(

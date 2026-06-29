@@ -1,16 +1,18 @@
+import logging
 import questionary
 from rich.table import Table
 from bd.crud.tipo import crear_tipo_bd , get_tipos_bd
 from rich.console import Console
 import menus.path as path_interno       
 console = Console()
+logger = logging.getLogger(__name__)
 
 def formulario_agregar_categoria():
     nombre = questionary.text("Nombre de la categoría:").ask()
     descripcion = questionary.text("Descripción de la categoría (opcional):").ask()
 
     nuevo_tipo = crear_tipo_bd(nombre, descripcion)
-    print(f"Categoría creada: {nuevo_tipo.id} - {nuevo_tipo.nombre}")
+    logger.info("Categoría creada: %s - %s", nuevo_tipo.id, nuevo_tipo.nombre)
 
 def tabla_categorias(lista):
     table = Table(title="Tipos")
@@ -33,16 +35,14 @@ def vista_categorias():
             if page_num < 1:
                 raise ValueError
         except ValueError:
-            print("Por favor, ingresa un número de página válido.")
+            logger.warning("Se ingresó un número de página inválido")
             continue
 
         categorias = get_tipos_bd(page=page_num, page_size=5)
         if not categorias:
-            print("No hay más categorías para mostrar.")
+            logger.info("No hay más categorías para mostrar")
             continue
-        print("-------------------------------")
-        print(categorias)
-        print("-------------------------------")
+        logger.debug("Categorías obtenidas: %s", categorias)
         tabla_categorias(categorias)
 
         otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
@@ -74,4 +74,4 @@ def menu_categorias():
 
                 break
             case _:
-                print("Opción no válida. Inténtalo de nuevo.")
+                logger.warning("Opción no válida en menú de categorías")

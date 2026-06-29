@@ -1,3 +1,4 @@
+import logging
 import uuid
 from rich.console import Console
 import questionary
@@ -7,6 +8,7 @@ from menus.path import *
 from datetime import datetime
 from rich.table import Table
 console = Console()
+logger = logging.getLogger(__name__)
 
         
 def menu_gastos():  
@@ -34,9 +36,9 @@ def menu_gastos():
                 path_interno(False, "gastos")
                 break
             case "Configuración":
-                print("Funcionalidad de configuración (pendiente de implementar).")
+                logger.info("Funcionalidad de configuración pendiente de implementar")
             case _:
-                print("Opción no válida. Inténtalo de nuevo.")
+                logger.warning("Opción no válida en menú de gastos")
 
 
 
@@ -60,8 +62,7 @@ def agregar_gasto():
             fecha = None
         else:
             fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
-        print(fecha)
-        print("----------------------")
+        logger.debug("Fecha capturada para gasto: %s", fecha)
         try:
             monto = float(monto)
             crear_registro(monto, tipo, fecha)
@@ -76,16 +77,14 @@ def VerGastos():
             if page_num < 1:
                 raise ValueError
         except ValueError:
-            print("Por favor, ingresa un número de página válido.")
+            logger.warning("Se ingresó un número de página inválido")
             continue
 
         gastos = registros_paguinados(page=page_num, page_size=5)
         if not gastos:
-            print("No hay más categorías para mostrar.")
+            logger.info("No hay más gastos para mostrar")
             continue
-        print("-------------------------------")
-        print(gastos)
-        print("-------------------------------")
+        logger.debug("Gastos obtenidos: %s", gastos)
         tabla_gastos(gastos)
 
         otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
@@ -98,10 +97,7 @@ def tabla_gastos(lista):
     table.add_column("Fecha")
     table.add_column("Tipo")
     for item in lista:
-        print("-----------------------")
-        print(item)
-        print(item.monto)
-        print("-------------------------")
+        logger.debug("Procesando gasto id=%s monto=%s", getattr(item, "id", None), item.monto)
         table.add_row(
             item.monto,  # monto
             item.fecha.strftime("%d/%m/%Y") if item.fecha else "N/A",  # fecha
