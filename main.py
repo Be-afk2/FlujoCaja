@@ -40,11 +40,25 @@ def limpiar_procesos():
     for proceso in PROCESOS_ACTIVOS:
         if proceso.poll() is None:  # Si el proceso aún está corriendo
             try:
-                proceso.terminate()
+                if os.name == "nt":
+                    subprocess.run(
+                        ["taskkill", "/F", "/T", "/PID", str(proceso.pid)],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                else:
+                    proceso.terminate()
                 proceso.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 proceso.kill()
                 proceso.wait()
+            except Exception:
+                try:
+                    proceso.kill()
+                    proceso.wait()
+                except Exception:
+                    pass
     PROCESOS_ACTIVOS.clear()
 
 
@@ -87,13 +101,16 @@ def iniciar_api() -> Optional[subprocess.Popen]:
             env = os.environ.copy()
             env[DEBUG_ENV_VAR] = "1"
         
-        proceso = subprocess.Popen(
-            comando,
-            stdout=None if DEBUG_MODE else subprocess.PIPE,
-            stderr=None if DEBUG_MODE else subprocess.PIPE,
-            text=True,
-            env=env,
-        )
+        popen_kwargs = {
+            "stdout": None if DEBUG_MODE else subprocess.PIPE,
+            "stderr": None if DEBUG_MODE else subprocess.PIPE,
+            "text": True,
+            "env": env,
+        }
+        if os.name == "nt":
+            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+
+        proceso = subprocess.Popen(comando, **popen_kwargs)
         # Verificar que el proceso se inició correctamente
         time.sleep(API_STARTUP_DELAY_SECONDS)
         if proceso.poll() is not None:

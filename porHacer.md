@@ -65,11 +65,11 @@ Objetivo: hacer que la app arranque y persista datos de manera predecible.
   - timeout del frontend.
 - [ ] Mover `database.db` fuera del repo, idealmente a `%APPDATA%/FlujoCaja/`.
 - [ ] Asegurar que `database.db` no se versiona.
-- [ ] Separar inicializacion de tablas y carga de datos iniciales.
-- [ ] Crear seeds controlados para monedas, tipos y tipos de cuenta.
-- [ ] Preparar una estrategia simple de migraciones.
+- [x] Separar inicializacion de tablas y carga de datos iniciales.
+- [x] Crear seeds controlados para monedas, tipos y tipos de cuenta.
+- [x] Preparar una estrategia simple de migraciones.
 - [ ] Mejorar manejo de puerto ocupado al iniciar la API.
-- [ ] Ejecutar Uvicorn sin `--reload` en modo normal.
+- [x] Ejecutar Uvicorn sin `--reload` en modo normal.
 
 ---
 
