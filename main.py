@@ -29,9 +29,9 @@ def registrar_limpieza():
 
 def manejar_signal_interrupt(signum, frame):
     """Maneja Ctrl+C para limpiar procesos correctamente."""
-    console.print("\n[yellow]→ Recibido Ctrl+C, deteniendo servicios...[/yellow]")
+    console.print("\n[yellow]-> Recibido Ctrl+C, deteniendo servicios...[/yellow]")
     limpiar_procesos()
-    console.print("[green]✓ Todos los servicios han sido terminados.[/green]")
+    console.print("[green]OK - Todos los servicios han sido terminados.[/green]")
     sys.exit(0)
 
 
@@ -70,12 +70,12 @@ def iniciar_base_datos() -> bool:
         bool: True si la BD se inició correctamente, False en caso contrario.
     """
     try:
-        console.print("[cyan]→ Inicializando base de datos...[/cyan]")
+        console.print("[cyan]-> Inicializando base de datos...[/cyan]")
         comprobar_y_crear_bd()
-        console.print("[green]✓ Base de datos lista.[/green]")
+        console.print("[green]OK - Base de datos lista.[/green]")
         return True
     except Exception as e:
-        console.print(f"[red]✗ Error al inicializar la base de datos: {e}[/red]")
+        console.print(f"[red]ERROR - Error al inicializar la base de datos: {e}[/red]")
         return False
 
 
@@ -91,9 +91,9 @@ def iniciar_api() -> Optional[subprocess.Popen]:
         comando = build_api_command(sys.executable, DEBUG_MODE)
         
         if DEBUG_MODE:
-            console.print(f"[cyan]→ Iniciando API ({API_HOST}:{API_PORT}) en modo DEBUG...[/cyan]")
+            console.print(f"[cyan]-> Iniciando API ({API_HOST}:{API_PORT}) en modo DEBUG...[/cyan]")
         else:
-            console.print(f"[cyan]→ Iniciando API ({API_HOST}:{API_PORT})...[/cyan]")
+            console.print(f"[cyan]-> Iniciando API ({API_HOST}:{API_PORT})...[/cyan]")
         
         # Preparar variables de entorno
         env = None
@@ -115,13 +115,13 @@ def iniciar_api() -> Optional[subprocess.Popen]:
         time.sleep(API_STARTUP_DELAY_SECONDS)
         if proceso.poll() is not None:
             stdout, stderr = proceso.communicate()
-            console.print(f"[red]✗ Error al iniciar la API: {stderr}[/red]")
+            console.print(f"[red]ERROR - Error al iniciar la API: {stderr}[/red]")
             return None
         PROCESOS_ACTIVOS.append(proceso)
-        console.print("[green]✓ API iniciada correctamente.[/green]")
+        console.print("[green]OK - API iniciada correctamente.[/green]")
         return proceso
     except Exception as e:
-        console.print(f"[red]✗ Error al iniciar la API: {e}[/red]")
+        console.print(f"[red]ERROR - Error al iniciar la API: {e}[/red]")
         return None
 
 
@@ -133,29 +133,29 @@ def iniciar_web() -> bool:
         bool: True si se completó la ejecución, False si hubo error.
     """
     try:
-        console.print("[cyan]→ Iniciando interfaz web...[/cyan]")
+        console.print("[cyan]-> Iniciando interfaz web...[/cyan]")
         web_main()
         return True
     except KeyboardInterrupt:
-        console.print("[yellow]⚠ Aplicación detenida por el usuario.[/yellow]")
+        console.print("[yellow]! Aplicacion detenida por el usuario.[/yellow]")
         return True
     except Exception as e:
-        console.print(f"[red]✗ Error en la interfaz web: {e}[/red]")
+        console.print(f"[red]ERROR - Error en la interfaz web: {e}[/red]")
         return False
 
 
 # ==================== FUNCIONES DE MODO OPERACIONAL ====================
 def modo_solo_api() -> None:
     """Inicia solo el servidor API."""
-    console.print("[bold cyan]═══ Modo: Solo API ═══[/bold cyan]")
+    console.print("[bold cyan]--- Modo: Solo API ---[/bold cyan]")
     
     if not iniciar_base_datos():
-        console.print("[red]Fallando aplicación: No se pudo inicializar la BD.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
     
     proceso_api = iniciar_api()
     if not proceso_api:
-        console.print("[red]Fallando aplicación: No se pudo iniciar la API.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo iniciar la API.[/red]")
         sys.exit(1)
     
     try:
@@ -163,17 +163,17 @@ def modo_solo_api() -> None:
         while proceso_api.poll() is None:
             time.sleep(0.1)
     except KeyboardInterrupt:
-        console.print("[yellow]→ Deteniendo API...[/yellow]")
+        console.print("[yellow]-> Deteniendo API...[/yellow]")
         limpiar_procesos()
-        console.print("[green]✓ API terminada.[/green]")
+        console.print("[green]OK - API terminada.[/green]")
 
 
 def modo_solo_bd() -> None:
     """Inicia solo la base de datos (útil para verificar)."""
-    console.print("[bold cyan]═══ Modo: Solo Base de Datos ═══[/bold cyan]")
+    console.print("[bold cyan]--- Modo: Solo Base de Datos ---[/bold cyan]")
     
     if not iniciar_base_datos():
-        console.print("[red]Fallando aplicación: No se pudo inicializar la BD.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
     
     console.print("[green]Base de datos lista. Presione Ctrl+C para salir.[/green]")
@@ -186,24 +186,24 @@ def modo_solo_bd() -> None:
 
 def modo_solo_web() -> None:
     """Inicia solo la interfaz web."""
-    console.print("[bold cyan]═══ Modo: Solo Web ═══[/bold cyan]")
+    console.print("[bold cyan]--- Modo: Solo Web ---[/bold cyan]")
     
     if not iniciar_base_datos():
-        console.print("[red]Fallando aplicación: No se pudo inicializar la BD.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
     
     if not iniciar_web():
-        console.print("[red]Fallando aplicación: No se pudo iniciar la interfaz web.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo iniciar la interfaz web.[/red]")
         sys.exit(1)
 
 
 def modo_completo() -> None:
     """Inicia todos los servicios (API, BD y Web)."""
-    console.print("[bold cyan]═══ Modo: Aplicación Completa ═══[/bold cyan]")
+    console.print("[bold cyan]--- Modo: Aplicacion Completa ---[/bold cyan]")
     
     # 1. Inicializar Base de Datos
     if not iniciar_base_datos():
-        console.print("[red]Fallando aplicación: No se pudo inicializar la BD.[/red]")
+        console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
     
     # 2. Iniciar API
@@ -216,13 +216,13 @@ def modo_completo() -> None:
     try:
         iniciar_web()
     except KeyboardInterrupt:
-        console.print("[yellow]→ Deteniendo servicios...[/yellow]")
+        console.print("[yellow]-> Deteniendo servicios...[/yellow]")
     except Exception as e:
-        console.print(f"[red]Error en la aplicación: {e}[/red]")
+        console.print(f"[red]Error en la aplicacion: {e}[/red]")
     finally:
-        console.print("[yellow]→ Cerrando servicios...[/yellow]")
+        console.print("[yellow]-> Cerrando servicios...[/yellow]")
         limpiar_procesos()
-        console.print("[green]✓ Todos los servicios han sido terminados.[/green]")
+        console.print("[green]OK - Todos los servicios han sido terminados.[/green]")
 
 
 # ==================== FUNCIÓN PRINCIPAL ====================
@@ -268,7 +268,7 @@ Ejemplos de uso:
     DEBUG_MODE = args.debug
     
     if DEBUG_MODE:
-        console.print("[yellow]⚠ Modo DEBUG activado[/yellow]")
+        console.print("[yellow]*** Modo DEBUG activado [/yellow]")
     
     # Registrar limpieza al finalizar
     registrar_limpieza()

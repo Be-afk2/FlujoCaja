@@ -4,10 +4,12 @@ import logging
 
 from alembic import command
 from alembic.config import Config
+from rich.console import Console
 from sqlalchemy import inspect
 
 from config import DATABASE_PATH, DATABASE_URL, PROJECT_ROOT
 
+console = Console()
 logger = logging.getLogger(__name__)
 
 ALEMBIC_INI_PATH = PROJECT_ROOT / "alembic.ini"
@@ -22,7 +24,7 @@ def _build_alembic_config() -> Config:
     return config
 
 
-def _existing_tables() -> set[str]:
+def existing_tables() -> set[str]:
     if not DATABASE_PATH.exists():
         return set()
 
@@ -34,17 +36,20 @@ def _existing_tables() -> set[str]:
 def apply_database_migrations() -> None:
     """Apply Alembic migrations or stamp a legacy schema."""
     config = _build_alembic_config()
-    existing_tables = _existing_tables()
+    tablas = existing_tables()
 
-    if not existing_tables:
-        logger.info("Aplicando migraciones sobre base vacia")
+    if not tablas:
+        console.print("[cyan]  -> Aplicando migraciones sobre base vacia...[/cyan]")
         command.upgrade(config, "head")
+        console.print("[green]  -> Migraciones aplicadas.[/green]")
         return
 
-    if "alembic_version" not in existing_tables and existing_tables & APP_TABLES:
-        logger.info("Base legacy detectada; marcando baseline de Alembic")
+    if "alembic_version" not in tablas and tablas & APP_TABLES:
+        console.print("[cyan]  -> Base legacy detectada; marcando baseline de Alembic...[/cyan]")
         command.stamp(config, "head")
+        console.print("[green]  -> Baseline marcado.[/green]")
         return
 
-    logger.info("Aplicando migraciones pendientes")
+    console.print("[cyan]  -> Aplicando migraciones pendientes...[/cyan]")
     command.upgrade(config, "head")
+    console.print("[green]  -> Migraciones aplicadas.[/green]")
