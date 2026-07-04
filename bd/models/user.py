@@ -4,7 +4,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
     from bd.models.cuentas import Cuenta
-    from bd.models.registro import Registro
+    from bd.models.movimiento import Movimiento
 
 
 class User(SQLModel, table=True):
@@ -13,7 +13,7 @@ class User(SQLModel, table=True):
     apellido: str
     passw: str
 
-    registros: List["Registro"] = Relationship(back_populates="user")
+    movimientos: List["Movimiento"] = Relationship(back_populates="user")
     cuentas: List["Cuenta"] = Relationship(back_populates="user")
 
 

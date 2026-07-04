@@ -24,14 +24,14 @@ python main.py --web            # web shell only
 - **Frontend:** static HTML/JS/Tailwind via CDN in `web/`, loaded by PyQt6 WebEngine
 - **Auth:** simple SQLite token (single-session, no JWT). Bearer token via `Authorization` header. Validated against `sesion` table.
   - Unprotected routes: `/auth/*` (login, create, session check, token life)
-  - Protected routes (require `Depends(validate_token)`): `/gastos`, `/tipos`, `/subtipos`, `/cuenta`, `/moneda`
+  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuenta`, `/moneda`
 - **Session:** `obtener_sesion()` reads global single session row from DB — not user-scoped. CRUD functions call this directly (tight coupling).
 - `database.db` is gitignored; auto-created on first run.
 
 ## Notable quirks
 
 - Several routers reassign `router` twice (`router = APIRouter()` then `router = APIRouter(prefix=...)`).
-- `/gastos` router is a stub — only returns `"hola"`.
+- `/movimientos` router is a stub — only returns `"hola"`.
 - `User.id` is `uuid.UUID`; other model PKs are `int`.
 - Password hashing uses `passlib.hash.bcrypt`.
 - `Registro.es_ingreso` inferred from `monto > 0`.
@@ -41,4 +41,4 @@ python main.py --web            # web shell only
 
 ## What's missing / planned
 
-See `porHacer.md` for full roadmap. Priority items: complete gastos CRUD, connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB), move `database.db` to `%APPDATA%/FlujoCaja/`.
+See `porHacer.md` for full roadmap. Priority items: complete movimientos CRUD, connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB), move `database.db` to `%APPDATA%/FlujoCaja/`.

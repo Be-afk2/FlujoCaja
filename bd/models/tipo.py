@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship
 from typing import List, Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from bd.models.registro import Registro
+    from bd.models.movimiento import Movimiento
     from bd.models.subTipo import Subtipo
 
 
@@ -11,5 +11,5 @@ class Tipo(SQLModel, table=True):
     nombre: str
     descripcion: Optional[str] = None
 
-    registros: List["Registro"] = Relationship(back_populates="tipo")
+    movimientos: List["Movimiento"] = Relationship(back_populates="tipo")
     subtipos: List["Subtipo"] = Relationship(back_populates="tipo")

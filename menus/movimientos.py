@@ -2,7 +2,7 @@ import logging
 import uuid
 from rich.console import Console
 import questionary
-from bd.crud.registro import crear_registro, registros_paguinados
+from bd.crud.movimiento import crear_movimiento, movimientos_paginados
 from bd.crud.tipo import get_tipo_lista
 from menus.path import *
 from datetime import datetime
@@ -10,46 +10,46 @@ from rich.table import Table
 console = Console()
 logger = logging.getLogger(__name__)
 
-        
-def menu_gastos():  
-    console.clear() 
-    path_interno(True, "Gastos")
+
+def menu_movimientos():
+    console.clear()
+    path_interno(True, "Movimientos")
     print_path()
     while True:
         answer = questionary.select(
-            "¿Qué deseas hacer en Gastos?",
+            "¿Qué deseas hacer en Movimientos?",
             choices=[
-                "Agregar gasto",
-                "Ver gastos",
+                "Agregar movimiento",
+                "Ver movimientos",
                 "Volver al menú principal",
             ]
         ).ask()
         match answer:
-            case "Agregar gasto":
-                agregar_gasto()
+            case "Agregar movimiento":
+                agregar_movimiento()
                 console.clear()
-            case "Ver gastos":
-                VerGastos()
+            case "Ver movimientos":
+                ver_movimientos()
                 console.clear()
             case "Volver al menú principal":
                 console.clear()
-                path_interno(False, "gastos")
+                path_interno(False, "movimientos")
                 break
             case "Configuración":
                 logger.info("Funcionalidad de configuración pendiente de implementar")
             case _:
-                logger.warning("Opción no válida en menú de gastos")
+                logger.warning("Opción no válida en menú de movimientos")
 
 
 
-def agregar_gasto():
+def agregar_movimiento():
     while True:
-        monto = questionary.text("Ingrese el monto del gasto:").ask()
+        monto = questionary.text("Ingrese el monto del movimiento:").ask()
         if(monto is None or monto.strip() == "" or monto == "0"):
             break
 
         tipo = questionary.select(
-            "¿Qué tipo de gasto es?",
+            "¿Qué tipo de movimiento es?",
             choices=get_tipo_lista()
         ).ask()
 
@@ -62,14 +62,14 @@ def agregar_gasto():
             fecha = None
         else:
             fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
-        logger.debug("Fecha capturada para gasto: %s", fecha)
+        logger.debug("Fecha capturada para movimiento: %s", fecha)
         try:
             monto = float(monto)
-            crear_registro(monto, tipo, fecha)
+            crear_movimiento(monto, tipo, fecha)
         except ValueError:
             console.print("[red]Por favor, ingrese un número válido.[/red]")
 
-def VerGastos():
+def ver_movimientos():
     while True:
         page = questionary.text("Página (número):", default="1").ask()
         try:
@@ -80,24 +80,24 @@ def VerGastos():
             logger.warning("Se ingresó un número de página inválido")
             continue
 
-        gastos = registros_paguinados(page=page_num, page_size=5)
-        if not gastos:
-            logger.info("No hay más gastos para mostrar")
+        movimientos = movimientos_paginados(page=page_num, page_size=5)
+        if not movimientos:
+            logger.info("No hay más movimientos para mostrar")
             continue
-        logger.debug("Gastos obtenidos: %s", gastos)
-        tabla_gastos(gastos)
+        logger.debug("Movimientos obtenidos: %s", movimientos)
+        tabla_movimientos(movimientos)
 
         otra_pagina = questionary.confirm("¿Deseas ver otra página?").ask()
         if not otra_pagina:
             break
 
-def tabla_gastos(lista):
-    table = Table(title="Gastos")
+def tabla_movimientos(lista):
+    table = Table(title="Movimientos")
     table.add_column("Monto")
     table.add_column("Fecha")
     table.add_column("Tipo")
     for item in lista:
-        logger.debug("Procesando gasto id=%s monto=%s", getattr(item, "id", None), item.monto)
+        logger.debug("Procesando movimiento id=%s monto=%s", getattr(item, "id", None), item.monto)
         table.add_row(
             item.monto,  # monto
             item.fecha.strftime("%d/%m/%Y") if item.fecha else "N/A",  # fecha

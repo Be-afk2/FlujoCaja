@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 ALEMBIC_INI_PATH = PROJECT_ROOT / "alembic.ini"
 ALEMBIC_SCRIPT_LOCATION = PROJECT_ROOT / "alembic"
-APP_TABLES = {"user", "registro", "tipo", "sesion", "cuenta", "tipocuenta", "moneda", "subtipo"}
+APP_TABLES = {"user", "movimiento", "tipo", "sesion", "cuenta", "tipocuenta", "moneda", "subtipo"}
 
 
 def _build_alembic_config() -> Config:

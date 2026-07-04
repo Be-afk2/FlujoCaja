@@ -1,7 +1,7 @@
 import menus.path as path_interno
 import questionary
 from bd.crud.user import *
-from menus.gastos import menu_gastos
+from menus.movimientos import menu_movimientos
 from menus.categorias import menu_categorias
 from rich.console import Console
 from menus.system import system_menu
@@ -14,7 +14,7 @@ def menu_principal():
         answer = questionary.select(
             "¿Qué deseas hacer?",
             choices=[
-                "Gastos",
+                "Movimientos",
                 "Categorías",
                 "Salir",
                 "System"
@@ -22,8 +22,8 @@ def menu_principal():
         ).ask()
         match answer:
 
-            case "Gastos":
-                menu_gastos()
+            case "Movimientos":
+                menu_movimientos()
             case "Categorías":
                 menu_categorias()
             case "System":

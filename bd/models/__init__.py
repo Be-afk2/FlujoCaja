@@ -1,5 +1,5 @@
 from .user import User
-from .registro import Registro
+from .movimiento import Movimiento
 from .tipo import Tipo
 from .sesion import Sesion
 from .cuentas import Cuenta
@@ -8,4 +8,4 @@ from .moneda import Moneda
 from .subTipo import Subtipo
 
 
-__all__ = ["User", "Registro", "Tipo","Sesion","Cuenta","TipoCuenta","Moneda","Subtipo"]
+__all__ = ["User", "Movimiento", "Tipo","Sesion","Cuenta","TipoCuenta","Moneda","Subtipo"]

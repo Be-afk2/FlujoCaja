@@ -28,7 +28,7 @@ El proyecto ya cuenta con:
 
 Pendientes principales:
 
-- Completar el CRUD de gastos/movimientos.
+- Completar el CRUD de movimientos.
 - Conectar todas las pantallas web con datos reales.
 - Fortalecer sesiones y autenticacion.
 - Ordenar configuracion, rutas de datos y estructura de capas.
@@ -43,11 +43,11 @@ Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 
 - [x] Declarar oficialmente la arquitectura actual en la documentacion.
 - [x] Marcar `app.py`, `menus/` y `widget/` como version CLI heredada.
-- [ ] Revisar archivos con textos o caracteres de codificacion rota.
+- [x] Revisar archivos con textos o caracteres de codificacion rota.
 - [x] Eliminar imports duplicados o no usados.
 - [x] Reemplazar `print()` de depuracion por logging.
 - [ ] Separar datos de ejemplo de datos reales.
-- [ ] Revisar nombres inconsistentes: gasto, registro, movimiento.
+- [x] Revisar nombres inconsistentes: gasto, registro, movimiento.
 - [x] Definir si el termino principal sera `movimiento`.
 
 ---
@@ -89,11 +89,11 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
   - usuario propietario.
 - [ ] Completar CRUD de gastos/movimientos en backend.
 - [ ] Crear endpoints:
-  - `GET /gastos`,
-  - `POST /gastos`,
-  - `GET /gastos/{id}`,
-  - `PUT /gastos/{id}`,
-  - `DELETE /gastos/{id}`.
+  - `GET /movimientos`,
+  - `POST /movimientos`,
+  - `GET /movimientos/{id}`,
+  - `PUT /movimientos/{id}`,
+  - `DELETE /movimientos/{id}`.
 - [ ] Agregar filtros:
   - fecha desde/hasta,
   - cuenta,

@@ -118,7 +118,7 @@ Define la aplicacion FastAPI, configura CORS, maneja errores HTTP e incluye los 
 
 - Autenticacion
 - Cuentas
-- Gastos
+- Movimientos
 - Monedas
 - Tipos
 - Subtipos
@@ -138,7 +138,7 @@ Modelos importantes:
 
 - `User`: usuarios del sistema.
 - `Cuenta`: cuentas financieras del usuario.
-- `Movimiento`: ingresos o gastos registrados. El modelo actual en codigo sigue llamandose `Registro`.
+- `Movimiento`: ingresos o gastos registrados.
 - `Tipo`: categorias principales.
 - `Subtipo`: subcategorias.
 - `Moneda`: monedas disponibles.
@@ -230,7 +230,7 @@ Algunos grupos de rutas disponibles:
 
 - `/auth`
 - `/cuenta`
-- `/gastos`
+- `/movimientos`
 - `/moneda`
 - `/tipos`
 - `/subtipos`
@@ -242,13 +242,13 @@ Algunos grupos de rutas disponibles:
 - Validacion basica por token.
 - Creacion y consulta de cuentas.
 - Gestion de tipos, subtipos y monedas.
-- Registro base de movimientos financieros.
+- Movimiento: registro base de movimientos financieros.
 - Interfaz web inicial con pantallas principales.
 - Ejecucion local como aplicacion de escritorio.
 
 ## Pendiente / roadmap
 
-- Completar CRUD de gastos y movimientos.
+- Completar CRUD de movimientos.
 - Conectar todas las pantallas web con datos reales de la API.
 - Mejorar dashboard con metricas reales.
 - Agregar graficos y reportes.

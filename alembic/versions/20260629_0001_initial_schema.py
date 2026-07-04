@@ -76,7 +76,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
-        "registro",
+        "movimiento",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("monto", sa.Float(), nullable=False),
         sa.Column("es_ingreso", sa.Boolean(), nullable=False),
@@ -94,7 +94,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("registro")
+    op.drop_table("movimiento")
     op.drop_table("cuenta")
     op.drop_table("sesion")
     op.drop_table("subtipo")
