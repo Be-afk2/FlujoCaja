@@ -21,6 +21,10 @@ DEFAULT_TIPOS = [
     {"nombre": "Servicios", "descripcion": "Agua, luz, internet y telefonia"},
     {"nombre": "Salud", "descripcion": "Medicamentos y atencion medica"},
     {"nombre": "Ocio", "descripcion": "Entretenimiento y recreacion"},
+    {"nombre": "Sueldo", "descripcion": "Salario o sueldo mensual"},
+    {"nombre": "Freelance", "descripcion": "Trabajos independientes"},
+    {"nombre": "Inversiones", "descripcion": "Rendimientos de inversiones"},
+    {"nombre": "Varios", "descripcion": "Otros ingresos"},
 ]
 
 DEFAULT_TIPOS_CUENTA = [
@@ -28,6 +32,7 @@ DEFAULT_TIPOS_CUENTA = [
     {"tipo": "Caja de ahorro"},
     {"tipo": "Cuenta corriente"},
     {"tipo": "Tarjeta"},
+    {"tipo": "Cuenta Rut"},
 ]
 
 

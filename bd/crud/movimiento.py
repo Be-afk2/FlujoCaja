@@ -149,4 +149,4 @@ def movimientos_filtrados(
         total = session.exec(select(Movimiento.id).where(and_(*condiciones))).all()
         resultados = session.exec(statement).all()
 
-    return resultados, len(total)
+    return resultados, len(total)   
