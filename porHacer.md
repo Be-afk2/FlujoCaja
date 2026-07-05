@@ -63,8 +63,8 @@ Objetivo: hacer que la app arranque y persista datos de manera predecible.
   - ruta de base de datos,
   - modo debug,
   - timeout del frontend.
-- [ ] Mover `database.db` fuera del repo, idealmente a `%APPDATA%/FlujoCaja/`.
-- [ ] Asegurar que `database.db` no se versiona.
+- [x] Mover `database.db` fuera del repo, idealmente a `%APPDATA%/FlujoCaja/`.
+- [x] Asegurar que `database.db` no se versiona.
 - [x] Separar inicializacion de tablas y carga de datos iniciales.
 - [x] Crear seeds controlados para monedas, tipos y tipos de cuenta.
 - [x] Preparar una estrategia simple de migraciones.
@@ -140,7 +140,7 @@ Objetivo: ordenar contratos HTTP y respuestas.
   - `400` para validaciones,
   - `401` para sesion invalida,
   - `404` para recursos inexistentes.
-- [ ] Documentar endpoints principales con OpenAPI.
+- [ ] Documentar endpoints principales.
 - [ ] Revisar CORS y limitarlo al uso local si corresponde.
 
 ---
