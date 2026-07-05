@@ -15,7 +15,7 @@ def fecha_hoy() -> tuple[int, int, int]:
 def crear_movimiento(
     monto: float,
     tipo_id: int,
-    cuenta_id: str,
+    cuenta_id: int,
     user: User,
     subtipo_id: Optional[int] = None,
     descripcion: Optional[str] = None,
@@ -35,10 +35,11 @@ def crear_movimiento(
             fecha=fecha or date.today(),
         )
         session.add(nuevo_movimiento)
+        session.flush()
+        actualizar_saldo(cuenta_id, monto, session=session)
         session.commit()
         session.refresh(nuevo_movimiento)
 
-    actualizar_saldo(cuenta_id, monto)
     return nuevo_movimiento
 
 
@@ -56,7 +57,7 @@ def update_movimiento(
     monto: Optional[float] = None,
     tipo_id: Optional[int] = None,
     subtipo_id: Optional[int] = None,
-    cuenta_id: Optional[str] = None,
+    cuenta_id: Optional[int] = None,
     descripcion: Optional[str] = None,
     fecha: Optional[date] = None,
 ) -> Movimiento | None:
@@ -83,10 +84,11 @@ def update_movimiento(
             mov.fecha = fecha
 
         session.add(mov)
+        session.flush()
+        actualizar_saldo(cuenta_anterior, -saldo_anterior, session=session)
+        actualizar_saldo(mov.cuenta_id, mov.monto, session=session)
         session.commit()
 
-    actualizar_saldo(cuenta_anterior, -saldo_anterior)
-    actualizar_saldo(mov.cuenta_id, mov.monto)
     return mov
 
 
@@ -99,9 +101,10 @@ def delete_movimiento(movimiento_id: int, user: User) -> bool:
         monto = mov.monto
         cuenta_id = mov.cuenta_id
         session.delete(mov)
+        session.flush()
+        actualizar_saldo(cuenta_id, -monto, session=session)
         session.commit()
 
-    actualizar_saldo(cuenta_id, -monto)
     return True
 
 
@@ -111,7 +114,7 @@ def movimientos_filtrados(
     cantidad: int = 10,
     fecha_desde: Optional[date] = None,
     fecha_hasta: Optional[date] = None,
-    cuenta_id: Optional[str] = None,
+    cuenta_id: Optional[int] = None,
     tipo_id: Optional[int] = None,
     subtipo_id: Optional[int] = None,
     es_ingreso: Optional[bool] = None,

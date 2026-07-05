@@ -18,7 +18,7 @@ def _format_fecha(d: date | None) -> str | None:
 class MovimientoCreate(BaseModel):
     monto: float
     tipo_id: int
-    cuenta_id: str
+    cuenta_id: int
     subtipo_id: Optional[int] = None
     descripcion: Optional[str] = None
     fecha: Optional[str] = None
@@ -32,7 +32,7 @@ class MovimientoCreate(BaseModel):
 class MovimientoUpdate(BaseModel):
     monto: Optional[float] = None
     tipo_id: Optional[int] = None
-    cuenta_id: Optional[str] = None
+    cuenta_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     descripcion: Optional[str] = None
     fecha: Optional[str] = None
@@ -46,7 +46,7 @@ class MovimientoUpdate(BaseModel):
 class MovimientoFilter(BaseModel):
     fecha_desde: Optional[str] = None
     fecha_hasta: Optional[str] = None
-    cuenta_id: Optional[str] = None
+    cuenta_id: Optional[int] = None
     tipo_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     es_ingreso: Optional[bool] = None
@@ -65,7 +65,7 @@ class MovimientoResponse(BaseModel):
     es_ingreso: bool
     tipo_id: int
     subtipo_id: Optional[int]
-    cuenta_id: str
+    cuenta_id: int
     user_id: str
     descripcion: Optional[str]
     fecha: date

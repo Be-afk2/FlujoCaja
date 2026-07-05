@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlmodel import Session, select
 from bd.database import engine
 from bd.crud.sesion import obtener_sesion
@@ -14,17 +15,23 @@ def get_cuentas(user: User):
 
         return session.exec(statement).all()
 
-def get_cuenta(cuenta_id: str) -> Cuenta | None:
+def get_cuenta(cuenta_id: int) -> Cuenta | None:
     with Session(engine) as session:
-        return session.get(Cuenta, int(cuenta_id))
+        return session.get(Cuenta, cuenta_id)
 
-def actualizar_saldo(cuenta_id: str, delta: float) -> None:
+def _aplicar_delta(session: Session, cuenta_id: int, delta: float) -> float:
+    cuenta = session.get(Cuenta, cuenta_id)
+    if not cuenta:
+        raise ValueError(f"Cuenta {cuenta_id} no existe")
+    cuenta.saldo += delta
+    session.add(cuenta)
+    return cuenta.saldo
+
+def actualizar_saldo(cuenta_id: int, delta: float, *, session: Optional[Session] = None) -> float:
+    if session is not None:
+        return _aplicar_delta(session, cuenta_id, delta)
     with Session(engine) as session:
-        cuenta = session.get(Cuenta, int(cuenta_id))
-        if cuenta:
-            cuenta.saldo += delta
-            session.add(cuenta)
-            session.commit()
+        return _aplicar_delta(session, cuenta_id, delta)
 
 def crear_cuenta(nombre:str, descripcion:str, tipo:int, moneda_id:int, user: User) -> Cuenta:
     with Session(engine) as session:

@@ -101,9 +101,9 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
   - subtipo,
   - ingreso/gasto,
   - paginacion.
-- [ ] Actualizar saldo de cuenta al crear un movimiento.
-- [ ] Recalcular saldo al editar un movimiento.
-- [ ] Revertir saldo al eliminar un movimiento.
+- [x] Actualizar saldo de cuenta al crear un movimiento.
+- [x] Recalcular saldo al editar un movimiento.
+- [x] Revertir saldo al eliminar un movimiento.
 - [ ] Validar que cuenta, tipo y subtipo pertenezcan o sean visibles para el usuario.
 - [ ] Agregar una capa de servicios para reglas de negocio.
 
@@ -113,16 +113,16 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
 
 Objetivo: tener un modelo de sesion claro y seguro para una app local.
 
-- [ ] Verificar que las contrasenas se guarden siempre hasheadas.
-- [ ] Evitar guardar o devolver contrasenas en respuestas de API.
-- [ ] Decidir estrategia definitiva:
+- [x] Verificar que las contrasenas se guarden siempre hasheadas.
+- [x] Evitar guardar o devolver contrasenas en respuestas de API.
+- [x] Decidir estrategia definitiva:
   - token opaco guardado en SQLite,
   - o JWT local.
-- [ ] Cambiar `validate_token()` para devolver el usuario autenticado.
-- [ ] Evitar depender de una sesion global con `obtener_sesion()`.
-- [ ] Leer el usuario actual desde el token `Authorization: Bearer`.
+- [x] Cambiar `validate_token()` para devolver el usuario autenticado.
+- [x] Evitar depender de una sesion global con `obtener_sesion()`.
+- [x] Leer el usuario actual desde el token `Authorization: Bearer`.
 - [ ] Agregar expiracion o renovacion de token.
-- [ ] Agregar logout confiable.
+- [x] Agregar logout confiable.
 - [ ] Manejar `401 Unauthorized` desde el frontend redirigiendo al login.
 
 ---

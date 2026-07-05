@@ -24,7 +24,7 @@ class Movimiento(SQLModel, table=True):
     user_id: str = Field(foreign_key="user.id")
     user: Optional["User"] = Relationship(back_populates="movimientos")
 
-    cuenta_id: str = Field(foreign_key="cuenta.id")
+    cuenta_id: int = Field(foreign_key="cuenta.id")
     cuenta: Optional["Cuenta"] = Relationship(back_populates="movimientos")
 
     descripcion: Optional[str] = Field(default=None)
