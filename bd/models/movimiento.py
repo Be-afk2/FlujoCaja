@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, TYPE_CHECKING
 
@@ -27,5 +27,6 @@ class Movimiento(SQLModel, table=True):
     cuenta_id: str = Field(foreign_key="cuenta.id")
     cuenta: Optional["Cuenta"] = Relationship(back_populates="movimientos")
 
-    #fecha de solo dd/mm/aaaa
-    fecha: datetime = Field(default_factory=datetime.now)
+    descripcion: Optional[str] = Field(default=None)
+
+    fecha: date = Field(default_factory=date.today)

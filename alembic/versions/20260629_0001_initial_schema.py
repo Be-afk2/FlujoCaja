@@ -84,7 +84,7 @@ def upgrade() -> None:
         sa.Column("subtipo_id", sa.Integer(), nullable=True),
         sa.Column("user_id", sa.String(), nullable=False),
         sa.Column("cuenta_id", sa.String(), nullable=False),
-        sa.Column("fecha", sa.DateTime(), nullable=False),
+        sa.Column("fecha", sa.Date(), nullable=False),
         sa.ForeignKeyConstraint(["tipo_id"], ["tipo.id"]),
         sa.ForeignKeyConstraint(["subtipo_id"], ["subtipo.id"]),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"]),

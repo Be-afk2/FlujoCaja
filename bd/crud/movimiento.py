@@ -1,41 +1,149 @@
-from datetime import datetime
-from sqlmodel import Session, select
-from bd.crud.tipo import get_one_tipo
+from datetime import date
+from typing import Optional
+from sqlmodel import Session, select, and_
 from bd.database import engine
-from bd.models import Movimiento, Tipo
-from bd.crud.sesion import *
+from bd.models import Movimiento, User
+from bd.crud.cuenta import actualizar_saldo
 from sqlalchemy.orm import selectinload
+
+
 def fecha_hoy() -> tuple[int, int, int]:
-    hoy = datetime.now()
+    hoy = date.today()
     return hoy.day, hoy.month, hoy.year
 
 
-def crear_movimiento(monto:float,tipo:str, fecha:datetime=None) -> Movimiento:
-    ingreso = True if monto > 0 else False
-    
+def crear_movimiento(
+    monto: float,
+    tipo_id: int,
+    cuenta_id: str,
+    user: User,
+    subtipo_id: Optional[int] = None,
+    descripcion: Optional[str] = None,
+    fecha: Optional[date] = None,
+) -> Movimiento:
+    ingreso = monto > 0
+
     with Session(engine) as session:
         nuevo_movimiento = Movimiento(
             monto=monto,
             es_ingreso=ingreso,
-            tipo_id=get_one_tipo(tipo).id,
-            user_id=str(obtener_sesion().id),
-            fecha=fecha
+            tipo_id=tipo_id,
+            subtipo_id=subtipo_id,
+            cuenta_id=cuenta_id,
+            user_id=str(user.id),
+            descripcion=descripcion,
+            fecha=fecha or date.today(),
         )
         session.add(nuevo_movimiento)
         session.commit()
+        session.refresh(nuevo_movimiento)
 
+    actualizar_saldo(cuenta_id, monto)
     return nuevo_movimiento
-def movimientos_paginados(page: int = 1, page_size: int = 10):
-    offset = (page - 1) * page_size
+
+
+def get_movimiento(movimiento_id: int, user: User) -> Movimiento | None:
+    with Session(engine) as session:
+        mov = session.get(Movimiento, movimiento_id)
+        if mov and mov.user_id != str(user.id):
+            return None
+        return mov
+
+
+def update_movimiento(
+    movimiento_id: int,
+    user: User,
+    monto: Optional[float] = None,
+    tipo_id: Optional[int] = None,
+    subtipo_id: Optional[int] = None,
+    cuenta_id: Optional[str] = None,
+    descripcion: Optional[str] = None,
+    fecha: Optional[date] = None,
+) -> Movimiento | None:
+    with Session(engine) as session:
+        mov = session.get(Movimiento, movimiento_id)
+        if not mov or mov.user_id != str(user.id):
+            return None
+
+        saldo_anterior = mov.monto
+        cuenta_anterior = mov.cuenta_id
+
+        if monto is not None:
+            mov.monto = monto
+            mov.es_ingreso = monto > 0
+        if tipo_id is not None:
+            mov.tipo_id = tipo_id
+        if subtipo_id is not None:
+            mov.subtipo_id = subtipo_id
+        if cuenta_id is not None:
+            mov.cuenta_id = cuenta_id
+        if descripcion is not None:
+            mov.descripcion = descripcion
+        if fecha is not None:
+            mov.fecha = fecha
+
+        session.add(mov)
+        session.commit()
+
+    actualizar_saldo(cuenta_anterior, -saldo_anterior)
+    actualizar_saldo(mov.cuenta_id, mov.monto)
+    return mov
+
+
+def delete_movimiento(movimiento_id: int, user: User) -> bool:
+    with Session(engine) as session:
+        mov = session.get(Movimiento, movimiento_id)
+        if not mov or mov.user_id != str(user.id):
+            return False
+
+        monto = mov.monto
+        cuenta_id = mov.cuenta_id
+        session.delete(mov)
+        session.commit()
+
+    actualizar_saldo(cuenta_id, -monto)
+    return True
+
+
+def movimientos_filtrados(
+    user: User,
+    pagina: int = 1,
+    cantidad: int = 10,
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    cuenta_id: Optional[str] = None,
+    tipo_id: Optional[int] = None,
+    subtipo_id: Optional[int] = None,
+    es_ingreso: Optional[bool] = None,
+):
+    offset = (pagina - 1) * cantidad
 
     with Session(engine) as session:
+        condiciones = [Movimiento.user_id == str(user.id)]
+
+        if fecha_desde:
+            condiciones.append(Movimiento.fecha >= fecha_desde)
+        if fecha_hasta:
+            condiciones.append(Movimiento.fecha <= fecha_hasta)
+        if cuenta_id is not None:
+            condiciones.append(Movimiento.cuenta_id == cuenta_id)
+        if tipo_id is not None:
+            condiciones.append(Movimiento.tipo_id == tipo_id)
+        if subtipo_id is not None:
+            condiciones.append(Movimiento.subtipo_id == subtipo_id)
+        if es_ingreso is not None:
+            condiciones.append(Movimiento.es_ingreso == es_ingreso)
+
         statement = (
             select(Movimiento)
             .options(selectinload(Movimiento.tipo))
-            .where(Movimiento.user_id == str(obtener_sesion().id))
+            .where(and_(*condiciones))
             .offset(offset)
-            .limit(page_size)
+            .limit(cantidad)
             .order_by(Movimiento.fecha.desc())
         )
 
-        return session.exec(statement).all()
+        total = session.exec(select(Movimiento.id).where(and_(*condiciones))).all()
+        resultados = session.exec(statement).all()
+
+    return resultados, len(total)

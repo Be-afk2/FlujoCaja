@@ -77,8 +77,8 @@ Objetivo: hacer que la app arranque y persista datos de manera predecible.
 
 Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
 
-- [ ] Definir modelo final para movimientos financieros.
-- [ ] Completar campos del movimiento:
+- [x] Definir modelo final para movimientos financieros.
+- [x] Completar campos del movimiento:
   - monto,
   - fecha,
   - ingreso o gasto,
@@ -87,14 +87,14 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
   - subtipo opcional,
   - descripcion opcional,
   - usuario propietario.
-- [ ] Completar CRUD de gastos/movimientos en backend.
-- [ ] Crear endpoints:
+- [x] Completar CRUD de gastos/movimientos en backend.
+- [x] Crear endpoints:
   - `GET /movimientos`,
   - `POST /movimientos`,
   - `GET /movimientos/{id}`,
   - `PUT /movimientos/{id}`,
   - `DELETE /movimientos/{id}`.
-- [ ] Agregar filtros:
+- [x] Agregar filtros:
   - fecha desde/hasta,
   - cuenta,
   - tipo,
