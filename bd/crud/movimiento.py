@@ -4,6 +4,7 @@ from sqlmodel import Session, select, and_
 from bd.database import engine
 from bd.models import Movimiento, User
 from bd.crud.cuenta import actualizar_saldo
+from bd.crud.resumen import actualizar_por_movimiento
 from sqlalchemy.orm import selectinload
 
 
@@ -37,6 +38,7 @@ def crear_movimiento(
         session.add(nuevo_movimiento)
         session.flush()
         actualizar_saldo(cuenta_id, monto, session=session)
+        actualizar_por_movimiento(session, str(user.id), cuenta_id, monto, nuevo_movimiento.fecha)
         session.commit()
         session.refresh(nuevo_movimiento)
 
@@ -68,6 +70,7 @@ def update_movimiento(
 
         saldo_anterior = mov.monto
         cuenta_anterior = mov.cuenta_id
+        fecha_anterior = mov.fecha
 
         if monto is not None:
             mov.monto = monto
@@ -87,6 +90,16 @@ def update_movimiento(
         session.flush()
         actualizar_saldo(cuenta_anterior, -saldo_anterior, session=session)
         actualizar_saldo(mov.cuenta_id, mov.monto, session=session)
+        actualizar_por_movimiento(
+            session,
+            str(user.id),
+            mov.cuenta_id,
+            mov.monto,
+            mov.fecha,
+            old_monto=saldo_anterior,
+            old_cuenta_id=cuenta_anterior,
+            old_fecha=fecha_anterior,
+        )
         session.commit()
 
     return mov
@@ -100,9 +113,19 @@ def delete_movimiento(movimiento_id: int, user: User) -> bool:
 
         monto = mov.monto
         cuenta_id = mov.cuenta_id
+        user_id = mov.user_id
+        fecha = mov.fecha
         session.delete(mov)
         session.flush()
         actualizar_saldo(cuenta_id, -monto, session=session)
+        actualizar_por_movimiento(
+            session,
+            user_id,
+            cuenta_id,
+            0.0,
+            fecha,
+            old_monto=monto,
+        )
         session.commit()
 
     return True
@@ -136,7 +159,6 @@ def movimientos_filtrados(
             condiciones.append(Movimiento.subtipo_id == subtipo_id)
         if es_ingreso is not None:
             condiciones.append(Movimiento.es_ingreso == es_ingreso)
-
         statement = (
             select(Movimiento)
             .options(selectinload(Movimiento.tipo))

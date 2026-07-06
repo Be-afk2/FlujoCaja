@@ -1,18 +1,15 @@
 from datetime import date, datetime
-from typing import Optional
-from pydantic import BaseModel, field_validator
+from typing import Annotated, Optional
+from pydantic import BaseModel, BeforeValidator
 
 
-def _parse_fecha(v: str | None) -> date | None:
-    if v is None:
-        return None
+def _parse_fecha(v: str | date | None) -> date | None:
+    if v is None or isinstance(v, date):
+        return v
     return datetime.strptime(v, "%d-%m-%Y").date()
 
 
-def _format_fecha(d: date | None) -> str | None:
-    if d is None:
-        return None
-    return d.strftime("%d-%m-%Y")
+DateFromString = Annotated[date, BeforeValidator(_parse_fecha)]
 
 
 class MovimientoCreate(BaseModel):
@@ -21,12 +18,7 @@ class MovimientoCreate(BaseModel):
     cuenta_id: int
     subtipo_id: Optional[int] = None
     descripcion: Optional[str] = None
-    fecha: Optional[str] = None
-
-    @field_validator("fecha", mode="before")
-    @classmethod
-    def parse_fecha(cls, v):
-        return _parse_fecha(v)
+    fecha: Optional[DateFromString] = None
 
 
 class MovimientoUpdate(BaseModel):
@@ -35,28 +27,18 @@ class MovimientoUpdate(BaseModel):
     cuenta_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     descripcion: Optional[str] = None
-    fecha: Optional[str] = None
-
-    @field_validator("fecha", mode="before")
-    @classmethod
-    def parse_fecha(cls, v):
-        return _parse_fecha(v)
+    fecha: Optional[DateFromString] = None
 
 
 class MovimientoFilter(BaseModel):
-    fecha_desde: Optional[str] = None
-    fecha_hasta: Optional[str] = None
+    fecha_desde: Optional[DateFromString] = None
+    fecha_hasta: Optional[DateFromString] = None
     cuenta_id: Optional[int] = None
     tipo_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     es_ingreso: Optional[bool] = None
     pagina: int = 1
     cantidad: int = 10
-
-    @field_validator("fecha_desde", "fecha_hasta", mode="before")
-    @classmethod
-    def parse_fecha_filtro(cls, v):
-        return _parse_fecha(v)
 
 
 class MovimientoResponse(BaseModel):

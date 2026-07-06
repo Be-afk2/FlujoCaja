@@ -91,9 +91,25 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["cuenta_id"], ["cuenta.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
+    op.create_table(
+        "resumenmensual",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("user_id", sa.String(), nullable=False),
+        sa.Column("cuenta_id", sa.Integer(), nullable=False),
+        sa.Column("anio", sa.Integer(), nullable=False),
+        sa.Column("mes", sa.Integer(), nullable=False),
+        sa.Column("total_ingresos", sa.Float(), nullable=False),
+        sa.Column("total_gastos", sa.Float(), nullable=False),
+        sa.Column("neto", sa.Float(), nullable=False),
+        sa.ForeignKeyConstraint(["user_id"], ["user.id"]),
+        sa.ForeignKeyConstraint(["cuenta_id"], ["cuenta.id"]),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint("user_id", "cuenta_id", "anio", "mes", name="uq_resumen_mensual"),
+    )
 
 
 def downgrade() -> None:
+    op.drop_table("resumenmensual")
     op.drop_table("movimiento")
     op.drop_table("cuenta")
     op.drop_table("sesion")
