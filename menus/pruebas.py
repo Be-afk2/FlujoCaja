@@ -19,9 +19,9 @@ def pruebas():
     ).ask()
     match  answer:
         case "Prueba 1":
-            print("Prueba 1 ejecutada.")
+            console.print("Prueba 1 ejecutada.")
         case "Prueba 2":
-            print("Prueba 2 ejecutada.")
+            console.print("Prueba 2 ejecutada.")
         case "Volver al menú principal":
             console.clear()
             path_interno.path_interno(False, "Pruebas")

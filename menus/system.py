@@ -27,8 +27,8 @@ def system_menu():
             case "Cerrar sesión":
                 eliminar_sesion_bd()
                 console.clear()
-                print("Sesión cerrada.")
-                print("No Volvera a iniciar sesión automaticamente")
+                console.print("Sesión cerrada.")
+                console.print("No volverá a iniciar sesión automáticamente")
             case "Pruebas":
                 pruebas()
             case "Crear usuario":
@@ -45,6 +45,6 @@ def system_menu():
                 path_interno.path_interno(False, "System")
                 break
             case _:
-                print("Opción no válida. Inténtalo de nuevo.")
+                console.print("Opción no válida. Inténtalo de nuevo.")
 
 

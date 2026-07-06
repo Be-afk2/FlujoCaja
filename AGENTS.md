@@ -25,7 +25,7 @@ python main.py --web            # web shell only
 - **Auth:** simple SQLite token (single-session, no JWT). Bearer token via `Authorization` header. Validated against `sesion` table.
   - Unprotected routes: `/auth/*` (login, create, session check, token life)
   - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuenta`, `/moneda`
-- **Session:** `obtener_sesion()` reads global single session row from DB — not user-scoped. CRUD functions call this directly (tight coupling).
+- **Session:** Single session row in DB. Auth via `Authorization: Bearer <token>`, validated by `validate_token()` in `api/dependencies.py` which resolves the `User`. Legacy `obtener_sesion()` still present but deprecated.
 - `database.db` is gitignored; auto-created on first run.
 
 ## Recent renames (Fase 0)
@@ -39,8 +39,6 @@ python main.py --web            # web shell only
 
 ## Notable quirks
 
-- Several routers reassign `router` twice (`router = APIRouter()` then `router = APIRouter(prefix=...)`).
-- `/movimientos` router is a stub — only returns `"hola"`.
 - `User.id` is `uuid.UUID`; other model PKs are `int`.
 - Password hashing uses `passlib.hash.bcrypt`.
 - `Movimiento.es_ingreso` inferred from `monto > 0`.
@@ -48,6 +46,38 @@ python main.py --web            # web shell only
 - Frontend uses `localStorage` for `remember_session` flag and `sessionStorage` for token.
 - No tests, no lint/format/typecheck config, no CI.
 
+## MCP Knowledge Graph (codebase-memory-mcp)
+
+El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp` v0.8.1) para responder consultas estructurales sin leer archivos uno por uno.
+
+**Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP.
+
+### Helper
+
+```powershell
+python tools/mcp.py search <pattern>    # buscar nodos por nombre
+python tools/mcp.py query "<cypher>"    # consulta Cypher
+python tools/mcp.py trace <func>        # trazado de llamadas
+python tools/mcp.py arch                # arquitectura general
+python tools/mcp.py code <pattern>      # búsqueda textual
+python tools/mcp.py schema              # esquema del grafo
+```
+
+### Consultas Cypher útiles
+
+```cypher
+MATCH (f:Function) RETURN f.name, f.file_path, f.signature LIMIT 20
+MATCH (c:Class) RETURN c.name, c.file_path
+MATCH ()-[r:CALLS]->() RETURN r.callee, count(*) as calls ORDER BY calls DESC
+MATCH (f:Function {is_entry_point: true}) RETURN f.name, f.file_path
+```
+
+### Info de contacto
+
+- El MCP server usa SQLite en `~/.cache/codebase-memory-mcp/`
+- Indexado por última vez: `2026-07-06T20:17:22Z` — 536 nodos, 1405 aristas
+- Auto-sync: el watcher detecta cambios automáticamente
+
 ## What's missing / planned
 
-See `porHacer.md` for full roadmap. Priority items: complete movimientos CRUD, connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB), move `database.db` to `%APPDATA%/FlujoCaja/`.
+See `porHacer.md` for full roadmap. Priority items: connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB).

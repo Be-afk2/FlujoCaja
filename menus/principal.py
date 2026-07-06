@@ -29,8 +29,8 @@ def menu_principal():
             case "System":
                 system_menu()
             case "Salir":
-                print("Saliendo...")
+                console.print("Saliendo...")
                 break
             case _:
-                print("Opción no válida. Inténtalo de nuevo.")
+                console.print("Opción no válida. Inténtalo de nuevo.")
 

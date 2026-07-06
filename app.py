@@ -13,12 +13,12 @@ def comprobar_conexion():
     try:
         # Intentar conectarse a la base de datos
         init_db()
-        print("Conexión a la base de datos exitosa.")
+        console.print("Conexión a la base de datos exitosa.")
         console.clear()
     except Exception as e:
-        print(f"Error al conectar a la base de datos: {e}")
+        console.print(f"Error al conectar a la base de datos: {e}")
 comprobar_conexion()
-print("----------------------------------------")
+console.print("----------------------------------------")
 
 userId = None
 userConnect = get_sesion()
@@ -33,16 +33,16 @@ def Login():
         name = questionary.text("Nombre:").ask()
         if(name == "exit"):
             console.clear()
-            print("Saliendo del programa...")
+            console.print("Saliendo del programa...")
             exit()
         passw = questionary.password("Contraseña:").ask()
-        recoradar =questionary.confirm("Recordar Sesion?").ask()
+        recoradar = questionary.confirm("Recordar Sesion?").ask()
 
-        print(recoradar)
-        estado , user = login_user(name, passw)
+        console.print(recoradar)
+        estado, user = login_user(name, passw)
         if estado:
             console.clear()
-            print(f"Bienvenido {user.name} {user.apellido}")
+            console.print(f"Bienvenido {user.name} {user.apellido}")
             if recoradar:
                 guardarsesion(user.id)
             userId = user.id
@@ -50,7 +50,7 @@ def Login():
             break
         else:
             console.clear()
-            print("Nombre o contraseña incorrecta. Inténtalo de nuevo.")
+            console.print("Nombre o contraseña incorrecta. Inténtalo de nuevo.")
 
 
 
