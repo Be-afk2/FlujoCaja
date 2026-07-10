@@ -1,262 +1,113 @@
 # FlujoCaja
 
-## Descripcion general
-
-**FlujoCaja** es una aplicacion personal para el control de flujo de caja y finanzas personales. Su objetivo es registrar ingresos y gastos, asociarlos a cuentas, clasificarlos por tipos y subtipos, y entregar una base para analizar como se mueve el dinero en el tiempo.
-
-El proyecto nacio como una alternativa a registros en Excel o papel, y actualmente se encuentra en etapa de **prototipo en desarrollo**. La version actual combina una API local, una base de datos SQLite y una interfaz web ejecutada dentro de una ventana de escritorio.
-
-## Idea principal
-
-La idea central es construir una herramienta local para:
-
-- Registrar movimientos de dinero.
-- Distinguir ingresos y gastos.
-- Clasificar movimientos por categorias personalizadas.
-- Administrar cuentas del usuario, como efectivo, ahorro u otras.
-- Mantener usuarios y sesiones.
-- Preparar el sistema para futuras vistas de analisis, graficos y reportes.
+Aplicación local para control de flujo de caja y finanzas personales. Permite registrar ingresos y gastos, asociarlos a cuentas, clasificarlos por tipos y subtipos, y analizar la evolución del dinero en el tiempo.
 
 ## Estado actual
 
-El proyecto ha evolucionado desde una aplicacion por consola hacia una arquitectura con API e interfaz grafica.
+El proyecto pasó de un prototipo CLI a una arquitectura con API REST, interfaz web y ventana de escritorio.
 
 Actualmente incluye:
 
-- Una **API REST local** construida con FastAPI.
-- Una **base de datos SQLite** administrada con SQLModel.
-- Una **interfaz web** en HTML, JavaScript y Tailwind CSS.
-- Una **ventana de escritorio** con PyQt6 WebEngine que carga la interfaz web local.
-- Una version previa por **consola/CLI**, que aun existe en el proyecto.
+- **API REST local** con FastAPI
+- **Base de datos SQLite** administrada con SQLModel
+- **Interfaz web** en HTML, JavaScript y Tailwind CSS (CDN)
+- **Ventana de escritorio** con PyQt6 WebEngine
+- **Versión CLI heredada** (`app.py`, `menus/`, `widget/`) conservada pero no activa por defecto
 
-Algunas pantallas web todavia contienen datos de ejemplo o se encuentran en desarrollo.
+## Arquitectura
 
-## Arquitectura actual
-
-La aplicacion funciona hoy con esta estructura real:
-
-- `main.py` como punto de entrada principal.
-- `bd/` como capa de persistencia con SQLite y SQLModel.
-- `api/` como API local FastAPI.
-- `web/` como frontend estatico consumido con `fetch`.
-- `app.py`, `menus/` y `widget/` como version CLI heredada.
-- `database.db` como archivo SQLite local en la raiz del proyecto.
-
-Esta es la arquitectura vigente del prototipo, aunque algunas partes siguen en proceso de limpieza y consolidacion.
-
-## Tecnologias utilizadas
-
-### Backend
-
-- Python
-- FastAPI
-- Uvicorn
-- SQLModel
-- SQLAlchemy
-- Pydantic
-- Passlib / bcrypt
-
-### Base de datos
-
-- SQLite
-
-### Interfaz
-
-- HTML
-- JavaScript
-- Tailwind CSS mediante CDN
-- PyQt6
-- PyQt6 WebEngine
-
-### Consola
-
-- Rich
-- Questionary
-
-## Estructura del proyecto
-
-```text
+```
 FlujoCaja/
-|-- api/                  # API FastAPI y routers
-|   |-- mainApi.py
-|   |-- dependencies.py
-|   `-- routers/
-|-- bd/                   # Base de datos, modelos y CRUD
-|   |-- database.py
-|   |-- bd.py
-|   |-- models/
-|   `-- crud/
-|-- web/                  # Interfaz web local
-|   |-- index.html
-|   |-- pages/
-|   |-- components/
-|   `-- js/
-|-- menus/                # Menus de la version CLI heredada
-|-- widget/               # Utilidades visuales de la version CLI heredada
-|-- app.py                # Entrada de la version CLI heredada
-|-- main.py               # Entrada principal actual
-|-- database.db           # Base de datos SQLite local
-`-- requirements.txt      # Dependencias Python
+├── api/                    # API FastAPI
+│   ├── mainApi.py          # App FastAPI, CORS, error handlers, routers
+│   ├── dependencies.py     # validate_token (Bearer → User)
+│   └── routers/            # auth, cuentas, monedas, movimientos, tipos, subtipos, resumen
+│       └── dtos/           # Pydantic DTOs de entrada/salida
+├── bd/                     # Capa de persistencia
+│   ├── database.py         # engine, init_db
+│   ├── bd.py               # bootstrap, migración legacy
+│   ├── bootstrap.py        # Semillas iniciales (monedas, tipos, etc.)
+│   ├── migrations.py       # Detección de tablas existentes
+│   ├── models/             # SQLModel: User, Cuenta, Movimiento, Tipo, Subtipo, Moneda, Sesion
+│   └── crud/               # Funciones CRUD por entidad
+├── web/                    # Frontend estático
+│   ├── index.html
+│   ├── pages/              # login, CrearCuenta, panelControl, cuentas, movimientos
+│   ├── components/         # Componentes HTML reutilizables
+│   └── js/                 # funciones.js, validacion.js, login.js, CrearCuenta.js, index.js
+├── menus/                  # CLI heredada
+├── widget/                 # Utilidades visuales CLI heredadas
+├── planes/                 # Planes de refactor (fase4-api-mantenible.md)
+├── tools/                  # Utilidades (mcp.py — helper para grafo MCP)
+├── main.py                 # Entrypoint principal
+├── app.py                  # Entrypoint CLI heredado
+├── config.py               # Configuración centralizada (rutas, puerto, debug)
+└── requirements.txt
 ```
 
-La version CLI heredada queda conservada en `app.py`, `menus/` y `widget/`.
+## Rutas de la API
 
-## Componentes principales
+| Prefijo | Autenticación | Recursos |
+|---------|---------------|----------|
+| `/auth` | Libre | `POST /register`, `POST /login`, `GET /`, `DELETE /` |
+| `/health` | Libre | `GET /`, `GET /token?token=...` |
+| `/movimientos` | Bearer token | CRUD completo con filtros y paginación |
+| `/cuentas` | Bearer token | CRUD de cuentas + tipos de cuenta |
+| `/monedas` | Bearer token | CRUD de monedas |
+| `/tipos` | Bearer token | CRUD de tipos |
+| `/subtipos` | Bearer token | CRUD de subtipos + filtro por tipo |
+| `/resumen` | Bearer token | Resúmenes anual, mensual, por rango |
 
-### `main.py`
+Todas las respuestas de error siguen el formato `{"error", "status", "path"}`.
 
-Es el punto de entrada principal de la aplicacion actual. Se encarga de:
-
-- Verificar o crear la base de datos.
-- Iniciar la API local en `http://127.0.0.1:8000`.
-- Abrir la interfaz web en una ventana de escritorio con PyQt6.
-- Permitir modos de ejecucion separados para API, base de datos o web.
-
-### `api/mainApi.py`
-
-Define la aplicacion FastAPI, configura CORS, maneja errores HTTP e incluye los routers principales:
-
-- Autenticacion
-- Cuentas
-- Movimientos
-- Monedas
-- Tipos
-- Subtipos
-
-Varias rutas usan validacion de token mediante dependencias.
-
-### `bd/`
-
-Contiene la capa de datos:
-
-- Conexion SQLite.
-- Inicializacion de tablas.
-- Modelos SQLModel.
-- Funciones CRUD.
-
-Modelos importantes:
-
-- `User`: usuarios del sistema.
-- `Cuenta`: cuentas financieras del usuario.
-- `Movimiento`: ingresos o gastos registrados.
-- `Tipo`: categorias principales.
-- `Subtipo`: subcategorias.
-- `Moneda`: monedas disponibles.
-- `Sesion`: datos de sesion.
-
-### `web/`
-
-Contiene la interfaz visual. Incluye pantallas para:
-
-- Carga inicial.
-- Login.
-- Panel de control.
-- Cuentas.
-- Creacion de cuentas.
-- Movimientos.
-
-La interfaz consume la API local usando `fetch` desde los archivos JavaScript.
-
-### `app.py`  (legacy CLI)
-
-Corresponde a la version por consola. Permite iniciar sesion, recordar usuario y entrar a menus internos usando `questionary` y `rich`.
-
-## Instalacion
-
-### Requisitos
-
-- Python 3
-- Entorno virtual recomendado
-
-### Instalar dependencias
+## Instalación
 
 ```bash
+python -m venv venv
+venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 ```
 
-## Ejecucion
-
-### Aplicacion completa
+## Ejecución
 
 ```bash
-python main.py
+python main.py              # App completa (BD + API + ventana)
+python main.py --api        # Solo API
+python main.py --api --debug # API con logging detallado
+python main.py --bd         # Solo inicializar BD
+python main.py --web        # Solo interfaz web
+python app.py               # CLI heredada
 ```
 
-Este comando inicia:
+## Funcionalidades implementadas
 
-- Base de datos
-- API local
-- Interfaz web en ventana de escritorio
+- Creación e inicio de sesión de usuarios (contraseñas hasheadas con bcrypt)
+- Persistencia de sesión con token opaco en SQLite
+- Validación de token en rutas protegidas via `Authorization: Bearer`
+- CRUD completo de movimientos (crear, leer, actualizar, eliminar)
+- Filtros por fecha, cuenta, tipo, subtipo, ingreso/gasto y paginación
+- Validación de pertenencia: cuenta debe ser del usuario autenticado
+- Subtipo validado contra el tipo al que pertenece
+- Actualización y reversión de saldos al crear/editar/eliminar movimientos
+- Resumen mensual/anual por rango de fechas
+- Dashboard web con métricas básicas
+- Base de datos migrada automáticamente a `%APPDATA%/FlujoCaja/`
 
-### Solo API
+## Tecnologías
 
-```bash
-python main.py --api
-```
+- Python / FastAPI / Uvicorn
+- SQLModel / SQLAlchemy / Pydantic
+- Passlib (bcrypt)
+- HTML / JavaScript / Tailwind CSS (CDN)
+- PyQt6 / PyQt6-WebEngine
+- Rich / Questionary (CLI heredada)
 
-### API en modo debug
+## Roadmap
 
-```bash
-python main.py --api --debug
-```
+Ver `porHacer.md` para el detalle completo. Prioridades actuales:
 
-### Solo base de datos
-
-```bash
-python main.py --bd
-```
-
-### Solo interfaz web
-
-```bash
-python main.py --web
-```
-
-### Version por consola (obsoleto)
-
-```bash
-python app.py
-```
-
-## API local
-
-Por defecto, la API se ejecuta en:
-
-```text
-http://127.0.0.1:8000
-```
-
-Algunos grupos de rutas disponibles:
-
-- `/auth`
-- `/cuenta`
-- `/movimientos`
-- `/moneda`
-- `/tipos`
-- `/subtipos`
-
-## Funcionalidades actuales
-
-- Creacion e inicio de sesion de usuarios.
-- Persistencia de sesion.
-- Validacion basica por token.
-- Creacion y consulta de cuentas.
-- Gestion de tipos, subtipos y monedas.
-- Movimiento: registro base de movimientos financieros.
-- Interfaz web inicial con pantallas principales.
-- Ejecucion local como aplicacion de escritorio.
-
-## Pendiente / roadmap
-
-- Completar CRUD de movimientos.
-- Conectar todas las pantallas web con datos reales de la API.
-- Mejorar dashboard con metricas reales.
-- Agregar graficos y reportes.
-- Fortalecer autenticacion y manejo de sesiones.
-- Mejorar validaciones y manejo de errores.
-- Preparar empaquetado como ejecutable.
-- Revisar arquitectura para separar mejor API, datos e interfaz.
-
-## Nota
-
-Este es un proyecto personal en desarrollo. La arquitectura actual esta pensada para crecer progresivamente: primero consolidando una base local funcional y luego agregando mejores vistas, analisis financiero y una experiencia de uso mas completa.
+1. Conectar todas las pantallas web con datos reales
+2. Agregar tests (pytest con BD temporal)
+3. Dashboard con gráficos y reportes
+4. Exportación/importación CSV
+5. Empaquetado como ejecutable (PyInstaller)
