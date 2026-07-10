@@ -46,7 +46,7 @@ async function crearCuenta() {
     
     try {
         console.log('📤 Enviando solicitud de registro...');
-        const response = await post('auth/create', {
+        const response = await post('auth/register', {
             name: valores.nombre,
             apellido: valores.apellido,
             passw: valores.password

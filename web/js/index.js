@@ -12,7 +12,7 @@ const ROUTES = {
 
 const API_ENDPOINTS = {
     AUTH_CHECK: "auth/",
-    TOKEN_LIFE: "auth/life/token",
+    TOKEN_LIFE: "health/token",
 };
 
 

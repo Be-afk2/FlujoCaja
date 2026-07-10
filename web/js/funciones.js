@@ -120,7 +120,7 @@ function initEventListeners() {
  */
 async function handleGetButtonClick() {
     try {
-        const response = await get('auth/life');
+        const response = await get('health');
         console.log('✓ Respuesta GET:', response);
     } catch (error) {
         console.error('✗ Error en GET:', error.message);
