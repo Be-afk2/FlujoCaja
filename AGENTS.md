@@ -52,15 +52,25 @@ El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp` v0.8.1) para
 
 **Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP.
 
-### Helper
+### Helper (portable)
+
+El script `tools/mcp.py` es portable: se para en el directorio raíz de cualquier proyecto
+indexado y funciona automáticamente. También puedes copiarlo a `%USERPROFILE%\.local\bin\mcp.py`
+para usarlo globalmente.
 
 ```powershell
-python tools/mcp.py search <pattern>    # buscar nodos por nombre
-python tools/mcp.py query "<cypher>"    # consulta Cypher
-python tools/mcp.py trace <func>        # trazado de llamadas
-python tools/mcp.py arch                # arquitectura general
-python tools/mcp.py code <pattern>      # búsqueda textual
-python tools/mcp.py schema              # esquema del grafo
+# Desde el directorio del proyecto (auto-detecta)
+python ruta/a/tools/mcp.py search <patron>
+python ruta/a/tools/mcp.py query "<cypher>"
+python ruta/a/tools/mcp.py trace <funcion>
+python ruta/a/tools/mcp.py arch
+python ruta/a/tools/mcp.py code <patron>
+python ruta/a/tools/mcp.py schema
+python ruta/a/tools/mcp.py projects
+python ruta/a/tools/mcp.py index   # re-indexar
+
+# Para otro proyecto (por nombre)
+python ruta/a/tools/mcp.py -p Otro-Proyecto search "class .*"
 ```
 
 ### Consultas Cypher útiles
@@ -77,6 +87,7 @@ MATCH (f:Function {is_entry_point: true}) RETURN f.name, f.file_path
 - El MCP server usa SQLite en `~/.cache/codebase-memory-mcp/`
 - Indexado por última vez: `2026-07-06T20:17:22Z` — 536 nodos, 1405 aristas
 - Auto-sync: el watcher detecta cambios automáticamente
+- `-p <project>` sobreescribe el proyecto autodetectado
 
 ## What's missing / planned
 

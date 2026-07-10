@@ -13,7 +13,7 @@ DATA_DIR = Path(os.environ.get("APPDATA", PROJECT_ROOT / "data")) / APP_NAME
 # Ruta completa al archivo de base de datos
 DATABASE_PATH = DATA_DIR / DATABASE_FILENAME
 # URL de conexión SQLAlchemy/SQLModel — usado en bd/database.py (crear engine),
-# bd/migrations.py (Alembic), bd/main.py (sketch legacy), alembic/env.py
+# bd/migrations.py (Alembic), alembic/env.py
 DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
 # Host donde escucha FastAPI — usado en main.py y build_api_command()

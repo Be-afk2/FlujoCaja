@@ -52,6 +52,34 @@ Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 
 ---
 
+## Fase 0.5 — Eliminar codigo duplicado / refactorizar funciones redundantes
+
+Objetivo: reducir mantenimiento eliminando funciones que hacen lo mismo en distintos lugares.
+
+### Funciones identicas o casi identicas (unificar)
+
+- [x] `comprobar_conexion` duplicada en `bd/bd.py` y `app.py` — eliminada de `bd/bd.py` (código muerto)
+- [x] `init_db` duplicada en `bd/database.py` y `bd/main.py` — eliminado `bd/main.py`
+- [x] `engine` de BD duplicado en `bd/database.py` y `bd/main.py` — eliminado `bd/main.py`
+- [x] `CrearUsuario` en `bd/main.py` duplicado de `bd/crud/user.py:crear_usuario()` — eliminado `bd/main.py`
+- [x] `guardarsesion` en `app.py` wrapper trivial — reemplazada por `guardar_sesion_bd` directo
+
+### Funciones JS duplicadas (login.js / CrearCuenta.js)
+
+- [x] Extraer a `web/js/validacion.js` compartido: `validarCampo`, `destacarError`, `limpiarError`, `limpiarErrorAlEscribir`, `togglePasswordVisibility`, `validarFormulario` (se deja `obtenerValoresFormulario` por pagina porque usa distintos field keys)
+
+### Funciones de sesion redundantes en `bd/crud/sesion.py`
+
+- [x] Renombrar `obtener_session_bd()` → `crear_session_sqlmodel()`
+- [x] Eliminar `validar_token(token)` — reemplazada por `obtener_usuario_por_token()` en `life_token`
+
+### Wrappers API sin logica adicional
+
+- [x] Evaluar capa de wrappers — eliminados los de `moneda.py` (pass-through); mantenidos los de `cuenta.py` porque inyectan `Depends(validate_token)`
+- [x] `get_tipo_lista` en `bd/crud/tipo.py` — eliminada; el mapeo `.nombre` se hace en cada caller
+
+---
+
 ## Fase 1 - Configuracion y base tecnica
 
 Objetivo: hacer que la app arranque y persista datos de manera predecible.
@@ -104,7 +132,7 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
 - [x] Actualizar saldo de cuenta al crear un movimiento.
 - [x] Recalcular saldo al editar un movimiento.
 - [x] Revertir saldo al eliminar un movimiento.
-- [ ] Validar que cuenta, tipo y subtipo pertenezcan o sean visibles para el usuario.
+- [x] Validar que cuenta, tipo y subtipo pertenezcan o sean visibles para el usuario.
 - [ ] Agregar una capa de servicios para reglas de negocio.
 
 ---

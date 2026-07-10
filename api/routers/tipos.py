@@ -1,21 +1,16 @@
 from fastapi import APIRouter
 
-from bd.crud.tipo import get_one_tipo, get_sub_tipos, get_tipo_lista, get_tipos_bd,crear_tipo_bd
+from bd.crud.tipo import get_one_tipo, get_sub_tipos, get_tipos_bd, crear_tipo_bd
 
 from .dtos.paguinador import PaguinadorDto
 from .dtos.tipos import OneId, TipoCreateDto
 
 
-router = APIRouter()
 router = APIRouter(prefix="/tipos")
 
 @router.get("/")
-def get_test(paguinador:PaguinadorDto):
+def get_tipos(paguinador:PaguinadorDto):
     return  get_tipos_bd(paguinador.pagina,paguinador.cantidad)
-
-@router.get("/lista")
-def get_lista(paguinador:PaguinadorDto):
-    return get_tipo_lista(paguinador.pagina,paguinador.cantidad)
 
 
 @router.post("/create")

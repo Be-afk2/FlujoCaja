@@ -41,11 +41,3 @@ def comprobar_y_crear_bd():
     else:
         console.print("[green]Base de datos lista. Continuando normalmente.[/green]")
 
-def comprobar_conexion():
-    try:
-        # Intentar conectarse a la base de datos
-        init_db()
-        logger.info("Conexion a la base de datos exitosa")
-        console.clear()
-    except Exception as e:
-        logger.error("Error al conectar a la base de datos: %s", e)

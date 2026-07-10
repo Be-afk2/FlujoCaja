@@ -2,7 +2,7 @@ from datetime import date
 from typing import Optional
 from sqlmodel import Session, select, and_
 from bd.database import engine
-from bd.models import Movimiento, User
+from bd.models import Movimiento, Cuenta, Subtipo, User
 from bd.crud.cuenta import actualizar_saldo
 from bd.crud.resumen import actualizar_por_movimiento
 from sqlalchemy.orm import selectinload
@@ -11,6 +11,24 @@ from sqlalchemy.orm import selectinload
 def fecha_hoy() -> tuple[int, int, int]:
     hoy = date.today()
     return hoy.day, hoy.month, hoy.year
+
+
+def _validar_cuenta(cuenta_id: int, user: User, session: Session) -> None:
+    cuenta = session.get(Cuenta, cuenta_id)
+    if not cuenta:
+        raise ValueError(f"Cuenta {cuenta_id} no existe")
+    if cuenta.user_id != str(user.id):
+        raise ValueError(f"Cuenta {cuenta_id} no pertenece al usuario")
+
+
+def _validar_subtipo(subtipo_id: int, tipo_id: int, session: Session) -> None:
+    subtipo = session.get(Subtipo, subtipo_id)
+    if not subtipo:
+        raise ValueError(f"Subtipo {subtipo_id} no existe")
+    if subtipo.tipo_id != tipo_id:
+        raise ValueError(
+            f"Subtipo {subtipo_id} no pertenece al tipo {tipo_id}"
+        )
 
 
 def crear_movimiento(
@@ -25,6 +43,9 @@ def crear_movimiento(
     ingreso = monto > 0
 
     with Session(engine) as session:
+        _validar_cuenta(cuenta_id, user, session)
+        if subtipo_id is not None:
+            _validar_subtipo(subtipo_id, tipo_id, session)
         nuevo_movimiento = Movimiento(
             monto=monto,
             es_ingreso=ingreso,
@@ -67,6 +88,11 @@ def update_movimiento(
         mov = session.get(Movimiento, movimiento_id)
         if not mov or mov.user_id != str(user.id):
             return None
+
+        if cuenta_id is not None:
+            _validar_cuenta(cuenta_id, user, session)
+        if subtipo_id is not None:
+            _validar_subtipo(subtipo_id, tipo_id or mov.tipo_id, session)
 
         saldo_anterior = mov.monto
         cuenta_anterior = mov.cuenta_id

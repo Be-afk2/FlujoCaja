@@ -14,7 +14,7 @@ def generar_token() -> str:
     return str(uuid4())
 
 
-def obtener_session_bd() -> Session:
+def crear_session_sqlmodel() -> Session:
     return Session(engine)
 
 
@@ -22,7 +22,7 @@ def obtener_session_bd() -> Session:
 
 def guardar_sesion_bd(user_id: str) -> bool:
     try:
-        with obtener_session_bd() as session:
+        with crear_session_sqlmodel() as session:
             sesion_antigua = obtener_sesion_db(session)
             if sesion_antigua:
                 session.delete(sesion_antigua)
@@ -41,7 +41,7 @@ def guardar_sesion_bd(user_id: str) -> bool:
 
 def actualizar_token_bd() -> str | None:
     try:
-        with obtener_session_bd() as session:
+        with crear_session_sqlmodel() as session:
             sesion = obtener_sesion_db(session)
             if not sesion:
                 return None
@@ -56,22 +56,10 @@ def actualizar_token_bd() -> str | None:
         return None
 
 
-def validar_token(token: str) -> bool:
-    try:
-        with obtener_session_bd() as session:
-            sesion = obtener_sesion_db(session)
-            if not sesion:
-                return False
-            return sesion.token == token
-    except Exception as e:
-        logger.error("Error validando token: %s", e)
-        return False
-
-
 def obtener_usuario_por_token(token: str) -> User | None:
     """Busca la sesion por token y devuelve el User asociado. NO rota el token."""
     try:
-        with obtener_session_bd() as session:
+        with crear_session_sqlmodel() as session:
             sesion = obtener_sesion_db(session)
             if not sesion or sesion.token != token:
                 return None
@@ -89,7 +77,7 @@ def obtener_sesion(actualizar: bool = False) -> tuple[User, str] | None:
     Solo rota el token si actualizar=True (ej: en login).
     Deprecada para uso en CRUDs - usar obtener_usuario_por_token() en su lugar."""
     try:
-        with obtener_session_bd() as session:
+        with crear_session_sqlmodel() as session:
             sesion = obtener_sesion_db(session)
             if not sesion:
                 return None
@@ -113,7 +101,7 @@ def obtener_sesion(actualizar: bool = False) -> tuple[User, str] | None:
 
 def eliminar_sesion_bd() -> bool:
     try:
-        with obtener_session_bd() as session:
+        with crear_session_sqlmodel() as session:
             sesion = obtener_sesion_db(session)
             if not sesion:
                 return True

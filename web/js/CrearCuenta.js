@@ -32,65 +32,6 @@ function obtenerValoresFormulario() {
 }
 
 /**
- * Valida que un campo no esté vacío.
- * @param {string} fieldKey - Clave del campo a validar
- * @param {string} value - Valor del campo
- * @returns {boolean} True si es válido, False en caso contrario
- */
-function validarCampo(fieldKey, value) {
-    if (!value || value.length === 0) {
-        destacarError(fieldKey);
-        return false;
-    }
-    limpiarError(fieldKey);
-    return true;
-}
-
-/**
- * Destaca un campo con error (borde rojo).
- * @param {string} fieldKey - Clave del campo a destacar
- */
-function destacarError(fieldKey) {
-    const inputElement = document.getElementById(CAMPOS_REQUERIDOS[fieldKey].id);
-    if (inputElement) {
-        inputElement.classList.remove(...CLASE_NORMAL.split(' '));
-        inputElement.classList.add(...CLASE_ERROR.split(' '));
-        inputElement.setAttribute('aria-invalid', 'true');
-    }
-}
-
-/**
- * Limpia el estado de error de un campo.
- * @param {string} fieldKey - Clave del campo a limpiar
- */
-function limpiarError(fieldKey) {
-    const inputElement = document.getElementById(CAMPOS_REQUERIDOS[fieldKey].id);
-    if (inputElement) {
-        inputElement.classList.remove(...CLASE_ERROR.split(' '));
-        inputElement.classList.add(...CLASE_NORMAL.split(' '));
-        inputElement.setAttribute('aria-invalid', 'false');
-    }
-}
-
-/**
- * Valida todos los campos del formulario.
- * @returns {boolean} True si todos los campos son válidos, False en caso contrario
- */
-function validarFormulario() {
-    const valores = obtenerValoresFormulario();
-    let esValido = true;
-
-    // Validar cada campo requerido
-    for (const [key, field] of Object.entries(CAMPOS_REQUERIDOS)) {
-        if (!validarCampo(key, valores[key])) {
-            esValido = false;
-        }
-    }
-
-    return esValido;
-}
-
-/**
  * Crea una cuenta con los datos del formulario.
  * Valida que todos los campos estén llenos antes de enviar.
  */
@@ -121,34 +62,6 @@ async function crearCuenta() {
     } catch (error) {
         console.error('✗ Error al crear cuenta:', error);
         alert(`✗ Error: ${error.message}`);
-    }
-}
-
-/**
- * Alterna la visibilidad de la contraseña.
- */
-function togglePasswordVisibility() {
-    const inputPassword = document.getElementById(CAMPOS_REQUERIDOS.password.id);
-    const btnToggle = document.getElementById('btnTogglePassword');
-    
-    if (inputPassword.type === 'password') {
-        inputPassword.type = 'text';
-        btnToggle.innerHTML = '<span class="material-symbols-outlined text-xl">visibility_off</span>';
-    } else {
-        inputPassword.type = 'password';
-        btnToggle.innerHTML = '<span class="material-symbols-outlined text-xl">visibility</span>';
-    }
-}
-
-/**
- * Limpia los errores cuando el usuario comienza a escribir en un campo.
- */
-function limpiarErrorAlEscribir(fieldKey) {
-    const inputElement = document.getElementById(CAMPOS_REQUERIDOS[fieldKey].id);
-    if (inputElement) {
-        inputElement.addEventListener('input', () => {
-            limpiarError(fieldKey);
-        });
     }
 }
 

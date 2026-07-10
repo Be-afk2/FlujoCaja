@@ -3,7 +3,7 @@ import uuid
 from rich.console import Console
 import questionary
 from bd.crud.movimiento import crear_movimiento, movimientos_paginados
-from bd.crud.tipo import get_tipo_lista
+from bd.crud.tipo import get_tipos_bd
 from menus.path import *
 from datetime import datetime
 from rich.table import Table
@@ -50,7 +50,7 @@ def agregar_movimiento():
 
         tipo = questionary.select(
             "¿Qué tipo de movimiento es?",
-            choices=get_tipo_lista()
+            choices=[t.nombre for t in get_tipos_bd()]
         ).ask()
 
         fecha_str = questionary.text(

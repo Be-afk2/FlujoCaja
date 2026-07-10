@@ -32,15 +32,18 @@ def listar_movimientos(filtros: MovimientoFilter = Depends(), user: User = Depen
 
 @router.post("/", status_code=201)
 def crear(datos: MovimientoCreate, user: User = Depends(validate_token)):
-    mov = crear_movimiento(
-        monto=datos.monto,
-        tipo_id=datos.tipo_id,
-        cuenta_id=datos.cuenta_id,
-        user=user,
-        subtipo_id=datos.subtipo_id,
-        descripcion=datos.descripcion,
-        fecha=datos.fecha,
-    )
+    try:
+        mov = crear_movimiento(
+            monto=datos.monto,
+            tipo_id=datos.tipo_id,
+            cuenta_id=datos.cuenta_id,
+            user=user,
+            subtipo_id=datos.subtipo_id,
+            descripcion=datos.descripcion,
+            fecha=datos.fecha,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return mov
 
 
@@ -54,16 +57,19 @@ def obtener(movimiento_id: int, user: User = Depends(validate_token)):
 
 @router.put("/{movimiento_id}")
 def actualizar(movimiento_id: int, datos: MovimientoUpdate, user: User = Depends(validate_token)):
-    mov = update_movimiento(
-        movimiento_id=movimiento_id,
-        user=user,
-        monto=datos.monto,
-        tipo_id=datos.tipo_id,
-        subtipo_id=datos.subtipo_id,
-        cuenta_id=datos.cuenta_id,
-        descripcion=datos.descripcion,
-        fecha=datos.fecha,
-    )
+    try:
+        mov = update_movimiento(
+            movimiento_id=movimiento_id,
+            user=user,
+            monto=datos.monto,
+            tipo_id=datos.tipo_id,
+            subtipo_id=datos.subtipo_id,
+            cuenta_id=datos.cuenta_id,
+            descripcion=datos.descripcion,
+            fecha=datos.fecha,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not mov:
         raise HTTPException(status_code=404, detail="Movimiento no encontrado")
     return mov

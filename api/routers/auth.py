@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 
 from bd.crud.user import login_user, crear_usuario
-from bd.crud.sesion import guardar_sesion_bd, eliminar_sesion_bd, validar_token, obtener_usuario_por_token
+from bd.crud.sesion import guardar_sesion_bd, eliminar_sesion_bd, obtener_usuario_por_token
 
 from .dtos.userDto import UserDTO, UserLogin, UserPublic, UserWithToken
 
@@ -49,6 +49,7 @@ def life():
 
 @router.get("/life/token")
 def life_token(token: str):
-    if not validar_token(token):
+    usuario = obtener_usuario_por_token(token)
+    if not usuario:
         raise HTTPException(status_code=401, detail="Token inválido o expirado")
     return {"message": "Token válido", "status": "true"}

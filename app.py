@@ -23,9 +23,6 @@ console.print("----------------------------------------")
 userId = None
 userConnect = get_sesion()
 
-def guardarsesion(user_id: str):
-    guardar_sesion_bd(user_id)
-
 def Login():
     global userId
     global userConnect
@@ -44,7 +41,7 @@ def Login():
             console.clear()
             console.print(f"Bienvenido {user.name} {user.apellido}")
             if recoradar:
-                guardarsesion(user.id)
+                guardar_sesion_bd(user.id)
             userId = user.id
             userConnect = user
             break
