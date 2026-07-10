@@ -4,7 +4,7 @@ from bd.crud.resumen import get_resumenes_anual, get_resumen_mensual, get_resume
 from bd.models.user import User
 from api.dependencies import validate_token
 
-router = APIRouter(prefix="/resumen")
+router = APIRouter(prefix="/resumen", tags=["Resumen"])
 
 
 @router.get("/anual")

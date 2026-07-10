@@ -1,6 +1,12 @@
 from pydantic import BaseModel
-from sqlmodel import SQLModel
+
 
 class MonedaDTO(BaseModel):
+    nombre: str
+    simbolo: str
+
+
+class MonedaResponse(BaseModel):
+    id: int
     nombre: str
     simbolo: str

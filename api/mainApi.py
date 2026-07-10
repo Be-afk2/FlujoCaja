@@ -7,7 +7,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from api.routers import auth, cuenta, moneda, movimientos, resumen, tipos, subtipos
 from api.dependencies import validate_token
 from bd.crud.sesion import obtener_usuario_por_token
-from config import is_debug_enabled
+from config import is_debug_enabled, API_HOST, API_PORT
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
 DEBUG_MODE = is_debug_enabled()
@@ -23,15 +23,23 @@ else:
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger(__name__)
 
-app = FastAPI()
+app = FastAPI(
+    title="FlujoCaja API",
+    description="API local para gestión de flujo de caja personal",
+    version="0.3.0",
+)
 
-# Configuración de CORS
+# Configuración de CORS — solo orígenes locales
+origins = [f"http://{API_HOST}:{API_PORT}"]
+if API_HOST == "127.0.0.1":
+    origins.append("http://localhost:8000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permite todos los orígenes
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # Permite todos los métodos (GET, POST, PUT, DELETE, OPTIONS, etc.)
-    allow_headers=["*"],  # Permite todos los headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Middleware para logging de requests en modo DEBUG

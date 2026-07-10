@@ -11,15 +11,15 @@ from .dtos.userDto import UserDTO, UserLogin, UserPublic, UserWithToken
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register", status_code=201, response_model=UserPublic)
+@router.post("/register", status_code=201, response_model=UserPublic, summary="Registrar nuevo usuario")
 def register(newUser: UserDTO):
     logger.debug("Creando usuario: %s", newUser)
     return crear_usuario(newUser.name, newUser.apellido, newUser.passw)
 
-@router.post("/login", response_model=UserPublic)
+@router.post("/login", response_model=UserPublic, summary="Iniciar sesión")
 def login(user: UserLogin):
     userLogin = login_user(user.name, user.passw)
     if userLogin:
@@ -28,7 +28,7 @@ def login(user: UserLogin):
         return userLogin
     raise HTTPException(status_code=401, detail="Credenciales inválidas", headers={"WWW-Authenticate": "Bearer"})
 
-@router.get("", response_model=UserWithToken)
+@router.get("", response_model=UserWithToken, summary="Obtener sesión actual")
 def getSesion(credentials=Depends(HTTPBearer())):
     usuario = obtener_usuario_por_token(credentials.credentials)
     if not usuario:

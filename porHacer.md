@@ -159,17 +159,17 @@ Objetivo: tener un modelo de sesion claro y seguro para una app local.
 
 Objetivo: ordenar contratos HTTP y respuestas.
 
-- [ ] Revisar prefijos y nombres de rutas.
-- [ ] Normalizar respuestas de error.
-- [ ] Crear DTOs de entrada y salida para cada recurso.
-- [ ] Evitar devolver modelos internos directamente cuando no convenga.
-- [ ] Agregar codigos HTTP correctos:
+- [x] Revisar prefijos y nombres de rutas — plurales, sin verbos en path, health checks aparte.
+- [x] Normalizar respuestas de error — handler global + handler 422, todos con `{"error", "status", "path"}`.
+- [x] Crear DTOs de entrada y salida para cada recurso — `response_model` en todos los endpoints.
+- [x] Evitar devolver modelos internos directamente — resuelto via `response_model` en cada endpoint.
+- [x] Agregar codigos HTTP correctos:
   - `201` al crear,
   - `400` para validaciones,
   - `401` para sesion invalida,
   - `404` para recursos inexistentes.
-- [ ] Documentar endpoints principales.
-- [ ] Revisar CORS y limitarlo al uso local si corresponde.
+- [x] Documentar endpoints principales — `tags` en todos los routers, `summary` en auth/movimientos, metadata en FastAPI.
+- [x] Revisar CORS y limitarlo al uso local — restringido a `127.0.0.1:8000` y `localhost:8000`.
 
 ---
 

@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 from pydantic import BaseModel, BeforeValidator
 
 
@@ -48,6 +48,11 @@ class MovimientoResponse(BaseModel):
     tipo_id: int
     subtipo_id: Optional[int]
     cuenta_id: int
-    user_id: str
     descripcion: Optional[str]
     fecha: date
+
+
+class MovimientoListResponse(BaseModel):
+    data: List[MovimientoResponse]
+    total: int
+    pagina: int

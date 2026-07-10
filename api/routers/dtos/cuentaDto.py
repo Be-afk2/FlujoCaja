@@ -1,18 +1,23 @@
-import uuid
 from pydantic import BaseModel
-from sqlmodel import SQLModel
+from typing import Optional
 
-class CuentaDTO(BaseModel):
-    nombre:str
-    descripcion:str
-    tipo:str
-
-class SubCuentaDTO(BaseModel):
-    nombre:str
-    descripcion:str
 
 class CuentaDTO(BaseModel):
     nombre: str
     descripcion: str
     tipo: int
-    moneda:int
+    moneda: int
+
+
+class SubCuentaDTO(BaseModel):
+    nombre: str
+    descripcion: str
+
+
+class CuentaResponse(BaseModel):
+    id: int
+    nombre: str
+    saldo: float
+    descripcion: Optional[str]
+    tipo_id: int
+    moneda_id: int

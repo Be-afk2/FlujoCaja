@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import List
 
 from bd.crud.movimiento import (
     crear_movimiento,
@@ -9,12 +10,12 @@ from bd.crud.movimiento import (
 )
 from bd.models.user import User
 from api.dependencies import validate_token
-from .dtos.movimientoDto import MovimientoCreate, MovimientoUpdate, MovimientoFilter
+from .dtos.movimientoDto import MovimientoCreate, MovimientoUpdate, MovimientoFilter, MovimientoResponse, MovimientoListResponse
 
-router = APIRouter(prefix="/movimientos")
+router = APIRouter(prefix="/movimientos", tags=["Movimientos"])
 
 
-@router.get("/")
+@router.get("/", response_model=MovimientoListResponse, summary="Listar movimientos con filtros y paginación")
 def listar_movimientos(filtros: MovimientoFilter = Depends(), user: User = Depends(validate_token)):
     resultados, total = movimientos_filtrados(
         user=user,
@@ -30,7 +31,7 @@ def listar_movimientos(filtros: MovimientoFilter = Depends(), user: User = Depen
     return {"data": resultados, "total": total, "pagina": filtros.pagina}
 
 
-@router.post("/", status_code=201)
+@router.post("/", status_code=201, response_model=MovimientoResponse, summary="Crear un nuevo movimiento")
 def crear(datos: MovimientoCreate, user: User = Depends(validate_token)):
     try:
         mov = crear_movimiento(
@@ -47,7 +48,7 @@ def crear(datos: MovimientoCreate, user: User = Depends(validate_token)):
     return mov
 
 
-@router.get("/{movimiento_id}")
+@router.get("/{movimiento_id}", response_model=MovimientoResponse, summary="Obtener movimiento por ID")
 def obtener(movimiento_id: int, user: User = Depends(validate_token)):
     mov = get_movimiento(movimiento_id, user)
     if not mov:
@@ -55,7 +56,7 @@ def obtener(movimiento_id: int, user: User = Depends(validate_token)):
     return mov
 
 
-@router.put("/{movimiento_id}")
+@router.put("/{movimiento_id}", response_model=MovimientoResponse, summary="Actualizar un movimiento existente")
 def actualizar(movimiento_id: int, datos: MovimientoUpdate, user: User = Depends(validate_token)):
     try:
         mov = update_movimiento(
@@ -75,7 +76,7 @@ def actualizar(movimiento_id: int, datos: MovimientoUpdate, user: User = Depends
     return mov
 
 
-@router.delete("/{movimiento_id}")
+@router.delete("/{movimiento_id}", summary="Eliminar un movimiento")
 def eliminar(movimiento_id: int, user: User = Depends(validate_token)):
     ok = delete_movimiento(movimiento_id, user)
     if not ok:
