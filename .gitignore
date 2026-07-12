@@ -6,3 +6,4 @@ indexar.py
 /tools
 AGENTS.md
 planes/fase4-api-mantenible.md
+template-agents/tools/mcp.py
