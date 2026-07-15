@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from api.routers import auth, cuenta, moneda, movimientos, resumen, tipos, subtipos
 from api.dependencies import validate_token
-from bd.crud.sesion import obtener_usuario_por_token
 from config import is_debug_enabled, API_HOST, API_PORT
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
@@ -90,10 +89,7 @@ def health():
     return {"message": "alive"}
 
 @app.get("/health/token")
-def health_token(token: str):
-    usuario = obtener_usuario_por_token(token)
-    if not usuario:
-        raise HTTPException(status_code=401, detail="Token inválido o expirado", headers={"WWW-Authenticate": "Bearer"})
+def health_token(_=Depends(validate_token)):
     return {"message": "Token válido", "status": "true"}
 
 app.include_router(movimientos.router, dependencies=[Depends(validate_token)])

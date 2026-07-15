@@ -56,8 +56,9 @@ async function Login() {
             
             // Guardar token si existe
             if (response.token) {
-                localStorage.setItem('authToken', response.token);
-                console.log('✓ Token guardado en localStorage');
+                localStorage.setItem("remember_session", valores.recordar);
+                guardarToken(response.token);
+                console.log('✓ Token guardado');
             }
 
             // Mostrar mensaje de éxito

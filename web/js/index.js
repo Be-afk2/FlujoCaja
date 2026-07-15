@@ -1,10 +1,5 @@
 
 // ==================== CONSTANTES ====================
-const STORAGE_KEYS = {
-    TOKEN: "token",
-    REMEMBER_SESSION: "remember_session",
-};
-
 const ROUTES = {
     PANEL_CONTROL: "pages/panelControl.html",
     LOGIN: "pages/login.html",
@@ -67,7 +62,7 @@ async function validarYRedireccionarSesion() {
  * @returns {boolean} - True si hay sesión recordada
  */
 function verificarSesionLocal() {
-    return localStorage.getItem(STORAGE_KEYS.REMEMBER_SESSION) === "true";
+    return localStorage.getItem("remember_session") === "true";
 }
 
 /**
@@ -103,7 +98,7 @@ async function verificarTokenLife() {
             return false;
         }
 
-        const response = await get(`${API_ENDPOINTS.TOKEN_LIFE}?token=${token}`);
+        const response = await get(API_ENDPOINTS.TOKEN_LIFE);
         console.log("Respuesta de vida del token:", response);
         if (!response?.ok) {
             console.warn("⚠ Token inválido o expirado");
@@ -119,31 +114,10 @@ async function verificarTokenLife() {
     }
 }
 
-/**
- * Obtiene el token del almacenamiento de sesión.
- * @returns {string|null} - El token o null si no existe
- */
-function obtenerToken() {
-    return sessionStorage.getItem(STORAGE_KEYS.TOKEN);
-}
-
-/**
- * Guarda la sesión en el almacenamiento.
- * @param {string} token - El token a guardar
- */
 function guardarSesion(token) {
-    sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
-    localStorage.setItem(STORAGE_KEYS.REMEMBER_SESSION, "true");
+    localStorage.setItem("remember_session", "true");
+    guardarToken(token);
     console.log("✓ Sesión guardada");
-}
-
-/**
- * Cierra la sesión del usuario eliminando los datos del almacenamiento.
- */
-function cerrarSesion() {
-    sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.REMEMBER_SESSION);
-    console.log("✓ Sesión cerrada");
 }
 
 
@@ -163,7 +137,7 @@ function redirigir(url) {
 function mostrarInfoDebug() {
     console.group("📊 Información de Sesión");
     console.log("Token:", obtenerToken() || "No disponible");
-    console.log("Sesión recordada:", localStorage.getItem(STORAGE_KEYS.REMEMBER_SESSION));
+    console.log("Sesión recordada:", localStorage.getItem("remember_session"));
     console.log("Memoria:", performance.memory || "No disponible");
     console.groupEnd();
 }

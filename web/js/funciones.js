@@ -7,6 +7,25 @@ const CONFIG = {
     }
 };
 
+const TOKEN_KEY = "auth_token";
+
+function guardarToken(token) {
+    sessionStorage.setItem(TOKEN_KEY, token);
+    if (localStorage.getItem("remember_session") === "true") {
+        localStorage.setItem(TOKEN_KEY, token);
+    }
+}
+
+function obtenerToken() {
+    return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY);
+}
+
+function cerrarSesion() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem("remember_session");
+}
+
 // ==================== UTILIDADES ====================
 
 /**
@@ -19,9 +38,16 @@ const CONFIG = {
  * @returns {Promise<Object>} Respuesta parseada como JSON
  * @throws {Error} Si la petición falla o la respuesta no es válida
  */
+const PUBLIC_PATHS = ["auth/", "auth/login", "auth/register", "health"];
+
 async function request(path, { method = 'GET', data = null, headers = {} } = {}) {
     const url = `${CONFIG.baseUrl}${path}`;
     const requestHeaders = { ...CONFIG.headers, ...headers };
+
+    const token = obtenerToken();
+    if (token && !PUBLIC_PATHS.includes(path)) {
+        requestHeaders["Authorization"] = `Bearer ${token}`;
+    }
     
     const options = {
         method,
@@ -29,7 +55,6 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
         signal: AbortSignal.timeout(CONFIG.timeout)
     };
 
-    // Agregar body solo si hay datos
     if (data && (method === 'POST' || method === 'PUT')) {
         options.body = JSON.stringify(data);
     }
@@ -37,7 +62,10 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
     try {
         const response = await fetch(url, options);
         
-        // Validar que la respuesta sea exitosa
+        if (response.status === 401) {
+            cerrarSesion();
+        }
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ 
                 error: `HTTP ${response.status}: ${response.statusText}`,
@@ -45,7 +73,6 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
                 path: url
             }));
             
-            // Crear un error personalizado que contiene toda la información
             const error = new Error(errorData.error || errorData.message || errorData.detail || 'Error en la petición');
             error.status = errorData.status || response.status;
             error.data = errorData;
@@ -60,12 +87,11 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
 }
 
 /**
- * Función para hacer una petición GET a una ruta específica con datos opcionales.
+ * Función para hacer una petición GET a una ruta específica.
  * @param {string} path - La ruta a la cual se realizará la petición.
- * @param {Object} data - Los datos que se enviarán en la petición (opcional).
  * @returns {Promise<Object>} - Una promesa que resuelve con la respuesta de la petición.
  */
-async function get(path, data = {}) {
+async function get(path) {
     return request(path, { method: 'GET' });
 }
 
@@ -96,56 +122,5 @@ async function deleteRequest(path) {
  */
 async function putRequest(path, data = {}) {
     return request(path, { method: 'PUT', data });
-}
-
-// ==================== EVENT LISTENERS ====================
-
-/**
- * Inicializa los listeners de eventos cuando el DOM esté cargado.
- */
-function initEventListeners() {
-    const btnGet = document.getElementById('btnGet');
-    if (btnGet) {
-        btnGet.addEventListener('click', handleGetButtonClick);
-    }
-
-    const btnPost = document.getElementById('btnPost');
-    if (btnPost) {
-        btnPost.addEventListener('click', handlePostButtonClick);
-    }
-}
-
-/**
- * Manejador para el botón GET.
- */
-async function handleGetButtonClick() {
-    try {
-        const response = await get('health');
-        console.log('✓ Respuesta GET:', response);
-    } catch (error) {
-        console.error('✗ Error en GET:', error.message);
-    }
-}
-
-/**
- * Manejador para el botón POST.
- */
-async function handlePostButtonClick() {
-    try {
-        const data = { clave: 'valor' };
-        const response = await post('ruta/especifica', data);
-        console.log('✓ Respuesta POST:', response);
-    } catch (error) {
-        console.error('✗ Error en POST:', error.message);
-    }
-}
-
-// ==================== INICIALIZACIÓN ====================
-
-// Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEventListeners);
-} else {
-    initEventListeners();
 }
 

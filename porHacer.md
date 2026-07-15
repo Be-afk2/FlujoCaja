@@ -133,7 +133,6 @@ Objetivo: consolidar cuentas, saldos y movimientos como nucleo de la app.
 - [x] Recalcular saldo al editar un movimiento.
 - [x] Revertir saldo al eliminar un movimiento.
 - [x] Validar que cuenta, tipo y subtipo pertenezcan o sean visibles para el usuario.
-- [ ] Agregar una capa de servicios para reglas de negocio.
 
 ---
 
