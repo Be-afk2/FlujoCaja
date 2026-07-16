@@ -23,19 +23,27 @@ python main.py --web            # web shell only
 - **DB:** SQLite (`database.db`), SQLModel (`bd/models/`), CRUD in `bd/crud/`
 - **Frontend:** static HTML/JS/Tailwind via CDN in `web/`, loaded by PyQt6 WebEngine
 - **Auth:** simple SQLite token (single-session, no JWT). Bearer token via `Authorization` header. Validated against `sesion` table.
-  - Unprotected routes: `/auth/*` (login, create, session check, token life)
-  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuenta`, `/moneda`
+  - Unprotected routes: `/auth/*` (login, register, session check), `/health`
+  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuentas`, `/monedas`, `/resumen`, `/health/token`
 - **Session:** Single session row in DB. Auth via `Authorization: Bearer <token>`, validated by `validate_token()` in `api/dependencies.py` which resolves the `User`. Legacy `obtener_sesion()` still present but deprecated.
 - `database.db` is gitignored; auto-created on first run.
 
-## Recent renames (Fase 0)
+## Key refactors (Fase 4 — API mantenible)
 
-- `bd/models/registro.py` → `bd/models/movimiento.py` (class `Registro` → `Movimiento`)
-- `bd/crud/registro.py` → `bd/crud/movimiento.py` (`crear_registro` → `crear_movimiento`, `registros_paginados` → `movimientos_paginados`)
-- `api/routers/gastos.py` → `api/routers/movimientos.py` (prefix `/gastos` → `/movimientos`)
-- `menus/gastos.py` → `menus/movimientos.py` (legacy CLI)
-- Relationships: `Cuenta.registros`, `Tipo.registros`, `User.registros` → `movimientos`
-- DB table: `registro` → `movimiento` (updated in alembic baseline + APP_TABLES)
+- Routes renamed: `/cuenta` → `/cuentas`, `/moneda` → `/monedas`, `/auth/create` → `/auth/register`, `/auth/life/*` → `/health/*`
+- DTOs introduced: `CuentaResponse`, `MonedaResponse`, `MovimientoListResponse`, `TipoListResponse`, `TipoDetailResponse`; `response_model` on every endpoint
+- `RequestValidationError` handler normalizes 422 to `{"error", "status", "path", "details"}`
+- Auth errors return 401 with `WWW-Authenticate` header
+- CORS restricted to `["http://127.0.0.1:8000", "http://localhost:8000"]`
+- `FastAPI(title=..., description=..., version="0.3.0")` with `tags` on all 7 routers
+- All POST creation endpoints have `status_code=201`
+
+## Key refactors (Fase 5 — Frontend conectado, en curso)
+
+- Token storage unified: `guardarToken()`, `obtenerToken()`, `cerrarSesion()` in `funciones.js`
+- Bearer token auto-injected in every `request()` via `Authorization` header (except `PUBLIC_PATHS`)
+- `health/token` changed from query-param to `Depends(validate_token)` (Bearer)
+- `funciones.js` cleaned: removed demo event listeners, unused `get()` `data` param (127 lines)
 
 ## Notable quirks
 
@@ -43,20 +51,18 @@ python main.py --web            # web shell only
 - Password hashing uses `passlib.hash.bcrypt`.
 - `Movimiento.es_ingreso` inferred from `monto > 0`.
 - Tailwind configured via inline `<script>` in `index.html` (no build step).
-- Frontend uses `localStorage` for `remember_session` flag and `sessionStorage` for token.
+- Frontend uses `sessionStorage` for token (key: `auth_token`) and `localStorage` for `remember_session` flag.
 - No tests, no lint/format/typecheck config, no CI.
 
 ## MCP Knowledge Graph (codebase-memory-mcp)
 
-El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp` v0.8.1) para responder consultas estructurales sin leer archivos uno por uno.
+El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp`) para responder consultas estructurales sin leer archivos uno por uno.
 
 **Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP.
 
 ### Helper (portable)
 
-El script `tools/mcp.py` es portable: se para en el directorio raíz de cualquier proyecto
-indexado y funciona automáticamente. También puedes copiarlo a `%USERPROFILE%\.local\bin\mcp.py`
-para usarlo globalmente.
+El script `tools/mcp.py` es portable: se para en el directorio raíz de cualquier proyecto indexado y funciona automáticamente. También puedes copiarlo a `%USERPROFILE%\.local\bin\mcp.py` para usarlo globalmente.
 
 ```powershell
 # Desde el directorio del proyecto (auto-detecta)
@@ -85,7 +91,6 @@ MATCH (f:Function {is_entry_point: true}) RETURN f.name, f.file_path
 ### Info de contacto
 
 - El MCP server usa SQLite en `~/.cache/codebase-memory-mcp/`
-- Indexado por última vez: `2026-07-06T20:17:22Z` — 536 nodos, 1405 aristas
 - Auto-sync: el watcher detecta cambios automáticamente
 - `-p <project>` sobreescribe el proyecto autodetectado
 
