@@ -43,7 +43,8 @@ const PUBLIC_PATHS = ["auth/", "auth/login", "auth/register", "health"];
 async function request(path, { method = 'GET', data = null, headers = {} } = {}) {
     const url = `${CONFIG.baseUrl}${path}`;
     const requestHeaders = { ...CONFIG.headers, ...headers };
-
+    console.log("-------------------url-------------------")
+    console.log(url)
     const token = obtenerToken();
     if (token && !PUBLIC_PATHS.includes(path)) {
         requestHeaders["Authorization"] = `Bearer ${token}`;

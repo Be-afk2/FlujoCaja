@@ -1,8 +1,10 @@
 import logging
+from pathlib import Path
 from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from api.routers import auth, cuenta, moneda, movimientos, resumen, tipos, subtipos
 from api.dependencies import validate_token
@@ -28,14 +30,10 @@ app = FastAPI(
     version="0.3.0",
 )
 
-# Configuración de CORS — solo orígenes locales
-origins = [f"http://{API_HOST}:{API_PORT}"]
-if API_HOST == "127.0.0.1":
-    origins.append("http://localhost:8000")
-
+# CORS abierto para desarrollo local
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -82,6 +80,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "details": errors
         }
     )
+
+# Servir frontend estático
+web_dir = Path(__file__).resolve().parent.parent / "web"
+if web_dir.is_dir():
+    app.mount("/app", StaticFiles(directory=str(web_dir), html=True), name="web")
 
 # Health checks
 @app.get("/health")
