@@ -150,7 +150,7 @@ Objetivo: tener un modelo de sesion claro y seguro para una app local.
 - [x] Leer el usuario actual desde el token `Authorization: Bearer`.
 - [ ] Agregar expiracion o renovacion de token.
 - [x] Agregar logout confiable.
-- [ ] Manejar `401 Unauthorized` desde el frontend redirigiendo al login.
+- [x] Manejar `401 Unauthorized` desde el frontend redirigiendo al login.
 
 ---
 
@@ -176,19 +176,19 @@ Objetivo: ordenar contratos HTTP y respuestas.
 
 Objetivo: que cada pantalla trabaje con datos reales y estados claros.
 
-- [ ] Mejorar `web/js/funciones.js` como cliente API unico.
-- [ ] Agregar automaticamente `Authorization: Bearer <token>`.
-- [ ] Centralizar manejo de errores de API.
-- [ ] Reemplazar `alert()` por mensajes visuales consistentes.
-- [ ] Agregar estados de carga.
-- [ ] Agregar estados vacios.
-- [ ] Conectar dashboard con metricas reales.
-- [ ] Conectar pantalla de cuentas con API real.
-- [ ] Conectar pantalla de movimientos con API real.
-- [ ] Crear formulario completo para registrar movimiento.
-- [ ] Crear formulario para editar movimiento.
-- [ ] Agregar confirmacion para eliminar.
-- [ ] Crear componentes compartidos:
+- [x] Mejorar `web/js/funciones.js` como cliente API unico.
+- [x] Agregar automaticamente `Authorization: Bearer <token>`.
+- [x] Centralizar manejo de errores de API.
+- [x] Reemplazar `alert()` por mensajes visuales consistentes.
+- [x] Agregar estados de carga.
+- [x] Agregar estados vacios.
+- [x] Conectar dashboard con metricas reales.
+- [x] Conectar pantalla de cuentas con API real.
+- [x] Conectar pantalla de movimientos con API real.
+- [x] Crear formulario completo para registrar movimiento.
+- [x] Crear formulario para editar movimiento.
+- [x] Agregar confirmacion para eliminar.
+- [x] Crear componentes compartidos:
   - menu lateral,
   - selector de cuenta,
   - selector de tipo,
@@ -219,12 +219,12 @@ Objetivo: poder modificar la app sin romper comportamiento basico.
 
 Objetivo: convertir los datos registrados en informacion util.
 
-- [ ] Dashboard con saldo total por cuenta.
-- [ ] Ingresos del mes.
-- [ ] Gastos del mes.
+- [x] Dashboard con saldo total por cuenta.
+- [x] Ingresos del mes.
+- [x] Gastos del mes.
 - [ ] Flujo neto mensual.
-- [ ] Grafico de evolucion por mes.
-- [ ] Grafico por categorias.
+- [x] Grafico de evolucion por mes.
+- [x] Grafico por categorias.
 - [ ] Filtros por cuenta y rango de fecha.
 - [ ] Exportar movimientos a CSV.
 - [ ] Preparar importacion desde CSV.

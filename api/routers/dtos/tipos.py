@@ -4,7 +4,12 @@ from typing import List, Optional
 
 class TipoCreateDto(BaseModel):
     nombre: str
-    descripcion: str
+    descripcion: Optional[str] = None
+
+
+class TipoUpdate(BaseModel):
+    nombre: Optional[str] = None
+    descripcion: Optional[str] = None
 
 
 class OneId(BaseModel):
@@ -14,12 +19,15 @@ class OneId(BaseModel):
 class SubtipoResponse(BaseModel):
     id: int
     nombre: str
-    descripcion: Optional[str]
 
 
 class SubTipoCreate(BaseModel):
     nombre: str
     tipo: int
+
+
+class SubtipoUpdate(BaseModel):
+    nombre: str
 
 
 class TipoListResponse(BaseModel):

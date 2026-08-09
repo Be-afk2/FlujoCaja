@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Categorías - NombrePendiente App</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b981",
+                        "background-dark": "#0f172a",
+                        "card-dark": "#1e293b",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans"],
+                        "sans": ["Public Sans", "Noto Sans", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark min-h-screen font-sans text-slate-200 flex overflow-hidden">
+
+    <!-- ==================== MENÚ LATERAL (COMPARTIDO) ==================== -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex border-r border-slate-800"
+        data-component="../components/sidemenu.html"></aside>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <main class="flex-1 p-8">
+
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-white">Categorías</h1>
+                    <p class="text-slate-500">Organiza tus movimientos por categorías y subcategorías.</p>
+                </div>
+                <button type="button" id="btn-nueva-categoria"
+                    class="inline-flex items-center gap-2 bg-primary hover:bg-emerald-600 text-white font-medium py-2.5 px-4 rounded-xl transition-colors">
+                    <span class="material-symbols-outlined">add</span>
+                    Nueva Categoría
+                </button>
+            </div>
+
+            <!-- Grid principal -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+                <!-- Columna izquierda: categorías dinámicas -->
+                <div class="xl:col-span-2 space-y-6" id="categorias-container">
+                    <div class="flex justify-center p-10 text-slate-500">Cargando categorías...</div>
+                </div>
+
+                <!-- Columna derecha: formulario Nueva Categoría -->
+                <div class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-5 h-fit sticky top-0">
+                    <h2 class="font-bold text-lg text-white mb-4" id="tituloFormCategoria">Nueva Categoría</h2>
+                    <form id="formCategoria">
+                        <label class="block text-sm text-slate-400 mb-1" for="inputNombreCategoria">Nombre</label>
+                        <input id="inputNombreCategoria" type="text" placeholder="Ej: Entretenimiento"
+                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4" />
+
+                        <label class="block text-sm text-slate-400 mb-1" for="inputDescripcionCategoria">Descripción</label>
+                        <textarea id="inputDescripcionCategoria" rows="2" placeholder="Ej: Salidas y ocio"
+                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4 resize-none"></textarea>
+
+                        <button type="submit" id="btnCrearCategoria"
+                            class="w-full bg-primary hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-colors">
+                            Crear Categoría
+                        </button>
+                        <button type="button" id="btnCancelarCategoria"
+                            class="hidden w-full mt-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-3 rounded-xl transition-colors">
+                            Cancelar edición
+                        </button>
+                    </form>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ==================== MODAL NUEVA/EDITAR SUBCATEGORÍA ==================== -->
+    <div id="modalSubtipo" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold text-white" id="tituloModalSubtipo">Nueva Subcategoría</h2>
+                <button type="button" data-cerrar-subtipo
+                    class="text-slate-500 hover:text-slate-300 transition-colors text-xl">&times;</button>
+            </div>
+            <label class="block text-sm text-slate-400 mb-1" for="inputNombreSubtipo">Nombre</label>
+            <input id="inputNombreSubtipo" type="text" placeholder="Ej: Restaurantes"
+                class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary mb-6" />
+            <div class="flex gap-3 pt-2">
+                <button type="button" data-cerrar-subtipo
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnGuardarSubtipo"
+                    class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-emerald-600 text-white font-semibold transition-colors">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CONFIRMACIÓN ELIMINAR ==================== -->
+    <div id="modalConfirmar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <h2 class="text-lg font-bold text-white mb-2">¿Eliminar?</h2>
+            <p class="text-sm text-slate-400 mb-6" id="textoConfirmar"></p>
+            <div class="flex gap-3">
+                <button type="button" id="btnCancelarConfirmar"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarAccion"
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors">
+                    Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/funciones.js"></script>
+    <script src="../js/notificaciones.js"></script>
+    <script src="../js/categorias.js"></script>
+    <script src="../js/loadmenu.js"></script>
+
+</body>
+
+</html>

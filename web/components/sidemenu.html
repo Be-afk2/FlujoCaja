@@ -10,7 +10,7 @@
     <span class="text-xl font-bold tracking-tight">NombrePendiente</span>
 </div>
 <nav class="flex-1 px-4 py-4 space-y-1">
-    <a class="flex items-center space-x-3 bg-emerald-500/10 text-emerald-400 p-3 rounded-lg font-medium"
+    <a class="sidebar-link flex items-center space-x-3 text-slate-400 p-3 rounded-lg"
         href="panelControl.html">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -19,7 +19,7 @@
         </svg>
         <span>Panel</span>
     </a>
-    <a class="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-800 p-3 rounded-lg transition-colors"
+    <a class="sidebar-link flex items-center space-x-3 text-slate-400 p-3 rounded-lg"
         href="cuentas.html">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V5a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
@@ -27,7 +27,7 @@
         </svg>
         <span>Cuentas</span>
     </a>
-    <a class="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-800 p-3 rounded-lg transition-colors"
+    <a class="sidebar-link flex items-center space-x-3 text-slate-400 p-3 rounded-lg"
         href="transacciones.html">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -36,15 +36,13 @@
         </svg>
         <span>Transacciones</span>
     </a>
-    <a class="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-800 p-3 rounded-lg transition-colors"
-        href="#">
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7 7h.01M7 11h.01M7 15h.01M11 7h.01M11 11h.01M11 15h.01M15 7h.01M15 11h.01M15 15h.01"
-                stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-        </svg>
+    <a class="sidebar-link flex items-center gap-3 px-3 py-3 rounded-lg"
+        href="categoria.html">
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">sell</span>
+
         <span>Categorías</span>
     </a>
-    <a class="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-800 p-3 rounded-lg transition-colors"
+    <a class="sidebar-link flex items-center space-x-3 text-slate-400 p-3 rounded-lg"
         href="#">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -55,7 +53,7 @@
         </svg>
         <span>Ajustes</span>
     </a>
-        <a class="flex items-center space-x-3 text-slate-400 hover:text-white hover:bg-slate-800 p-3 rounded-lg transition-colors"
+    <a class="sidebar-link flex items-center space-x-3 text-slate-400 p-3 rounded-lg"
         href="test.html">
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path
@@ -77,3 +75,21 @@
         </div>
     </div>
 </div>
+<style>
+    .sidebar-link {
+        transition: background-color .15s, color .15s, box-shadow .15s;
+    }
+    .sidebar-link:hover {
+        background-color: rgb(51 65 85 / 0.5);
+        color: #fff;
+    }
+    .sidebar-link.sidebar-active {
+        background-color: rgb(16 185 129 / 0.10);
+        color: #34d399;
+        box-shadow: 0 0 0 1px rgb(16 185 129 / 0.30), 0 0 14px rgb(16 185 129 / 0.25);
+    }
+    .sidebar-link.sidebar-active:hover {
+        background-color: rgb(16 185 129 / 0.15);
+        color: #34d399;
+    }
+</style>
