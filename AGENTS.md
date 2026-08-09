@@ -10,11 +10,14 @@
 ```powershell
 venv\Scripts\activate
 pip install -r requirements.txt
+pip install -r requirements-dev.txt     # dev only (pytest, httpx, ruff)
 python main.py                  # full app (BD + API + web)
 python main.py --api            # API only
 python main.py --api --debug    # API with debug logging
 python main.py --bd             # DB init only
 python main.py --web            # web shell only
+python -m pytest tests -v       # run tests (or .\run_tests.ps1)
+python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 ```
 
 ## Architecture
@@ -52,7 +55,19 @@ python main.py --web            # web shell only
 - `Movimiento.es_ingreso` inferred from `monto > 0`.
 - Tailwind configured via inline `<script>` in `index.html` (no build step).
 - Frontend uses `sessionStorage` for token (key: `auth_token`) and `localStorage` for `remember_session` flag.
-- No tests, no lint/format/typecheck config, no CI.
+- `obtener_usuario_por_token()` only checks the **first** `Sesion` row → single active session by design; isolation tests log in users sequentially.
+
+## Tests (Fase 6)
+
+- `pytest` + `httpx` + `ruff` in `requirements-dev.txt`; config in `pyproject.toml`.
+- `tests/conftest.py` sets `os.environ["APPDATA"]` to a temp dir **before** importing app modules, so the global `engine` binds to a temp SQLite; an autouse `reset_db` fixture drops/recreates schema + seeds per test.
+- API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
+- Dates sent to the API use `dd-mm-YYYY` (parsed by `DateFromString`).
+- Lint is scoped to `tests/` + `api/mainApi.py` (ruff `select = ["E", "F", "I"]`).
+
+## What's missing / planned
+
+See `porHacer.md` for full roadmap. Priority items: connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB).
 
 ## MCP Knowledge Graph (codebase-memory-mcp)
 

@@ -1,14 +1,16 @@
 import logging
 from pathlib import Path
-from fastapi import FastAPI, Request, Depends, HTTPException
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from api.routers import auth, cuenta, moneda, movimientos, resumen, tipos, subtipos
+
 from api.dependencies import validate_token
-from config import is_debug_enabled, API_HOST, API_PORT
+from api.routers import auth, cuenta, moneda, movimientos, resumen, subtipos, tipos
+from config import is_debug_enabled
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
 DEBUG_MODE = is_debug_enabled()
@@ -62,7 +64,8 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             "error": exc.detail,
             "status": exc.status_code,
             "path": str(request.url)
-        }
+        },
+        headers=exc.headers,
     )
 
 @app.exception_handler(RequestValidationError)

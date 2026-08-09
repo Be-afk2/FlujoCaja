@@ -201,17 +201,17 @@ Objetivo: que cada pantalla trabaje con datos reales y estados claros.
 
 Objetivo: poder modificar la app sin romper comportamiento basico.
 
-- [ ] Agregar `pytest`.
-- [ ] Crear base SQLite temporal para tests.
-- [ ] Testear creacion de usuario.
-- [ ] Testear login.
-- [ ] Testear creacion de cuenta.
-- [ ] Testear creacion de movimiento.
-- [ ] Testear actualizacion de saldo al crear/editar/eliminar movimientos.
-- [ ] Testear filtros de movimientos.
-- [ ] Testear que un usuario no pueda acceder a datos de otro.
-- [ ] Agregar script o comando para correr tests.
-- [ ] Agregar chequeo basico de formato/lint.
+- [x] Agregar `pytest`.
+- [x] Crear base SQLite temporal para tests.
+- [x] Testear creacion de usuario.
+- [x] Testear login.
+- [x] Testear creacion de cuenta.
+- [x] Testear creacion de movimiento.
+- [x] Testear actualizacion de saldo al crear/editar/eliminar movimientos.
+- [x] Testear filtros de movimientos.
+- [x] Testear que un usuario no pueda acceder a datos de otro.
+- [x] Agregar script o comando para correr tests.
+- [x] Agregar chequeo basico de formato/lint.
 
 ---
 
