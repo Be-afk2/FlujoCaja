@@ -20,7 +20,7 @@ def crear_session_sqlmodel() -> Session:
 
 # ==================== OPERACIONES DB ====================
 
-def guardar_sesion_bd(user_id: str) -> bool:
+def guardar_sesion_bd(user_id: str) -> str | None:
     try:
         with crear_session_sqlmodel() as session:
             sesion_antigua = obtener_sesion_db(session)
@@ -33,10 +33,11 @@ def guardar_sesion_bd(user_id: str) -> bool:
             )
             session.add(nueva_sesion)
             session.commit()
-            return True
+            session.refresh(nueva_sesion)
+            return nueva_sesion.token
     except Exception as e:
         logger.error("Error al guardar sesion: %s", e)
-        return False
+        return None
 
 
 def actualizar_token_bd() -> str | None:

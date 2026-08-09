@@ -127,6 +127,7 @@ def update_movimiento(
             old_fecha=fecha_anterior,
         )
         session.commit()
+        session.refresh(mov)
 
     return mov
 

@@ -21,3 +21,8 @@ class CuentaResponse(BaseModel):
     descripcion: Optional[str]
     tipo_id: int
     moneda_id: int
+
+
+class TipoCuentaResponse(BaseModel):
+    id: int
+    tipo: str

@@ -11,5 +11,25 @@ async function loadComponents() {
 
         el.innerHTML = html
     }
+
+    cargarNombreUsuario()
 }
+
+/**
+ * Rellena el nombre de usuario del menú lateral desde la sesión activa.
+ */
+async function cargarNombreUsuario() {
+    const nombreEl = document.getElementById('userName');
+    if (!nombreEl || typeof get !== 'function') return;
+
+    try {
+        const sesion = await get('auth/');
+        if (sesion?.user?.name) {
+            nombreEl.textContent = sesion.user.name;
+        }
+    } catch (error) {
+        console.warn('No se pudo cargar el nombre de usuario:', error.message);
+    }
+}
+
 loadComponents()

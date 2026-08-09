@@ -43,7 +43,14 @@ async function crearCuenta() {
     }
 
     const valores = obtenerValoresFormulario();
-    
+    const btnCrearCuenta = document.getElementById('btnCrearCuenta');
+
+    // Estado de carga
+    if (btnCrearCuenta) {
+        btnCrearCuenta.disabled = true;
+        btnCrearCuenta.textContent = 'Creando cuenta...';
+    }
+
     try {
         console.log('📤 Enviando solicitud de registro...');
         const response = await post('auth/register', {
@@ -54,14 +61,23 @@ async function crearCuenta() {
 
         if (response) {
             console.log('✓ Cuenta creada exitosamente:', response);
-            // Aquí puedes redirigir al usuario o mostrar un mensaje de éxito
-            alert('✓ Cuenta creada exitosamente');
+            mostrarNotificacion('Cuenta creada exitosamente');
             // Limpiar formulario
             document.getElementById('formCrearCuenta').reset();
+            // Redirigir al login
+            setTimeout(() => {
+                window.location.href = './login.html';
+            }, 800);
         }
     } catch (error) {
         console.error('✗ Error al crear cuenta:', error);
-        alert(`✗ Error: ${error.message}`);
+        mostrarNotificacion(error.message || 'Error al crear la cuenta', 'error');
+    } finally {
+        // Restaurar estado del botón
+        if (btnCrearCuenta) {
+            btnCrearCuenta.disabled = false;
+            btnCrearCuenta.textContent = 'Crear Cuenta';
+        }
     }
 }
 

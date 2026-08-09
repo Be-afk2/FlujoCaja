@@ -42,7 +42,14 @@ async function Login() {
     }
 
     const valores = obtenerValoresFormulario();
-    
+    const btnLogin = document.getElementById('btnLogin');
+
+    // Estado de carga
+    if (btnLogin) {
+        btnLogin.disabled = true;
+        btnLogin.textContent = 'Ingresando...';
+    }
+
     try {
         console.log('📤 Enviando solicitud de login...');
         const response = await post('auth/login', {
@@ -53,7 +60,7 @@ async function Login() {
         console.log('✓ Respuesta recibida:', response);
         if (response) {
             console.log('✓ Login exitoso:', response);
-            
+
             // Guardar token si existe
             if (response.token) {
                 localStorage.setItem("remember_session", valores.recordar);
@@ -62,8 +69,8 @@ async function Login() {
             }
 
             // Mostrar mensaje de éxito
-            alert('✓ Sesión iniciada exitosamente');
-            
+            mostrarNotificacion('Sesión iniciada exitosamente');
+
             // Redirigir al panel de control
             setTimeout(() => {
                 window.location.href = './panelControl.html';
@@ -71,10 +78,10 @@ async function Login() {
         }
     } catch (error) {
         console.error('✗ Error al iniciar sesión:', error);
-        
+
         // Extraer mensaje de error detallado
         let mensajeError = 'Error al iniciar sesión';
-        
+
         // Si el error tiene datos de respuesta API
         if (error.data) {
             console.error('📋 Datos del error:', error.data);
@@ -84,9 +91,9 @@ async function Login() {
         else if (error.message) {
             mensajeError = error.message;
         }
-        
+
         // Validar errores específicos por código de estado
-        if (error.status === 404) {
+        if (error.status === 401 || error.status === 404) {
             mensajeError = 'Usuario o contraseña incorrectos';
             console.warn('⚠ Intento de login fallido: credenciales inválidas');
         } else if (error.status === 400) {
@@ -96,8 +103,14 @@ async function Login() {
         } else if (error.message.includes('timeout') || error.message.includes('Timeout')) {
             mensajeError = 'Tiempo de conexión agotado. Intenta nuevamente.';
         }
-        
-        alert(`✗ ${mensajeError}`);
+
+        mostrarNotificacion(mensajeError, 'error');
+    } finally {
+        // Restaurar estado del botón
+        if (btnLogin) {
+            btnLogin.disabled = false;
+            btnLogin.textContent = 'Iniciar Sesión';
+        }
     }
 }
 

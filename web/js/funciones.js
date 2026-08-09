@@ -38,13 +38,11 @@ function cerrarSesion() {
  * @returns {Promise<Object>} Respuesta parseada como JSON
  * @throws {Error} Si la petición falla o la respuesta no es válida
  */
-const PUBLIC_PATHS = ["auth/", "auth/login", "auth/register", "health"];
+const PUBLIC_PATHS = ["auth/login", "auth/register", "health"];
 
 async function request(path, { method = 'GET', data = null, headers = {} } = {}) {
     const url = `${CONFIG.baseUrl}${path}`;
     const requestHeaders = { ...CONFIG.headers, ...headers };
-    console.log("-------------------url-------------------")
-    console.log(url)
     const token = obtenerToken();
     if (token && !PUBLIC_PATHS.includes(path)) {
         requestHeaders["Authorization"] = `Bearer ${token}`;
@@ -63,8 +61,9 @@ async function request(path, { method = 'GET', data = null, headers = {} } = {})
     try {
         const response = await fetch(url, options);
         
-        if (response.status === 401) {
+        if (response.status === 401 && !PUBLIC_PATHS.includes(path)) {
             cerrarSesion();
+            redirigirLogin();
         }
 
         if (!response.ok) {
@@ -123,5 +122,127 @@ async function deleteRequest(path) {
  */
 async function putRequest(path, data = {}) {
     return request(path, { method: 'PUT', data });
+}
+
+// ==================== HELPERS UI / DATOS ====================
+
+/**
+ * Redirige a la pantalla de login resolviendo la ruta según la ubicación actual.
+ */
+function redirigirLogin() {
+    const estaEnPages = window.location.pathname.includes('/pages/');
+    window.location.href = estaEnPages ? 'login.html' : 'pages/login.html';
+}
+
+/**
+ * Formatea un monto como moneda con signo de dólar.
+ * @param {number} monto
+ * @returns {string}
+ */
+function formatearDinero(monto) {
+    const numero = Number(monto) || 0;
+    return '$' + numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * Convierte fecha ISO (YYYY-MM-DD) al formato que espera la API (dd-mm-YYYY).
+ * @param {string} iso - Fecha en formato YYYY-MM-DD (de input date) o vacío.
+ * @returns {string|null} null si no hay fecha (la API usará hoy).
+ */
+function fechaParaAPI(iso) {
+    if (!iso) return null;
+    const [anio, mes, dia] = iso.split('-');
+    return `${dia}-${mes}-${anio}`;
+}
+
+/**
+ * Convierte una fecha ISO (YYYY-MM-DD) a formato de display dd/mm/YYYY.
+ * @param {string} iso
+ * @returns {string}
+ */
+function formatearFechaLegible(iso) {
+    if (!iso) return '—';
+    const [anio, mes, dia] = iso.split('-');
+    return `${dia}/${mes}/${anio}`;
+}
+
+/**
+ * Llena un <select> con las cuentas del usuario.
+ * @param {string} selectId - ID del elemento select.
+ * @param {number|null} seleccionado - ID de cuenta a preseleccionar.
+ */
+async function cargarSelectorCuentas(selectId, seleccionado = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const cuentas = await get('cuentas/');
+    select.innerHTML = '<option value="">Seleccionar cuenta</option>' +
+        cuentas.map(c => `<option value="${c.id}" ${Number(c.id) === Number(seleccionado) ? 'selected' : ''}>${c.nombre}</option>`).join('');
+    return cuentas;
+}
+
+/**
+ * Llena un <select> con los tipos de movimiento.
+ * @param {string} selectId - ID del elemento select.
+ * @param {number|null} seleccionado - ID de tipo a preseleccionar.
+ */
+async function cargarSelectorTipos(selectId, seleccionado = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const tipos = await get('tipos/?cantidad=50');
+    select.innerHTML = '<option value="">Seleccionar tipo</option>' +
+        tipos.map(t => `<option value="${t.id}" ${Number(t.id) === Number(seleccionado) ? 'selected' : ''}>${t.nombre}</option>`).join('');
+    return tipos;
+}
+
+/**
+ * Renderiza una tabla de movimientos en un <tbody>.
+ * @param {string} tbodyId - ID del tbody destino.
+ * @param {Array} movimientos - Lista de MovimientoResponse.
+ * @param {Object} opciones
+ * @param {Object} opciones.cuentasMap - Mapa id -> nombre de cuenta.
+ * @param {Object} opciones.tiposMap - Mapa id -> nombre de tipo.
+ * @param {boolean} opciones.conAcciones - Si mostrar botones Editar/Eliminar.
+ * @param {Function|null} opciones.onEditar - Callback con el movimiento.
+ * @param {Function|null} opciones.onEliminar - Callback con el movimiento.
+ */
+function renderTablaMovimientos(tbodyId, movimientos, { cuentasMap = {}, tiposMap = {}, conAcciones = false, onEditar = null, onEliminar = null } = {}) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+
+    if (!movimientos || movimientos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${conAcciones ? 5 : 4}" class="px-4 py-8 text-center text-slate-500">No hay movimientos registrados.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = movimientos.map(m => {
+        const esIngreso = Number(m.monto) > 0;
+        const montoHtml = `<span class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-rose-500'}">${esIngreso ? '+' : ''}${formatearDinero(m.monto)}</span>`;
+        const nombreTipo = tiposMap[m.tipo_id] || `Tipo ${m.tipo_id}`;
+        const nombreCuenta = cuentasMap[m.cuenta_id] || `Cuenta ${m.cuenta_id}`;
+        const acciones = conAcciones
+            ? `<div class="flex gap-2 justify-end">
+                 <button type="button" data-accion="editar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">Editar</button>
+                 <button type="button" data-accion="eliminar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 transition-colors">Eliminar</button>
+               </div>`
+            : '';
+        return `<tr class="border-b border-slate-800">
+            <td class="px-4 py-3 text-sm text-slate-400 whitespace-nowrap">${formatearFechaLegible(m.fecha)}</td>
+            <td class="px-4 py-3 text-sm text-slate-200">${nombreTipo}</td>
+            <td class="px-4 py-3 text-sm text-slate-400">${nombreCuenta}</td>
+            <td class="px-4 py-3 text-sm text-right">${montoHtml}</td>
+            ${conAcciones ? `<td class="px-4 py-3">${acciones}</td>` : ''}
+        </tr>`;
+    }).join('');
+
+    if (conAcciones) {
+        tbody.querySelectorAll('[data-accion]').forEach(btn => {
+            const id = Number(btn.getAttribute('data-id'));
+            const mov = movimientos.find(x => Number(x.id) === id);
+            btn.addEventListener('click', () => {
+                if (btn.getAttribute('data-accion') === 'editar' && onEditar) onEditar(mov);
+                if (btn.getAttribute('data-accion') === 'eliminar' && onEliminar) onEliminar(mov);
+            });
+        });
+    }
 }
 

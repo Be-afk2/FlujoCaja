@@ -19,13 +19,14 @@ def register(newUser: UserDTO):
     logger.debug("Creando usuario: %s", newUser)
     return crear_usuario(newUser.name, newUser.apellido, newUser.passw)
 
-@router.post("/login", response_model=UserPublic, summary="Iniciar sesión")
+@router.post("/login", response_model=UserWithToken, summary="Iniciar sesión")
 def login(user: UserLogin):
     userLogin = login_user(user.name, user.passw)
     if userLogin:
-        if user.recordar:
-            guardar_sesion_bd(userLogin.id)
-        return userLogin
+        token = guardar_sesion_bd(userLogin.id)
+        if not token:
+            raise HTTPException(status_code=500, detail="No se pudo iniciar sesión")
+        return {"user": userLogin, "token": token}
     raise HTTPException(status_code=401, detail="Credenciales inválidas", headers={"WWW-Authenticate": "Bearer"})
 
 @router.get("", response_model=UserWithToken, summary="Obtener sesión actual")
