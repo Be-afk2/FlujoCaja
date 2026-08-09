@@ -65,6 +65,13 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - Dates sent to the API use `dd-mm-YYYY` (parsed by `DateFromString`).
 - Lint is scoped to `tests/` + `api/mainApi.py` (ruff `select = ["E", "F", "I"]`).
 
+## Key refactors (Fase 7 — Reportes y análisis)
+
+- `POST /movimientos/importar` recibe `{"filas": [MovimientoImport]}` y crea movimientos en bulk (`crear_movimientos_bulk` en `bd/crud/movimiento.py`); devuelve `{"importados", "errores": [{"fila", "error"}]}` — sin auto-rollback, el usuario decide.
+- DTO `MovimientoImport` (monto, fecha, tipo_id, cuenta_id, descripcion) en `api/routers/dtos/movimientoDto.py`.
+- Dashboard: card "Flujo Neto Mensual" (ingresos - gastos del mes, verde/rojo según signo).
+- Transacciones: filtros por cuenta + rango de fecha (`filtroCuenta`, `filtroDesde`, `filtroHasta` → query params `cuenta_id`, `fecha_desde`, `fecha_hasta`), botones Exportar CSV (descarga con BOM UTF-8 para Excel) e Importar CSV (mapea nombres de cuenta/tipo → ids, acepta fechas ISO o `dd-mm-YYYY`).
+
 ## What's missing / planned
 
 See `porHacer.md` for full roadmap. Priority items: connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB).

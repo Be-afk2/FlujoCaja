@@ -88,7 +88,7 @@
         <!-- END: Header -->
         <div class="p-8 space-y-8">
             <!-- BEGIN: Key Metric Cards -->
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-6" data-purpose="stat-cards">
+            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" data-purpose="stat-cards">
                 <!-- Total Balance Card -->
                 <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
@@ -148,6 +148,21 @@
                         </svg>
                         <span id="gastosMesSub">Mes actual</span>
                     </div>
+                </div>
+                <!-- Monthly Net Flow Card -->
+                <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-sm font-medium text-slate-400">Flujo Neto Mensual</span>
+                        <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
+                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round"
+                                    stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-white" id="flujoNeto">$0.00</div>
+                    <div class="mt-2 text-sm text-slate-500" id="flujoNetoSub">Ingresos - Gastos</div>
                 </div>
             </section>
             <!-- END: Key Metric Cards -->

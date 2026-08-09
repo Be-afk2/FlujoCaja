@@ -74,6 +74,57 @@ def get_movimiento(movimiento_id: int, user: User) -> Movimiento | None:
         return mov
 
 
+def crear_movimientos_bulk(filas: list[dict], user: User) -> dict:
+    """Inserta varios movimientos en una sola transacción.
+
+    Valida cada fila por separado; las inválidas se reportan en `errores`
+    sin abortar la importación del resto. Devuelve:
+    {"importados": int, "errores": [{"fila": int, "error": str}]}
+    """
+    importados = 0
+    errores: list[dict] = []
+
+    with Session(engine) as session:
+        for idx, fila in enumerate(filas, start=1):
+            try:
+                cuenta_id = fila["cuenta_id"]
+                tipo_id = fila["tipo_id"]
+                monto = fila["monto"]
+
+                _validar_cuenta(cuenta_id, user, session)
+                subtipo_id = fila.get("subtipo_id")
+                if subtipo_id is not None:
+                    _validar_subtipo(subtipo_id, tipo_id, session)
+
+                nuevo_movimiento = Movimiento(
+                    monto=monto,
+                    es_ingreso=monto > 0,
+                    tipo_id=tipo_id,
+                    subtipo_id=subtipo_id,
+                    cuenta_id=cuenta_id,
+                    user_id=str(user.id),
+                    descripcion=fila.get("descripcion"),
+                    fecha=fila.get("fecha") or date.today(),
+                )
+                session.add(nuevo_movimiento)
+                session.flush()
+                actualizar_saldo(cuenta_id, monto, session=session)
+                actualizar_por_movimiento(
+                    session,
+                    str(user.id),
+                    cuenta_id,
+                    monto,
+                    nuevo_movimiento.fecha,
+                )
+                importados += 1
+            except (ValueError, KeyError, TypeError) as e:
+                errores.append({"fila": idx, "error": str(e)})
+
+        session.commit()
+
+    return {"importados": importados, "errores": errores}
+
+
 def update_movimiento(
     movimiento_id: int,
     user: User,

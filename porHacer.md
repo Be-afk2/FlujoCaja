@@ -222,12 +222,12 @@ Objetivo: convertir los datos registrados en informacion util.
 - [x] Dashboard con saldo total por cuenta.
 - [x] Ingresos del mes.
 - [x] Gastos del mes.
-- [ ] Flujo neto mensual.
+- [x] Flujo neto mensual.
 - [x] Grafico de evolucion por mes.
 - [x] Grafico por categorias.
-- [ ] Filtros por cuenta y rango de fecha.
-- [ ] Exportar movimientos a CSV.
-- [ ] Preparar importacion desde CSV.
+- [x] Filtros por cuenta y rango de fecha.
+- [x] Exportar movimientos a CSV.
+- [x] Importacion desde CSV (POST `/movimientos/importar` + UI en transacciones).
 
 ---
 

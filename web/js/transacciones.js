@@ -46,6 +46,7 @@ async function cargarSelectores() {
     try {
         await Promise.all([
             cargarSelectorCuentas('account'),
+            cargarSelectorCuentas('filtroCuenta'),
             cargarSelectorTipos('category'),
         ]);
     } catch (error) {
@@ -148,6 +149,24 @@ async function guardarTransaccion() {
 
 // ==================== LISTAR MOVIMIENTOS ====================
 
+function filtrosQuery(cantidad = '50') {
+    const params = new URLSearchParams({ cantidad });
+    const cuenta = document.getElementById('filtroCuenta')?.value;
+    const desde = document.getElementById('filtroDesde')?.value;
+    const hasta = document.getElementById('filtroHasta')?.value;
+    if (cuenta) params.set('cuenta_id', cuenta);
+    if (desde) params.set('fecha_desde', fechaParaAPI(desde));
+    if (hasta) params.set('fecha_hasta', fechaParaAPI(hasta));
+    return params.toString();
+}
+
+function limpiarFiltros() {
+    document.getElementById('filtroCuenta').value = '';
+    document.getElementById('filtroDesde').value = '';
+    document.getElementById('filtroHasta').value = '';
+    cargarMovimientos();
+}
+
 async function cargarMovimientos() {
     const tbody = document.getElementById('tbodyMovimientos');
     if (!tbody) return;
@@ -156,7 +175,7 @@ async function cargarMovimientos() {
 
     try {
         const [resp, cuentas, tipos] = await Promise.all([
-            get('movimientos/?cantidad=50'),
+            get(`movimientos/?${filtrosQuery()}`),
             get('cuentas/'),
             get('tipos/?cantidad=50'),
         ]);
@@ -179,6 +198,164 @@ async function cargarMovimientos() {
     } catch (error) {
         console.error('Error cargando movimientos:', error);
         tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">Error al cargar movimientos.</td></tr>';
+    }
+}
+
+// ==================== EXPORTAR / IMPORTAR CSV ====================
+
+function csvEscape(v) {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+async function exportarCSV() {
+    const btn = document.getElementById('btnExportarCSV');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Generando...';
+    }
+
+    try {
+        const [resp, cuentas, tipos] = await Promise.all([
+            get(`movimientos/?${filtrosQuery('100000')}`),
+            get('cuentas/'),
+            get('tipos/?cantidad=50'),
+        ]);
+
+        const cuentasMap = {};
+        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; });
+        const tiposMap = {};
+        tipos.forEach(t => { tiposMap[t.id] = t.nombre; });
+
+        const lineas = [['fecha', 'monto', 'tipo', 'cuenta', 'descripcion']];
+        (resp.data || []).forEach(m => {
+            lineas.push([
+                m.fecha,
+                m.monto,
+                tiposMap[m.tipo_id] || '',
+                cuentasMap[m.cuenta_id] || '',
+                m.descripcion || '',
+            ].map(csvEscape).join(','));
+        });
+
+        const csv = '\ufeff' + lineas.join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `movimientos_${fechaHoyISO()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        mostrarNotificacion(`Exportados ${resp.total} movimientos`);
+    } catch (error) {
+        console.error('Error exportando CSV:', error);
+        mostrarNotificacion(error.message || 'Error al exportar CSV', 'error');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Exportar CSV';
+        }
+    }
+}
+
+function parsearCSV(texto) {
+    const filas = [];
+    const lineas = texto.replace(/^\uFEFF/, '').trim().split(/\r?\n/);
+    if (lineas.length < 2) return filas;
+
+    const headers = lineas[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    for (let i = 1; i < lineas.length; i++) {
+        const linea = lineas[i].trim();
+        if (!linea) continue;
+
+        const valores = [];
+        let actual = '';
+        let entreComillas = false;
+        for (const ch of linea) {
+            if (ch === '"') {
+                entreComillas = !entreComillas;
+            } else if (ch === ',' && !entreComillas) {
+                valores.push(actual);
+                actual = '';
+            } else {
+                actual += ch;
+            }
+        }
+        valores.push(actual);
+
+        const fila = {};
+        headers.forEach((h, idx) => { fila[h] = (valores[idx] || '').trim(); });
+        filas.push(fila);
+    }
+    return filas;
+}
+
+function fechaParaAPICompat(f) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(f)) return fechaParaAPI(f);
+    if (/^\d{2}-\d{2}-\d{4}$/.test(f)) return f;
+    return null;
+}
+
+async function importarCSV(file) {
+    const texto = await file.text();
+    const filas = parsearCSV(texto);
+
+    if (filas.length === 0) {
+        mostrarNotificacion('El archivo CSV está vacío o no tiene encabezado', 'warning');
+        return;
+    }
+
+    const [cuentas, tipos] = await Promise.all([
+        get('cuentas/'),
+        get('tipos/?cantidad=50'),
+    ]);
+    const cuentasPorNombre = {};
+    cuentas.forEach(c => { cuentasPorNombre[c.nombre.toLowerCase()] = c.id; });
+    const tiposPorNombre = {};
+    tipos.forEach(t => { tiposPorNombre[t.nombre.toLowerCase()] = t.id; });
+
+    const items = [];
+    let erroresPrevios = 0;
+    filas.forEach(f => {
+        const cuentaId = cuentasPorNombre[String(f.cuenta || '').toLowerCase()];
+        const tipoId = tiposPorNombre[String(f.tipo || '').toLowerCase()];
+        const monto = Number(f.monto);
+        const fecha = fechaParaAPICompat(f.fecha || '');
+
+        if (!cuentaId || !tipoId || Number.isNaN(monto) || !fecha) {
+            erroresPrevios++;
+            return;
+        }
+
+        items.push({
+            monto,
+            tipo_id: tipoId,
+            cuenta_id: cuentaId,
+            descripcion: f.descripcion || null,
+            fecha,
+        });
+    });
+
+    if (items.length === 0) {
+        mostrarNotificacion('Ninguna fila válida para importar', 'error');
+        return;
+    }
+
+    try {
+        const resp = await post('movimientos/importar', { filas: items });
+        const erroresTotales = resp.errores.length + erroresPrevios;
+        const msg = `Importados: ${resp.importados}`;
+        mostrarNotificacion(
+            erroresTotales > 0 ? `${msg} · Errores: ${erroresTotales}` : msg,
+            erroresTotales > 0 ? 'warning' : 'success'
+        );
+        cargarMovimientos();
+    } catch (error) {
+        console.error('Error importando CSV:', error);
+        mostrarNotificacion(error.message || 'Error al importar CSV', 'error');
     }
 }
 
@@ -311,6 +488,17 @@ function initTransacciones() {
     document.querySelectorAll('[data-cerrar-edicion]').forEach(btn => btn.addEventListener('click', cerrarModalEditar));
     document.querySelectorAll('[data-cerrar-eliminar]').forEach(btn => btn.addEventListener('click', cerrarModalEliminar));
     document.getElementById('btnConfirmarEliminar')?.addEventListener('click', eliminarMovimiento);
+
+    document.getElementById('filtroCuenta')?.addEventListener('change', cargarMovimientos);
+    document.getElementById('filtroDesde')?.addEventListener('change', cargarMovimientos);
+    document.getElementById('filtroHasta')?.addEventListener('change', cargarMovimientos);
+    document.getElementById('btnLimpiarFiltros')?.addEventListener('click', limpiarFiltros);
+    document.getElementById('btnExportarCSV')?.addEventListener('click', exportarCSV);
+    document.getElementById('inputImportarCSV')?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) importarCSV(file);
+        e.target.value = '';
+    });
 
     cargarSelectores();
 }

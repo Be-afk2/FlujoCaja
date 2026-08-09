@@ -56,3 +56,26 @@ class MovimientoListResponse(BaseModel):
     data: List[MovimientoResponse]
     total: int
     pagina: int
+
+
+class MovimientoImportItem(BaseModel):
+    monto: float
+    tipo_id: int
+    cuenta_id: int
+    subtipo_id: Optional[int] = None
+    descripcion: Optional[str] = None
+    fecha: Optional[DateFromString] = None
+
+
+class MovimientoImportRequest(BaseModel):
+    filas: List[MovimientoImportItem]
+
+
+class MovimientoImportError(BaseModel):
+    fila: int
+    error: str
+
+
+class MovimientoImportResponse(BaseModel):
+    importados: int
+    errores: List[MovimientoImportError]

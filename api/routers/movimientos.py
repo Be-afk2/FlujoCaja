@@ -3,6 +3,7 @@ from typing import List
 
 from bd.crud.movimiento import (
     crear_movimiento,
+    crear_movimientos_bulk,
     get_movimiento,
     update_movimiento,
     delete_movimiento,
@@ -10,7 +11,15 @@ from bd.crud.movimiento import (
 )
 from bd.models.user import User
 from api.dependencies import validate_token
-from .dtos.movimientoDto import MovimientoCreate, MovimientoUpdate, MovimientoFilter, MovimientoResponse, MovimientoListResponse
+from .dtos.movimientoDto import (
+    MovimientoCreate,
+    MovimientoUpdate,
+    MovimientoFilter,
+    MovimientoResponse,
+    MovimientoListResponse,
+    MovimientoImportRequest,
+    MovimientoImportResponse,
+)
 
 router = APIRouter(prefix="/movimientos", tags=["Movimientos"])
 
@@ -46,6 +55,12 @@ def crear(datos: MovimientoCreate, user: User = Depends(validate_token)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return mov
+
+
+@router.post("/importar", response_model=MovimientoImportResponse, summary="Importar movimientos en lote")
+def importar(datos: MovimientoImportRequest, user: User = Depends(validate_token)):
+    filas = [fila.model_dump() for fila in datos.filas]
+    return crear_movimientos_bulk(filas, user)
 
 
 @router.get("/{movimiento_id}", response_model=MovimientoResponse, summary="Obtener movimiento por ID")

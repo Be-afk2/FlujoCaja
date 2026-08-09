@@ -26,6 +26,15 @@ async function cargarDashboard() {
         if (elIngresos) elIngresos.textContent = formatearDinero(ingresos);
         if (elGastos) elGastos.textContent = formatearDinero(gastos);
 
+        // Flujo neto del mes
+        const neto = ingresos - gastos;
+        const elNeto = document.getElementById('flujoNeto');
+        if (elNeto) {
+            elNeto.textContent = formatearDinero(neto);
+            elNeto.classList.remove('text-emerald-500', 'text-rose-500');
+            elNeto.classList.add(neto >= 0 ? 'text-emerald-500' : 'text-rose-500');
+        }
+
         // Saldo total = suma de saldos de cuentas
         const saldoTotal = (cuentas || []).reduce((s, c) => s + (c.saldo || 0), 0);
         const elSaldo = document.getElementById('saldoTotal');
