@@ -9,8 +9,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import validate_token
-from api.routers import auth, cuenta, moneda, movimientos, resumen, subtipos, tipos
-from config import is_debug_enabled
+from api.routers import auth, cuenta, datos, moneda, movimientos, resumen, subtipos, tipos
+from config import DATABASE_PATH, is_debug_enabled
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
 DEBUG_MODE = is_debug_enabled()
@@ -29,7 +29,7 @@ else:
 app = FastAPI(
     title="FlujoCaja API",
     description="API local para gestión de flujo de caja personal",
-    version="0.3.0",
+    version="0.4.0",
 )
 
 # CORS abierto para desarrollo local
@@ -92,7 +92,7 @@ if web_dir.is_dir():
 # Health checks
 @app.get("/health")
 def health():
-    return {"message": "alive"}
+    return {"message": "alive", "version": app.version, "database": str(DATABASE_PATH)}
 
 @app.get("/health/token")
 def health_token(_=Depends(validate_token)):
@@ -105,4 +105,5 @@ app.include_router(subtipos.router, dependencies=[Depends(validate_token)])
 app.include_router(cuenta.router, dependencies=[Depends(validate_token)])
 app.include_router(moneda.router, dependencies=[Depends(validate_token)])
 app.include_router(resumen.router, dependencies=[Depends(validate_token)])
+app.include_router(datos.router, dependencies=[Depends(validate_token)])
 

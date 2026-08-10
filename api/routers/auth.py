@@ -3,10 +3,20 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 
-from bd.crud.user import login_user, crear_usuario
+from api.dependencies import validate_token
+from bd.crud.user import login_user, crear_usuario, actualizar_perfil, cambiar_contrasena
 from bd.crud.sesion import guardar_sesion_bd, eliminar_sesion_bd, obtener_usuario_por_token
+from bd.models.user import User
 
-from .dtos.userDto import UserDTO, UserLogin, UserPublic, UserWithToken
+from .dtos.userDto import (
+    UserDTO,
+    UserLogin,
+    UserPublic,
+    UserWithToken,
+    MeResponse,
+    UserProfileUpdate,
+    PasswordChange,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +45,44 @@ def getSesion(credentials=Depends(HTTPBearer())):
     if not usuario:
         raise HTTPException(status_code=401, detail="No hay sesión activa", headers={"WWW-Authenticate": "Bearer"})
     return {"user": usuario, "token": credentials.credentials}
+
+@router.get("/me", response_model=MeResponse, summary="Obtener perfil del usuario autenticado")
+def obtener_perfil(user: User = Depends(validate_token)):
+    return user
+
+
+@router.put("/me", response_model=MeResponse, summary="Actualizar nombre y apellido")
+def actualizar_datos(
+    datos: UserProfileUpdate,
+    user: User = Depends(validate_token),
+):
+    if not datos.name and not datos.apellido:
+        raise HTTPException(status_code=400, detail="Debe enviarse al menos un campo a actualizar")
+
+    actualizado = actualizar_perfil(
+        user_id=str(user.id),
+        name=datos.name,
+        apellido=datos.apellido,
+    )
+    if not actualizado:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return actualizado
+
+
+@router.put("/me/password", summary="Cambiar la contraseña del usuario")
+def cambiar_password(
+    datos: PasswordChange,
+    user: User = Depends(validate_token),
+):
+    ok = cambiar_contrasena(
+        user_id=str(user.id),
+        passw_actual=datos.passw_actual,
+        passw_nueva=datos.passw_nueva,
+    )
+    if not ok:
+        raise HTTPException(status_code=400, detail="La contraseña actual no es correcta")
+    return {"message": "Contraseña actualizada"}
+
 
 @router.delete("")
 def borrar_sesion():

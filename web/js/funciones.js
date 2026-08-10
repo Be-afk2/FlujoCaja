@@ -9,6 +9,15 @@ const CONFIG = {
 
 const TOKEN_KEY = "auth_token";
 
+const THEME_KEY = "app_theme";
+
+function aplicarTemaGlobal() {
+    const tema = localStorage.getItem(THEME_KEY) || "dark";
+    document.documentElement.classList.toggle("dark", tema === "dark");
+}
+
+aplicarTemaGlobal();
+
 function guardarToken(token) {
     sessionStorage.setItem(TOKEN_KEY, token);
     if (localStorage.getItem("remember_session") === "true") {
@@ -122,6 +131,58 @@ async function deleteRequest(path) {
  */
 async function putRequest(path, data = {}) {
     return request(path, { method: 'PUT', data });
+}
+
+/**
+ * Descarga un archivo binario desde la API con el token de sesión.
+ * @param {string} path - Ruta del endpoint (ej: 'datos/backup').
+ * @param {string} nombreArchivo - Nombre con el que se guarda el archivo.
+ */
+async function downloadFile(path, nombreArchivo) {
+    const token = obtenerToken();
+    const response = await fetch(`${CONFIG.baseUrl}${path}`, {
+        headers: token ? { "Authorization": `Bearer ${token}` } : {}
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        throw new Error(errorData.error || 'Error al descargar el archivo');
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+/**
+ * Sube un archivo (multipart) a la API con el token de sesión.
+ * @param {string} path - Ruta del endpoint (ej: 'datos/restaurar').
+ * @param {File} file - Archivo a enviar.
+ * @returns {Promise<Object>} Respuesta JSON.
+ */
+async function uploadFile(path, file) {
+    const token = obtenerToken();
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${CONFIG.baseUrl}${path}`, {
+        method: 'POST',
+        headers: token ? { "Authorization": `Bearer ${token}` } : {},
+        body: formData
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: `HTTP ${response.status}` }));
+        throw new Error(errorData.error || 'Error al subir el archivo');
+    }
+
+    return response.json();
 }
 
 // ==================== HELPERS UI / DATOS ====================

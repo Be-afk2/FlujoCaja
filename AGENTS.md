@@ -27,7 +27,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - **Frontend:** static HTML/JS/Tailwind via CDN in `web/`, loaded by PyQt6 WebEngine
 - **Auth:** simple SQLite token (single-session, no JWT). Bearer token via `Authorization` header. Validated against `sesion` table.
   - Unprotected routes: `/auth/*` (login, register, session check), `/health`
-  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuentas`, `/monedas`, `/resumen`, `/health/token`
+  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuentas`, `/monedas`, `/resumen`, `/health/token`, `/auth/me`, `/datos`
 - **Session:** Single session row in DB. Auth via `Authorization: Bearer <token>`, validated by `validate_token()` in `api/dependencies.py` which resolves the `User`. Legacy `obtener_sesion()` still present but deprecated.
 - `database.db` is gitignored; auto-created on first run.
 
@@ -40,6 +40,15 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - CORS restricted to `["http://127.0.0.1:8000", "http://localhost:8000"]`
 - `FastAPI(title=..., description=..., version="0.3.0")` with `tags` on all 7 routers
 - All POST creation endpoints have `status_code=201`
+
+## Key refactors (Fase 8 — Perfil, contraseña, backup/restaurar)
+
+- `/auth/me` GET returns current user (DTO `MeResponse`); PUT updates `name`/`apellido` (`UserProfileUpdate`, 400 si vacío); PUT `/auth/me/password` valida contraseña actual (`PasswordChange`, bcrypt)
+- `actualizar_perfil` / `cambiar_contrasena` in `bd/crud/user.py` — **convierten `user_id` str → `UUID`** antes de `session.get` (User.id es UUID)
+- `/datos/backup` GET → SQLite `src.backup(dst)` a archivo temporal + `FileResponse` (se auto-elimina vía `BackgroundTask`)
+- `/datos/restaurar` POST multipart (`UploadFile`) → valida header SQLite, `engine.dispose()`, reemplaza `database.db`, `PRAGMA integrity_check`
+- `python-multipart` añadido a `requirements.txt` (necesario para `UploadFile`)
+- Frontend: botones backup/restaurar activos en `ajustes.html`, helpers `downloadFile()`/`uploadFile()` en `funciones.js`
 
 ## Key refactors (Fase 5 — Frontend conectado, en curso)
 

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Ajustes - NombrePendiente App</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#10b981",
+                        "background-dark": "#0f172a",
+                        "card-dark": "#1e293b",
+                        "border-dark": "#334155",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        @view-transition {
+            navigation: auto;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            animation: page-fade-in .18s ease-out;
+        }
+
+        @keyframes page-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+
+<body class="bg-background-dark min-h-screen font-sans text-slate-200 flex overflow-hidden">
+
+    <!-- ==================== MENÚ LATERAL (COMPARTIDO) ==================== -->
+    <aside class="w-64 bg-slate-900 text-white flex flex-col hidden md:flex border-r border-slate-800"
+        data-component="../components/sidemenu.html"></aside>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <div class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <main class="flex-1 p-8">
+            <div class="max-w-5xl mx-auto">
+
+                <header class="mb-8">
+                    <h1 class="text-3xl font-bold text-white">Ajustes</h1>
+                    <p class="text-slate-500">Configura tu cuenta, preferencias y datos de la aplicación.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                    <!-- ==================== COLUMNA IZQUIERDA ==================== -->
+                    <div class="lg:col-span-2 space-y-8">
+
+                        <!-- Perfil -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-5 border-b border-border-dark pb-4">
+                                <span class="material-symbols-outlined text-primary">person</span>
+                                <h2 class="text-lg font-bold text-white">Perfil</h2>
+                            </div>
+                            <form id="formPerfil" class="space-y-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm text-slate-400" for="inputNombre">Nombre</label>
+                                        <input id="inputNombre" type="text" required
+                                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-sm text-slate-400" for="inputApellido">Apellido</label>
+                                        <input id="inputApellido" type="text" required
+                                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" />
+                                    </div>
+                                </div>
+                                <div class="pt-2 flex justify-end">
+                                    <button type="submit" id="btnGuardarPerfil"
+                                        class="bg-primary hover:bg-emerald-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-colors">
+                                        Guardar Cambios
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- Cambiar contraseña -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-5 border-b border-border-dark pb-4">
+                                <span class="material-symbols-outlined text-primary">password</span>
+                                <h2 class="text-lg font-bold text-white">Cambiar contraseña</h2>
+                            </div>
+                            <form id="formPassword" class="space-y-4">
+                                <div class="space-y-2">
+                                    <label class="block text-sm text-slate-400" for="inputPasswActual">Contraseña actual</label>
+                                    <input id="inputPasswActual" type="password" required
+                                        class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" />
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="space-y-2">
+                                        <label class="block text-sm text-slate-400" for="inputPasswNueva">Nueva contraseña</label>
+                                        <input id="inputPasswNueva" type="password" required minlength="4"
+                                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" />
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="block text-sm text-slate-400" for="inputPasswConfirmar">Confirmar nueva contraseña</label>
+                                        <input id="inputPasswConfirmar" type="password" required minlength="4"
+                                            class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary" />
+                                    </div>
+                                </div>
+                                <div class="pt-2 flex justify-end">
+                                    <button type="submit" id="btnCambiarPassword"
+                                        class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 px-6 rounded-xl transition-colors">
+                                        Cambiar Contraseña
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <!-- Monedas -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-5 border-b border-border-dark pb-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-primary">currency_exchange</span>
+                                    <h2 class="text-lg font-bold text-white">Monedas</h2>
+                                </div>
+                                <button type="button" id="btnNuevaMoneda"
+                                    class="inline-flex items-center gap-2 bg-primary hover:bg-emerald-600 text-white font-medium py-2 px-4 rounded-xl transition-colors">
+                                    <span class="material-symbols-outlined text-sm">add</span>
+                                    Añadir
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="border-b border-border-dark">
+                                            <th class="py-3 pr-4 font-semibold text-slate-400 text-sm">Moneda</th>
+                                            <th class="py-3 pr-4 font-semibold text-slate-400 text-sm">Símbolo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="monedas-tbody">
+                                        <tr>
+                                            <td colspan="2" class="py-8 text-center text-slate-500">Cargando monedas...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- Categorías -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-5 border-b border-border-dark pb-4">
+                                <span class="material-symbols-outlined text-primary">category</span>
+                                <h2 class="text-lg font-bold text-white">Categorías</h2>
+                            </div>
+                            <p class="text-sm text-slate-400 mb-4">Gestiona las categorías y subcategorías de tus movimientos.</p>
+                            <a href="categoria.html"
+                                class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                Ir a Categorías
+                            </a>
+                        </section>
+
+                    </div>
+
+                    <!-- ==================== COLUMNA DERECHA ==================== -->
+                    <div class="space-y-8">
+
+                        <!-- Tema -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-primary">palette</span>
+                                <h2 class="text-lg font-bold text-white">Tema</h2>
+                            </div>
+                            <div class="flex items-center justify-between bg-slate-900 rounded-xl p-1 border border-border-dark">
+                                <button type="button" id="btnTemaClaro"
+                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all">
+                                    <span class="material-symbols-outlined text-sm">light_mode</span> Claro
+                                </button>
+                                <button type="button" id="btnTemaOscuro"
+                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all">
+                                    <span class="material-symbols-outlined text-sm">dark_mode</span> Oscuro
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- Datos -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-primary">database</span>
+                                <h2 class="text-lg font-bold text-white">Datos</h2>
+                            </div>
+                            <div class="space-y-3">
+                                <a href="transacciones.html"
+                                    class="w-full flex items-center gap-3 px-4 py-3 bg-slate-900 border border-border-dark hover:border-primary/50 text-slate-200 rounded-xl transition-colors text-sm">
+                                    <span class="material-symbols-outlined text-primary text-lg">download</span>
+                                    Exportar a CSV
+                                </a>
+                                <button type="button" id="btnBackup"
+                                    class="w-full flex items-center gap-3 px-4 py-3 bg-slate-900 border border-border-dark hover:border-primary/50 text-slate-200 rounded-xl transition-colors text-sm">
+                                    <span class="material-symbols-outlined text-lg">backup</span>
+                                    Backup de base de datos
+                                </button>
+                                <button type="button" id="btnRestaurar"
+                                    class="w-full flex items-center gap-3 px-4 py-3 bg-slate-900 border border-border-dark hover:border-primary/50 text-slate-200 rounded-xl transition-colors text-sm">
+                                    <span class="material-symbols-outlined text-lg">restore</span>
+                                    Restaurar base de datos
+                                </button>
+                                <input id="inputRestaurarDb" type="file" accept=".db,.sqlite,application/octet-stream" class="hidden" />
+                            </div>
+                        </section>
+
+                        <!-- Acerca de -->
+                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span class="material-symbols-outlined text-primary">info</span>
+                                <h2 class="text-lg font-bold text-white">Acerca de</h2>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-400">Versión:</span>
+                                    <span id="about-version" class="text-slate-200">—</span>
+                                </div>
+                                <div class="flex flex-col gap-1 mt-2">
+                                    <span class="text-slate-400">Base de datos:</span>
+                                    <code id="about-db" class="bg-slate-900 p-2 rounded border border-border-dark text-xs break-all text-slate-300">—</code>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Sesión -->
+                        <section>
+                            <button type="button" id="btnCerrarSesion"
+                                class="w-full flex items-center justify-center gap-2 bg-rose-600/20 border border-rose-500/30 text-rose-400 hover:bg-rose-600/30 font-medium py-3 rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">logout</span>
+                                Cerrar Sesión
+                            </button>
+                        </section>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODAL NUEVA MONEDA ==================== -->
+    <div id="modalMoneda" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg font-bold text-white">Nueva Moneda</h2>
+                <button type="button" data-cerrar-moneda class="text-slate-500 hover:text-slate-300 transition-colors text-xl">&times;</button>
+            </div>
+            <label class="block text-sm text-slate-400 mb-1" for="inputMonedaNombre">Nombre</label>
+            <input id="inputMonedaNombre" type="text" placeholder="Ej: Euro, Peso"
+                class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary mb-4" />
+            <label class="block text-sm text-slate-400 mb-1" for="inputMonedaSimbolo">Símbolo</label>
+            <input id="inputMonedaSimbolo" type="text" placeholder="Ej: €, $"
+                class="w-full bg-slate-900 border border-border-dark rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-primary mb-6" />
+            <div class="flex gap-3">
+                <button type="button" data-cerrar-moneda
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnGuardarMoneda"
+                    class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-emerald-600 text-white font-semibold transition-colors">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CONFIRMACIÓN RESTAURAR BD ==================== -->
+    <div id="modalRestaurar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <h2 class="text-lg font-bold text-white mb-2">¿Restaurar base de datos?</h2>
+            <p class="text-sm text-slate-400 mb-6">Se reemplazarán todos los datos actuales por los del archivo seleccionado. Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3">
+                <button type="button" data-cerrar-restaurar
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarRestaurar"
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors">
+                    Restaurar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL CONFIRMACIÓN CERRAR SESIÓN ==================== -->
+    <div id="modalCerrarSesion" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <h2 class="text-lg font-bold text-white mb-2">¿Cerrar sesión?</h2>
+            <p class="text-sm text-slate-400 mb-6">Deberás volver a iniciar sesión la próxima vez que uses la aplicación.</p>
+            <div class="flex gap-3">
+                <button type="button" data-cerrar-sesion-modal
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarSesion"
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/funciones.js"></script>
+    <script src="../js/notificaciones.js"></script>
+    <script src="../js/ajustes.js"></script>
+    <script src="../js/loadmenu.js"></script>
+
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlmodel import SQLModel
 
 class UserDTO(BaseModel):
@@ -18,3 +18,16 @@ class UserPublic(SQLModel):
 class UserWithToken(BaseModel):
     user: UserPublic
     token: str
+
+class MeResponse(SQLModel):
+    id: uuid.UUID
+    name: str
+    apellido: str
+
+class UserProfileUpdate(BaseModel):
+    name: str | None = None
+    apellido: str | None = None
+
+class PasswordChange(BaseModel):
+    passw_actual: str
+    passw_nueva: str = Field(min_length=4)

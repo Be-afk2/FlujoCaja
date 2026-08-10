@@ -228,6 +228,8 @@ Objetivo: convertir los datos registrados en informacion util.
 - [x] Filtros por cuenta y rango de fecha.
 - [x] Exportar movimientos a CSV.
 - [x] Importacion desde CSV (POST `/movimientos/importar` + UI en transacciones).
+- [x] Backup y restauracion manual de la base de datos (GET/POST `/datos/backup`, `/datos/restaurar`).
+- [x] Gestion de perfil y cambio de contraseña (GET/PUT `/auth/me`, PUT `/auth/me/password`).
 
 ---
 
@@ -240,7 +242,6 @@ Objetivo: distribuir la app como aplicacion local usable.
 - [ ] Incluir frontend estatico en el paquete.
 - [ ] Incluir inicializacion de base de datos.
 - [ ] Guardar base de datos y logs en carpeta de usuario.
-- [ ] Crear backup manual de la base de datos.
 - [ ] Documentar instalacion y ejecucion final.
 
 ---
