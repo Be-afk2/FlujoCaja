@@ -36,6 +36,19 @@
         }
     </script>
     <style>
+        @view-transition {
+            navigation: auto;
+        }
+
+        body {
+            animation: page-fade-in .18s ease-out;
+        }
+
+        @keyframes page-fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }

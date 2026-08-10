@@ -102,8 +102,8 @@ def iniciar_api() -> Optional[subprocess.Popen]:
             env[DEBUG_ENV_VAR] = "1"
         
         popen_kwargs = {
-            "stdout": None if DEBUG_MODE else subprocess.PIPE,
-            "stderr": None if DEBUG_MODE else subprocess.PIPE,
+            "stdout": None if DEBUG_MODE else subprocess.DEVNULL,
+            "stderr": None if DEBUG_MODE else subprocess.DEVNULL,
             "text": True,
             "env": env,
         }

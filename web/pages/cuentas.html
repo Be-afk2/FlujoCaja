@@ -39,6 +39,10 @@
   <!-- END: Custom Configurations -->
   <!-- BEGIN: Page Styles -->
   <style data-purpose="layout-styling">
+    @view-transition {
+      navigation: auto;
+    }
+
     .account-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -55,6 +59,12 @@
 
     body {
       font-family: 'Inter', sans-serif;
+      animation: page-fade-in .18s ease-out;
+    }
+
+    @keyframes page-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet" />

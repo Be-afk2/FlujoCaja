@@ -1,11 +1,12 @@
-import sys
-import os
 import logging
+import os
+import sys
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtCore import QUrl, Qt
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QColor
 from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWidgets import QApplication
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,9 @@ def main():
         QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls,
         True
     )
+
+    # 🎨 Fondo oscuro por defecto para evitar flash blanco/negro entre páginas
+    view.page().setBackgroundColor(QColor("#0f172a"))
 
     # ❌ Desactivar click derecho
     view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
