@@ -39,7 +39,7 @@ async function cargarNombreUsuario() {
     if (!nombreEl || typeof get !== 'function') return;
 
     try {
-        const sesion = await get('auth/');
+        const sesion = await get('auth');
         if (sesion?.user?.name) {
             nombreEl.textContent = sesion.user.name;
         }

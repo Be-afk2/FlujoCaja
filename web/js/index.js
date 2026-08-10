@@ -6,7 +6,7 @@ const ROUTES = {
 };
 
 const API_ENDPOINTS = {
-    AUTH_CHECK: "auth/",
+    AUTH_CHECK: "auth",
     TOKEN_LIFE: "health/token",
 };
 
@@ -100,7 +100,7 @@ async function verificarTokenLife() {
 
         const response = await get(API_ENDPOINTS.TOKEN_LIFE);
         console.log("Respuesta de vida del token:", response);
-        if (!response?.ok) {
+        if (response?.status !== "true") {
             console.warn("⚠ Token inválido o expirado");
             cerrarSesion();
             return false;

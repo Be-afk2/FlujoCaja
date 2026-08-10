@@ -4,17 +4,33 @@ import sys
 
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QColor
-from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QApplication
+
+from config import APP_NAME, DATA_DIR
 
 logger = logging.getLogger(__name__)
 
 
 def main():
     app = QApplication(sys.argv)
+    QApplication.setOrganizationName(APP_NAME)
+    QApplication.setApplicationName(APP_NAME)
+
+    # 💾 Perfil persistente: permite que localStorage (token/sesión recordada)
+    # sobreviva entre ejecuciones de la aplicación.
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    profile = QWebEngineProfile(APP_NAME)
+    profile.setPersistentStoragePath(str(DATA_DIR / "QtWebEngine"))
+    profile.setCachePath(str(DATA_DIR / "QtWebEngine" / "Cache"))
+    profile.settings().setAttribute(
+        QWebEngineSettings.WebAttribute.LocalStorageEnabled,
+        True
+    )
 
     view = QWebEngineView()
+    view.setPage(QWebEnginePage(profile, view))
 
     # ⚙️ Configuración
     settings = view.settings()
