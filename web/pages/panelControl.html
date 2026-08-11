@@ -11,6 +11,8 @@
     <!-- Google Fonts: Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
         rel="stylesheet" />
+    <!-- Font Awesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -25,6 +27,20 @@
                         slate: {
                             900: '#0f172a',
                             950: '#020617',
+                        },
+                        brand: {
+                            DEFAULT: '#10b77f',
+                            50: '#f0fdf7',
+                            100: '#dcfceb',
+                            200: '#bbf7d7',
+                            300: '#86efb8',
+                            400: '#4ade99',
+                            500: '#10b77f',
+                            600: '#059666',
+                            700: '#047855',
+                            800: '#065f46',
+                            900: '#064e3b',
+                            950: '#022c21',
                         }
                     },
                     borderRadius: {
@@ -54,6 +70,16 @@
         @keyframes page-fade-in {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+
+        .income-active {
+            color: #10b77f;
+            border-bottom: 2px solid #10b77f;
+        }
+
+        .expense-active {
+            color: #ef4444;
+            border-bottom: 2px solid #ef4444;
         }
     </style>
 </head>
@@ -263,9 +289,159 @@
                 </div>
             </section>
             <!-- END: Expenses by Category -->
+            <!-- BEGIN: Movimientos Table -->
+            <section class="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 overflow-hidden" data-purpose="movements-table">
+              <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-800">
+                <h3 class="font-bold text-white">Movimientos</h3>
+                <div class="flex items-center gap-3">
+                  <span class="text-sm text-slate-500" id="totalMovimientos"></span>
+                  <button type="button" id="btnExportarCSV"
+                    class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors">
+                    Exportar CSV
+                  </button>
+                  <label for="inputImportarCSV"
+                    class="px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors cursor-pointer">
+                    Importar CSV
+                  </label>
+                  <input type="file" id="inputImportarCSV" accept=".csv" class="hidden" />
+                </div>
+              </div>
+              <div class="flex flex-wrap items-end gap-3 px-6 py-3 border-b border-slate-800">
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1" for="filtroCuenta">Cuenta</label>
+                  <select id="filtroCuenta"
+                    class="px-3 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all">
+                    <option value="">Todas</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1" for="filtroDesde">Desde</label>
+                  <input type="date" id="filtroDesde"
+                    class="px-3 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all [color-scheme:dark]" />
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-slate-500 mb-1" for="filtroHasta">Hasta</label>
+                  <input type="date" id="filtroHasta"
+                    class="px-3 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all [color-scheme:dark]" />
+                </div>
+                <button type="button" id="btnLimpiarFiltros"
+                  class="px-3 py-2 rounded-lg bg-slate-800 text-slate-300 text-sm font-semibold hover:bg-slate-700 transition-colors">
+                  Limpiar
+                </button>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                  <thead class="text-xs uppercase tracking-wider text-slate-500 border-b border-slate-800">
+                    <tr>
+                      <th class="px-4 py-3">Fecha</th>
+                      <th class="px-4 py-3">Tipo</th>
+                      <th class="px-4 py-3">Cuenta</th>
+                      <th class="px-4 py-3 text-right">Monto</th>
+                      <th class="px-4 py-3 text-right">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyMovimientos" class="divide-y divide-slate-800"></tbody>
+                </table>
+              </div>
+            </section>
+            <!-- END: Movimientos Table -->
         </div>
     </main>
     <!-- END: Main Content -->
+    <!-- BEGIN: Modal Editar -->
+    <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+      <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-lg font-bold text-white">Editar Movimiento</h2>
+          <button type="button" data-cerrar-edicion class="text-slate-500 hover:text-slate-300 transition-colors text-xl">
+            &times;
+          </button>
+        </div>
+        <div class="flex border-b border-slate-800 mb-5">
+          <button type="button" class="flex-1 py-3 text-center font-semibold expense-active transition-all"
+            id="editExpenseTab" onclick="setTipoEditar('expense')">
+            <i class="fa-solid fa-arrow-up-from-bracket mr-2"></i>Gasto
+          </button>
+          <button type="button"
+            class="flex-1 py-3 text-center font-semibold text-slate-500 hover:bg-slate-800/50 transition-all"
+            id="editIncomeTab" onclick="setTipoEditar('income')">
+            <i class="fa-solid fa-arrow-down-to-bracket mr-2"></i>Ingreso
+          </button>
+        </div>
+        <form id="formEditar" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editAmount">Monto</label>
+            <input id="editAmount" type="number" step="0.01"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editDate">Fecha</label>
+            <input id="editDate" type="date"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all [color-scheme:dark]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editAccount">Cuenta</label>
+            <select id="editAccount"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all">
+              <option value="">Seleccionar cuenta</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editCategory">Categoría</label>
+            <select id="editCategory"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all">
+              <option value="">Seleccionar tipo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editSubtipo">Subtipo</label>
+            <select id="editSubtipo"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all">
+              <option value="">Seleccionar subtipo</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="editNote">Nota / Descripción</label>
+            <textarea id="editNote" rows="2"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all"></textarea>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="button" data-cerrar-edicion
+              class="flex-1 py-2.5 rounded-lg bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+              Cancelar
+            </button>
+            <button type="button" id="btnGuardarEdicion"
+              class="flex-1 py-2.5 rounded-lg bg-brand text-white font-bold hover:bg-brand-600 transition-colors">
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- END: Modal Editar -->
+
+    <!-- BEGIN: Modal Confirmar Eliminar -->
+    <div id="modalEliminar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+      <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-xl w-full max-w-sm p-6 text-center">
+        <div class="w-14 h-14 mx-auto bg-rose-600/20 rounded-full flex items-center justify-center text-rose-400 mb-4">
+          <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+        </div>
+        <h2 class="text-lg font-bold text-white mb-2">¿Eliminar movimiento?</h2>
+        <p class="text-sm text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
+        <div class="flex gap-3">
+          <button type="button" data-cerrar-eliminar
+            class="flex-1 py-2.5 rounded-lg bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+            Cancelar
+          </button>
+          <button type="button" id="btnConfirmarEliminar"
+            class="flex-1 py-2.5 rounded-lg bg-rose-600 text-white font-bold hover:bg-rose-500 transition-colors">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- END: Modal Confirmar Eliminar -->
+
     <script src="../js/funciones.js"></script>
     <script src="../js/notificaciones.js"></script>
     <script src="../js/panelControl.js"></script>

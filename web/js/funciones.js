@@ -228,6 +228,57 @@ function formatearFechaLegible(iso) {
 }
 
 /**
+ * Devuelve la fecha de hoy en formato ISO (YYYY-MM-DD).
+ * @returns {string}
+ */
+function fechaHoyISO() {
+    return new Date().toISOString().split('T')[0];
+}
+
+/**
+ * Aplica el signo a un monto según si es ingreso o gasto.
+ * @param {number} monto
+ * @param {boolean} esIngreso
+ * @returns {number}
+ */
+function montoConSigno(monto, esIngreso) {
+    return esIngreso ? Math.abs(monto) : -Math.abs(monto);
+}
+
+/**
+ * Alterna la apariencia de pestañas tipo Gasto/Ingreso.
+ * @param {string} tabId - ID de la pestaña que se activa.
+ * @param {string} activo - Clase CSS de la pestaña activa.
+ * @param {string} inactivo - ID de la pestaña que se desactiva.
+ */
+function alternarTab(tabId, activo, inactivo) {
+    document.getElementById(tabId).classList.add(activo);
+    document.getElementById(tabId).classList.remove('text-slate-500');
+    document.getElementById(inactivo).classList.remove(activo === 'income-active' ? 'expense-active' : 'income-active');
+    document.getElementById(inactivo).classList.add('text-slate-500');
+}
+
+/**
+ * Llena el selector de subtipos según el tipo seleccionado.
+ * @param {string} selectId - ID del elemento select.
+ * @param {number|null} tipoId - ID del tipo (o null para limpiar).
+ * @param {number|null} seleccionado - ID de subtipo a preseleccionar.
+ */
+async function cargarSubtipos(selectId, tipoId, seleccionado = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    if (!tipoId) {
+        select.innerHTML = '<option value="">Seleccionar subtipo</option>';
+        return;
+    }
+    const resp = await get(`subtipos/?tipo_id=${tipoId}`);
+    select.innerHTML = '<option value="">Seleccionar subtipo</option>' +
+        (resp.subtipos || []).map(s =>
+            `<option value="${s.id}" ${Number(s.id) === Number(seleccionado) ? 'selected' : ''}>${s.nombre}</option>`
+        ).join('');
+}
+
+/**
  * Llena un <select> con las cuentas del usuario.
  * @param {string} selectId - ID del elemento select.
  * @param {number|null} seleccionado - ID de cuenta a preseleccionar.
