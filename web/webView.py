@@ -6,7 +6,7 @@ from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtGui import QColor
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QFileDialog
 
 from config import APP_NAME, DATA_DIR
 
@@ -28,6 +28,9 @@ def main():
         QWebEngineSettings.WebAttribute.LocalStorageEnabled,
         True
     )
+    # ⬇️ Manejar descargas (backup BD, exportar CSV) para que el usuario
+    # elija dónde guardarlas; sin esto WebEngine cancela las descargas.
+    profile.downloadRequested.connect(_guardar_descarga)
 
     view = QWebEngineView()
     view.setPage(QWebEnginePage(profile, view))
@@ -64,6 +67,22 @@ def main():
 
     # ▶️ Ejecutar app
     sys.exit(app.exec())
+
+
+def _guardar_descarga(download):
+    """Pide al usuario dónde guardar el archivo descargado desde la web."""
+    try:
+        nombre = download.suggestedFileName() or "descarga"
+        ruta, _ = QFileDialog.getSaveFileName(None, "Guardar archivo", nombre)
+        if not ruta:
+            download.cancel()
+            return
+        download.setDownloadDirectory(os.path.dirname(ruta))
+        download.setDownloadFileName(os.path.basename(ruta))
+        download.accept()
+    except Exception as e:
+        logger.error("Error al configurar descarga: %s", e)
+        download.cancel()
 
 
 if __name__ == "__main__":
