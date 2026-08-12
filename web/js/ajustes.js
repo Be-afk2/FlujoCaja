@@ -1,35 +1,5 @@
 // ==================== AJUSTES ====================
 
-const THEME_KEY = 'app_theme';
-
-// ==================== TEMA ====================
-
-function aplicarTema(tema) {
-    document.documentElement.classList.toggle('dark', tema === 'dark');
-    const btnClaro = document.getElementById('btnTemaClaro');
-    const btnOscuro = document.getElementById('btnTemaOscuro');
-    if (!btnClaro || !btnOscuro) return;
-
-    const activo = 'bg-slate-800 text-white';
-    const inactivo = 'text-slate-400';
-    btnClaro.className = `flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${tema === 'light' ? activo : inactivo}`;
-    btnOscuro.className = `flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${tema === 'dark' ? activo : inactivo}`;
-}
-
-function initTema() {
-    const temaGuardado = localStorage.getItem(THEME_KEY) || 'dark';
-    aplicarTema(temaGuardado);
-
-    document.getElementById('btnTemaClaro')?.addEventListener('click', () => {
-        localStorage.setItem(THEME_KEY, 'light');
-        aplicarTema('light');
-    });
-    document.getElementById('btnTemaOscuro')?.addEventListener('click', () => {
-        localStorage.setItem(THEME_KEY, 'dark');
-        aplicarTema('dark');
-    });
-}
-
 // ==================== PERFIL ====================
 
 async function cargarPerfil() {
@@ -127,19 +97,54 @@ async function cargarMonedas() {
     try {
         const monedas = await get('monedas/');
         if (!monedas || monedas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="2" class="py-8 text-center text-slate-500">Aún no hay monedas registradas.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-slate-500">Aún no hay monedas registradas.</td></tr>';
             return;
         }
         tbody.innerHTML = monedas.map(m => `
             <tr class="border-b border-border-dark/50 hover:bg-slate-800 transition-colors">
                 <td class="py-3 pr-4 text-slate-200">${m.nombre}</td>
                 <td class="py-3 pr-4 text-slate-400">${m.simbolo}</td>
+                <td class="py-3 pr-4">
+                    <div class="flex gap-2 justify-end">
+                        <button type="button" data-accion-moneda="editar" data-id="${m.id}"
+                            class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">Editar</button>
+                        <button type="button" data-accion-moneda="eliminar" data-id="${m.id}"
+                            class="px-3 py-1 text-xs font-semibold rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 transition-colors">Eliminar</button>
+                    </div>
+                </td>
             </tr>
         `).join('');
+
+        tbody.querySelectorAll('[data-accion-moneda]').forEach(btn => {
+            const id = Number(btn.getAttribute('data-id'));
+            const moneda = monedas.find(x => Number(x.id) === id);
+            if (btn.getAttribute('data-accion-moneda') === 'editar') {
+                btn.addEventListener('click', () => abrirModalMoneda(moneda));
+            } else {
+                btn.addEventListener('click', () => abrirModalEliminarMoneda(moneda));
+            }
+        });
     } catch (error) {
         console.error('Error cargando monedas:', error);
-        tbody.innerHTML = '<tr><td colspan="2" class="py-8 text-center text-slate-500">Error al cargar las monedas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="3" class="py-8 text-center text-slate-500">Error al cargar las monedas.</td></tr>';
     }
+}
+
+let monedaEnEdicion = null;
+
+function abrirModalMoneda(moneda = null) {
+    monedaEnEdicion = moneda;
+    const modal = document.getElementById('modalMoneda');
+    const titulo = document.getElementById('modalMonedaTitulo');
+    const inputNombre = document.getElementById('inputMonedaNombre');
+    const inputSimbolo = document.getElementById('inputMonedaSimbolo');
+    if (!modal) return;
+
+    titulo.textContent = moneda ? 'Editar Moneda' : 'Nueva Moneda';
+    inputNombre.value = moneda?.nombre || '';
+    inputSimbolo.value = moneda?.simbolo || '';
+    modal.classList.remove('hidden');
+    inputNombre.focus();
 }
 
 function initModalMoneda() {
@@ -148,15 +153,9 @@ function initModalMoneda() {
     const btnGuardar = document.getElementById('btnGuardarMoneda');
     if (!modal || !btnNueva || !btnGuardar) return;
 
-    const abrir = () => {
-        document.getElementById('inputMonedaNombre').value = '';
-        document.getElementById('inputMonedaSimbolo').value = '';
-        modal.classList.remove('hidden');
-        document.getElementById('inputMonedaNombre').focus();
-    };
     const cerrar = () => modal.classList.add('hidden');
 
-    btnNueva.addEventListener('click', abrir);
+    btnNueva.addEventListener('click', () => abrirModalMoneda());
     modal.querySelectorAll('[data-cerrar-moneda]').forEach(el => el.addEventListener('click', cerrar));
     modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
 
@@ -168,13 +167,61 @@ function initModalMoneda() {
             return;
         }
 
+        btnGuardar.disabled = true;
+        btnGuardar.textContent = 'Guardando...';
+
         try {
-            await post('monedas/', { nombre, simbolo });
-            mostrarNotificacion('Moneda creada correctamente');
+            if (monedaEnEdicion) {
+                await putRequest(`monedas/${monedaEnEdicion.id}`, { nombre, simbolo });
+                mostrarNotificacion('Moneda actualizada correctamente');
+            } else {
+                await post('monedas/', { nombre, simbolo });
+                mostrarNotificacion('Moneda creada correctamente');
+            }
+            monedaEnEdicion = null;
             cerrar();
             cargarMonedas();
         } catch (error) {
-            mostrarNotificacion(error.message || 'Error al crear la moneda', 'error');
+            mostrarNotificacion(error.message || 'Error al guardar la moneda', 'error');
+        } finally {
+            btnGuardar.disabled = false;
+            btnGuardar.textContent = 'Guardar';
+        }
+    });
+}
+
+function abrirModalEliminarMoneda(moneda) {
+    const modal = document.getElementById('modalEliminarMoneda');
+    if (!modal) return;
+    modal.dataset.monedaId = moneda.id;
+    modal.classList.remove('hidden');
+}
+
+function initModalEliminarMoneda() {
+    const modal = document.getElementById('modalEliminarMoneda');
+    const btnConfirmar = document.getElementById('btnConfirmarEliminarMoneda');
+    if (!modal || !btnConfirmar) return;
+
+    const cerrar = () => modal.classList.add('hidden');
+
+    modal.querySelectorAll('[data-cerrar-eliminar-moneda]').forEach(el => el.addEventListener('click', cerrar));
+    modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
+
+    btnConfirmar.addEventListener('click', async () => {
+        const id = Number(modal.dataset.monedaId);
+        btnConfirmar.disabled = true;
+        btnConfirmar.textContent = 'Eliminando...';
+
+        try {
+            await deleteRequest(`monedas/${id}`);
+            mostrarNotificacion('Moneda eliminada correctamente');
+            cerrar();
+            cargarMonedas();
+        } catch (error) {
+            mostrarNotificacion(error.message || 'Error al eliminar la moneda', 'error');
+        } finally {
+            btnConfirmar.disabled = false;
+            btnConfirmar.textContent = 'Eliminar';
         }
     });
 }
@@ -294,10 +341,10 @@ function initRestaurarDb() {
 // ==================== INICIALIZACIÓN ====================
 
 document.addEventListener('DOMContentLoaded', () => {
-    initTema();
     cargarPerfil();
     cargarMonedas();
     initModalMoneda();
+    initModalEliminarMoneda();
     initCerrarSesion();
     cargarAcercaDe();
     initRestaurarDb();

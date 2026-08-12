@@ -62,8 +62,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            /* Slate 950 for dark mode background */
+            background-color: #0f172a;
             animation: page-fade-in .18s ease-out;
         }
 
@@ -90,7 +89,7 @@
         data-component="../components/sidemenu.html" data-purpose="sidebar"> </aside>
     <!-- END: Sidebar Navigation -->
     <!-- BEGIN: Main Content -->
-    <main class="flex-1 overflow-y-auto bg-slate-950" data-purpose="main-dashboard-area">
+    <main class="flex-1 overflow-y-auto bg-slate-900" data-purpose="main-dashboard-area">
         <!-- BEGIN: Header -->
         <!--
         <header
@@ -122,7 +121,7 @@
             <!-- BEGIN: Key Metric Cards -->
             <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" data-purpose="stat-cards">
                 <!-- Total Balance Card -->
-                <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+                <div class="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-sm font-medium text-slate-400">Balance Total</span>
                         <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
@@ -145,7 +144,7 @@
                     </div>
                 </div>
                 <!-- Monthly Income Card -->
-                <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+                <div class="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-sm font-medium text-slate-400">Ingresos Mensuales</span>
                         <div class="p-2 bg-emerald-500/10 text-emerald-500 rounded-lg">
@@ -160,7 +159,7 @@
                     <div class="mt-2 text-sm text-slate-500" id="ingresosMesSub">Mes actual</div>
                 </div>
                 <!-- Monthly Expenses Card -->
-                <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+                <div class="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-sm font-medium text-slate-400">Gastos Mensuales</span>
                         <div class="p-2 bg-rose-500/10 text-rose-500 rounded-lg">
@@ -182,7 +181,7 @@
                     </div>
                 </div>
                 <!-- Monthly Net Flow Card -->
-                <div class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800">
+                <div class="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800">
                     <div class="flex items-center justify-between mb-4">
                         <span class="text-sm font-medium text-slate-400">Flujo Neto Mensual</span>
                         <div class="p-2 bg-indigo-500/10 text-indigo-400 rounded-lg">
@@ -200,7 +199,7 @@
             <!-- END: Key Metric Cards -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- BEGIN: Income vs Expenses Chart -->
-                <section class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800"
+                <section class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800"
                     data-purpose="chart-container">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-white">Ingresos vs Gastos</h3>
@@ -267,7 +266,7 @@
                 </section>
                 <!-- END: Income vs Expenses Chart -->
                 <!-- BEGIN: Recent Transactions -->
-                <section class="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 flex flex-col"
+                <section class="bg-slate-800 rounded-2xl shadow-sm border border-slate-800 flex flex-col"
                     data-purpose="transactions-list">
                     <div class="p-6 border-b border-slate-800 flex items-center justify-between">
                         <h3 class="font-bold text-white">Transacciones Recientes</h3>
@@ -279,7 +278,7 @@
                 <!-- END: Recent Transactions -->
             </div>
             <!-- BEGIN: Expenses by Category -->
-            <section class="bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-800"
+            <section class="bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800"
                 data-purpose="expenses-by-category">
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="font-bold text-white">Gastos por Categoría</h3>
@@ -290,7 +289,7 @@
             </section>
             <!-- END: Expenses by Category -->
             <!-- BEGIN: Movimientos Table -->
-            <section class="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 overflow-hidden" data-purpose="movements-table">
+            <section class="bg-slate-800 rounded-2xl shadow-sm border border-slate-800 overflow-hidden" data-purpose="movements-table">
               <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-800">
                 <h3 class="font-bold text-white">Movimientos</h3>
                 <div class="flex items-center gap-3">
@@ -350,7 +349,7 @@
     <!-- END: Main Content -->
     <!-- BEGIN: Modal Editar -->
     <div id="modalEditar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div class="bg-slate-800 rounded-xl border border-slate-800 shadow-xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-6">
           <h2 class="text-lg font-bold text-white">Editar Movimiento</h2>
           <button type="button" data-cerrar-edicion class="text-slate-500 hover:text-slate-300 transition-colors text-xl">
@@ -422,7 +421,7 @@
 
     <!-- BEGIN: Modal Confirmar Eliminar -->
     <div id="modalEliminar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
-      <div class="bg-slate-900 rounded-xl border border-slate-800 shadow-xl w-full max-w-sm p-6 text-center">
+      <div class="bg-slate-800 rounded-xl border border-slate-800 shadow-xl w-full max-w-sm p-6 text-center">
         <div class="w-14 h-14 mx-auto bg-rose-600/20 rounded-full flex items-center justify-center text-rose-400 mb-4">
           <i class="fa-solid fa-triangle-exclamation text-xl"></i>
         </div>

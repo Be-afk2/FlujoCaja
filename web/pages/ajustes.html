@@ -149,11 +149,12 @@
                                         <tr class="border-b border-border-dark">
                                             <th class="py-3 pr-4 font-semibold text-slate-400 text-sm">Moneda</th>
                                             <th class="py-3 pr-4 font-semibold text-slate-400 text-sm">Símbolo</th>
+                                            <th class="py-3 pr-4 font-semibold text-slate-400 text-sm text-right">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody id="monedas-tbody">
                                         <tr>
-                                            <td colspan="2" class="py-8 text-center text-slate-500">Cargando monedas...</td>
+                                            <td colspan="3" class="py-8 text-center text-slate-500">Cargando monedas...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -180,20 +181,23 @@
                     <div class="space-y-8">
 
                         <!-- Tema -->
-                        <section class="bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
+                        <section class="relative bg-card-dark rounded-2xl border border-border-dark shadow-sm p-6">
                             <div class="flex items-center gap-3 mb-4">
                                 <span class="material-symbols-outlined text-primary">palette</span>
                                 <h2 class="text-lg font-bold text-white">Tema</h2>
                             </div>
-                            <div class="flex items-center justify-between bg-slate-900 rounded-xl p-1 border border-border-dark">
-                                <button type="button" id="btnTemaClaro"
-                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all">
+                            <div class="flex items-center justify-between bg-slate-900 rounded-xl p-1 border border-border-dark pointer-events-none opacity-50 blur-[1px] select-none" aria-disabled="true">
+                                <button type="button" id="btnTemaClaro" disabled
+                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all text-slate-400">
                                     <span class="material-symbols-outlined text-sm">light_mode</span> Claro
                                 </button>
-                                <button type="button" id="btnTemaOscuro"
-                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all">
+                                <button type="button" id="btnTemaOscuro" disabled
+                                    class="flex-1 py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all text-slate-400">
                                     <span class="material-symbols-outlined text-sm">dark_mode</span> Oscuro
                                 </button>
+                            </div>
+                            <div class="absolute inset-0 rounded-2xl flex items-end justify-center pb-3 pointer-events-none">
+                                <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 bg-slate-800/90 border border-border-dark rounded-full px-3 py-1">Próximamente</span>
                             </div>
                         </section>
 
@@ -262,7 +266,7 @@
     <div id="modalMoneda" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
         <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
             <div class="flex items-center justify-between mb-6">
-                <h2 class="text-lg font-bold text-white">Nueva Moneda</h2>
+                <h2 class="text-lg font-bold text-white" id="modalMonedaTitulo">Nueva Moneda</h2>
                 <button type="button" data-cerrar-moneda class="text-slate-500 hover:text-slate-300 transition-colors text-xl">&times;</button>
             </div>
             <label class="block text-sm text-slate-400 mb-1" for="inputMonedaNombre">Nombre</label>
@@ -279,6 +283,24 @@
                 <button type="button" id="btnGuardarMoneda"
                     class="flex-1 py-2.5 rounded-xl bg-primary hover:bg-emerald-600 text-white font-semibold transition-colors">
                     Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL ELIMINAR MONEDA ==================== -->
+    <div id="modalEliminarMoneda" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div class="bg-card-dark rounded-2xl border border-border-dark shadow-xl w-full max-w-md p-6">
+            <h2 class="text-lg font-bold text-white mb-2">¿Eliminar moneda?</h2>
+            <p class="text-sm text-slate-400 mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex gap-3">
+                <button type="button" data-cerrar-eliminar-moneda
+                    class="flex-1 py-2.5 rounded-xl bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" id="btnConfirmarEliminarMoneda"
+                    class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold transition-colors">
+                    Eliminar
                 </button>
             </div>
         </div>
