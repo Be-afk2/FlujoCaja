@@ -1,71 +1,57 @@
-import subprocess
-import sys
 import argparse
 import atexit
-import signal
+import logging
 import os
+import signal
+import sys
 import time
-from typing import List, Optional
-from rich.console import Console
-from config import API_HOST, API_PORT, API_STARTUP_DELAY_SECONDS, DEBUG_ENV_VAR, build_api_command
 
-# Importar funciones de módulos
+from config import API_HOST, API_PORT, DEBUG_ENV_VAR
 from bd.bd import comprobar_y_crear_bd
+from bd.logging import get_console, setup_logging
 from web.webView import main as web_main
 
-console = Console()
+logger = logging.getLogger(__name__)
+console = get_console()
 
 
 # ==================== CONFIGURACIÓN GLOBAL ====================
-PROCESOS_ACTIVOS: List[subprocess.Popen] = []
+servidor_api = None  # Instancia de api.server.ServidorAPI
 DEBUG_MODE: bool = False
 
 
-# ==================== FUNCIONES DE GESTIÓN DE PROCESOS ====================
+# ==================== LIMPIEZA Y SEÑALES ====================
 def registrar_limpieza():
-    """Registra la función de limpieza para ejecutar al finalizar."""
-    atexit.register(limpiar_procesos)
+    """Registra la limpieza al finalizar la aplicación."""
+    atexit.register(detener_api)
 
 
 def manejar_signal_interrupt(signum, frame):
-    """Maneja Ctrl+C para limpiar procesos correctamente."""
+    """Maneja Ctrl+C para detener el servidor correctamente."""
     console.print("\n[yellow]-> Recibido Ctrl+C, deteniendo servicios...[/yellow]")
-    limpiar_procesos()
+    detener_api()
     console.print("[green]OK - Todos los servicios han sido terminados.[/green]")
     sys.exit(0)
 
 
-def limpiar_procesos():
-    """Termina todos los procesos activos de manera ordenada."""
-    for proceso in PROCESOS_ACTIVOS:
-        if proceso.poll() is None:  # Si el proceso aún está corriendo
-            try:
-                if os.name == "nt":
-                    subprocess.run(
-                        ["taskkill", "/F", "/T", "/PID", str(proceso.pid)],
-                        capture_output=True,
-                        text=True,
-                        check=False,
-                    )
-                else:
-                    proceso.terminate()
-                proceso.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                proceso.kill()
-                proceso.wait()
-            except Exception:
-                try:
-                    proceso.kill()
-                    proceso.wait()
-                except Exception:
-                    pass
-    PROCESOS_ACTIVOS.clear()
+def detener_api():
+    """Detiene el servidor API in-process de manera ordenada."""
+    global servidor_api
+    if servidor_api is not None:
+        try:
+            servidor_api.detener()
+            logger.info("API detenida.")
+        except Exception as e:
+            logger.error("Error al detener la API: %s", e)
+        finally:
+            servidor_api = None
 
 
+# ==================== INICIALIZACIÓN DE SERVICIOS ====================
 def iniciar_base_datos() -> bool:
     """
     Inicia la base de datos verificando y creando si es necesario.
-    
+
     Returns:
         bool: True si la BD se inició correctamente, False en caso contrario.
     """
@@ -76,59 +62,61 @@ def iniciar_base_datos() -> bool:
         return True
     except Exception as e:
         console.print(f"[red]ERROR - Error al inicializar la base de datos: {e}[/red]")
+        logger.exception("Error al inicializar la base de datos")
         return False
 
 
-def iniciar_api() -> Optional[subprocess.Popen]:
+def iniciar_api() -> bool:
     """
-    Inicia el servidor API en un subprocess.
-    
-    Returns:
-        subprocess.Popen: Objeto del proceso si se inicia correctamente, None en caso contrario.
-    """
-    try:
-        # Actualizar configuración según modo debug
-        comando = build_api_command(sys.executable, DEBUG_MODE)
-        
-        if DEBUG_MODE:
-            console.print(f"[cyan]-> Iniciando API ({API_HOST}:{API_PORT}) en modo DEBUG...[/cyan]")
-        else:
-            console.print(f"[cyan]-> Iniciando API ({API_HOST}:{API_PORT})...[/cyan]")
-        
-        # Preparar variables de entorno
-        env = None
-        if DEBUG_MODE:
-            env = os.environ.copy()
-            env[DEBUG_ENV_VAR] = "1"
-        
-        popen_kwargs = {
-            "stdout": None if DEBUG_MODE else subprocess.DEVNULL,
-            "stderr": None if DEBUG_MODE else subprocess.DEVNULL,
-            "text": True,
-            "env": env,
-        }
-        if os.name == "nt":
-            popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    Inicia el servidor API en un hilo dentro del proceso actual.
 
-        proceso = subprocess.Popen(comando, **popen_kwargs)
-        # Verificar que el proceso se inició correctamente
-        time.sleep(API_STARTUP_DELAY_SECONDS)
-        if proceso.poll() is not None:
-            stdout, stderr = proceso.communicate()
-            console.print(f"[red]ERROR - Error al iniciar la API: {stderr}[/red]")
-            return None
-        PROCESOS_ACTIVOS.append(proceso)
+    Returns:
+        bool: True si la API arrancó correctamente, False en caso contrario.
+    """
+    global servidor_api
+    # Import lazy: api.server importa api.mainApi, que lee DEBUG_ENV_VAR al
+    # importarse. Hay que asegurarse de que el flag --debug ya fue aplicado.
+    from api.server import ServidorAPI
+
+    try:
+        console.print(f"[cyan]-> Iniciando API ({API_HOST}:{API_PORT})...[/cyan]")
+        servidor = ServidorAPI(host=API_HOST, port=API_PORT, debug=DEBUG_MODE)
+        servidor.iniciar()
+        servidor_api = servidor
         console.print("[green]OK - API iniciada correctamente.[/green]")
-        return proceso
+        return True
+    except RuntimeError as e:
+        logger.error("%s", e)
+        console.print(f"[red]ERROR - {e}[/red]")
+        _aviso_puerto_ocupado(API_PORT)
+        return False
     except Exception as e:
         console.print(f"[red]ERROR - Error al iniciar la API: {e}[/red]")
-        return None
+        logger.exception("Error al iniciar la API")
+        return False
+
+
+def _aviso_puerto_ocupado(port: int) -> None:
+    """Muestra un diálogo claro cuando el puerto del API está ocupado."""
+    try:
+        from PyQt6.QtWidgets import QApplication, QMessageBox
+
+        app = QApplication.instance() or QApplication([])
+        QMessageBox.critical(
+            None,
+            "FlujoCaja",
+            f"El puerto {port} está ocupado.\n\n"
+            "Otra aplicación está usando el puerto que FlujoCaja necesita.\n"
+            "Cerrala y volvé a abrir FlujoCaja.",
+        )
+    except Exception:
+        logger.error("Puerto %s ocupado", port)
 
 
 def iniciar_web() -> bool:
     """
-    Inicia la interfaz web (PyQt6).
-    
+    Inicia la interfaz web (PyQt6). Bloquea hasta que se cierre la ventana.
+
     Returns:
         bool: True si se completó la ejecución, False si hubo error.
     """
@@ -141,41 +129,40 @@ def iniciar_web() -> bool:
         return True
     except Exception as e:
         console.print(f"[red]ERROR - Error en la interfaz web: {e}[/red]")
+        logger.exception("Error en la interfaz web")
         return False
 
 
-# ==================== FUNCIONES DE MODO OPERACIONAL ====================
+# ==================== MODOS OPERACIONALES ====================
 def modo_solo_api() -> None:
     """Inicia solo el servidor API."""
     console.print("[bold cyan]--- Modo: Solo API ---[/bold cyan]")
-    
+
     if not iniciar_base_datos():
         console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
-    
-    proceso_api = iniciar_api()
-    if not proceso_api:
+
+    if not iniciar_api():
         console.print("[red]Fallando aplicacion: No se pudo iniciar la API.[/red]")
         sys.exit(1)
-    
+
     try:
-        # Usar un loop para permitir que Ctrl+C se capture correctamente
-        while proceso_api.poll() is None:
-            time.sleep(0.1)
+        while True:
+            time.sleep(0.2)
     except KeyboardInterrupt:
         console.print("[yellow]-> Deteniendo API...[/yellow]")
-        limpiar_procesos()
+        detener_api()
         console.print("[green]OK - API terminada.[/green]")
 
 
 def modo_solo_bd() -> None:
     """Inicia solo la base de datos (útil para verificar)."""
     console.print("[bold cyan]--- Modo: Solo Base de Datos ---[/bold cyan]")
-    
+
     if not iniciar_base_datos():
         console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
-    
+
     console.print("[green]Base de datos lista. Presione Ctrl+C para salir.[/green]")
     try:
         while True:
@@ -185,33 +172,39 @@ def modo_solo_bd() -> None:
 
 
 def modo_solo_web() -> None:
-    """Inicia solo la interfaz web."""
+    """Inicia BD + API + la interfaz web (la UI se sirve desde el API)."""
     console.print("[bold cyan]--- Modo: Solo Web ---[/bold cyan]")
-    
+
     if not iniciar_base_datos():
         console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
-    
-    if not iniciar_web():
-        console.print("[red]Fallando aplicacion: No se pudo iniciar la interfaz web.[/red]")
+
+    if not iniciar_api():
+        console.print("[red]Fallando aplicacion: No se pudo iniciar la API.[/red]")
         sys.exit(1)
+
+    try:
+        if not iniciar_web():
+            console.print("[red]Fallando aplicacion: No se pudo iniciar la interfaz web.[/red]")
+            sys.exit(1)
+    finally:
+        detener_api()
 
 
 def modo_completo() -> None:
     """Inicia todos los servicios (API, BD y Web)."""
     console.print("[bold cyan]--- Modo: Aplicacion Completa ---[/bold cyan]")
-    
+
     # 1. Inicializar Base de Datos
     if not iniciar_base_datos():
         console.print("[red]Fallando aplicacion: No se pudo inicializar la BD.[/red]")
         sys.exit(1)
-    
+
     # 2. Iniciar API
-    proceso_api = iniciar_api()
-    if not proceso_api:
-        console.print("[red]Fallando aplicación: No se pudo iniciar la API.[/red]")
+    if not iniciar_api():
+        console.print("[red]Fallando aplicacion: No se pudo iniciar la API.[/red]")
         sys.exit(1)
-    
+
     # 3. Iniciar Web (bloquea hasta que se cierre)
     try:
         iniciar_web()
@@ -221,7 +214,7 @@ def modo_completo() -> None:
         console.print(f"[red]Error en la aplicacion: {e}[/red]")
     finally:
         console.print("[yellow]-> Cerrando servicios...[/yellow]")
-        limpiar_procesos()
+        detener_api()
         console.print("[green]OK - Todos los servicios han sido terminados.[/green]")
 
 
@@ -240,42 +233,29 @@ Ejemplos de uso:
   python main.py --web         # Inicia solo la Web
         """
     )
-    parser.add_argument(
-        '--api',
-        action='store_true',
-        help='Iniciar solo el servidor API'
-    )
-    parser.add_argument(
-        '--bd',
-        action='store_true',
-        help='Iniciar solo la base de datos'
-    )
-    parser.add_argument(
-        '--web',
-        action='store_true',
-        help='Iniciar solo la interfaz web'
-    )
-    parser.add_argument(
-        '--debug',
-        action='store_true',
-        help='Activar modo debug (muestra logs detallados del API)'
-    )
-    
+    parser.add_argument('--api', action='store_true', help='Iniciar solo el servidor API')
+    parser.add_argument('--bd', action='store_true', help='Iniciar solo la base de datos')
+    parser.add_argument('--web', action='store_true', help='Iniciar solo la interfaz web')
+    parser.add_argument('--debug', action='store_true', help='Activar modo debug (logs detallados)')
+
     args = parser.parse_args()
-    
+
     # Configurar modo debug global
     global DEBUG_MODE
     DEBUG_MODE = args.debug
-    
+
     if DEBUG_MODE:
+        os.environ[DEBUG_ENV_VAR] = "1"
         console.print("[yellow]*** Modo DEBUG activado [/yellow]")
-    
+
+    setup_logging(debug=DEBUG_MODE)
+
     # Registrar limpieza al finalizar
     registrar_limpieza()
-    
+
     # Registrar manejador de Ctrl+C
     signal.signal(signal.SIGINT, manejar_signal_interrupt)
-    
+
     # Determinar qué modo ejecutar
     if args.api:
         modo_solo_api()
@@ -284,7 +264,6 @@ Ejemplos de uso:
     elif args.web:
         modo_solo_web()
     else:
-        # Si no hay parámetros, iniciar todo
         modo_completo()
 
 

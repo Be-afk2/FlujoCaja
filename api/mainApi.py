@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -10,21 +9,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import validate_token
 from api.routers import auth, cuenta, datos, moneda, movimientos, resumen, subtipos, tipos
-from config import DATABASE_PATH, is_debug_enabled
+from bd.logging import setup_logging
+from config import DATABASE_PATH, WEB_DIR, is_debug_enabled
 
 # ==================== CONFIGURACIÓN DE LOGGING ====================
 DEBUG_MODE = is_debug_enabled()
-
+setup_logging(debug=DEBUG_MODE)
+logger = logging.getLogger(__name__)
 if DEBUG_MODE:
-    logging.basicConfig(
-        level=logging.DEBUG,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    logger = logging.getLogger(__name__)
     logger.debug("🔍 Modo DEBUG activado - Logging detallado habilitado")
-else:
-    logging.basicConfig(level=logging.WARNING)
-    logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="FlujoCaja API",
@@ -85,9 +78,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # Servir frontend estático
-web_dir = Path(__file__).resolve().parent.parent / "web"
-if web_dir.is_dir():
-    app.mount("/app", StaticFiles(directory=str(web_dir), html=True), name="web")
+if WEB_DIR.is_dir():
+    app.mount("/app", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
 
 # Health checks
 @app.get("/health")

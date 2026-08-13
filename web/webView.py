@@ -3,18 +3,18 @@ import os
 import sys
 
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QIcon
 from PyQt6.QtWebEngineCore import QWebEnginePage, QWebEngineProfile, QWebEngineSettings
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import QApplication, QFileDialog
 
-from config import APP_NAME, DATA_DIR
+from config import API_HOST, API_PORT, APP_NAME, DATA_DIR, RESOURCE_DIR
 
 logger = logging.getLogger(__name__)
 
 
 def main():
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     QApplication.setOrganizationName(APP_NAME)
     QApplication.setApplicationName(APP_NAME)
 
@@ -48,16 +48,15 @@ def main():
     # ❌ Desactivar click derecho
     view.setContextMenuPolicy(Qt.ContextMenuPolicy.NoContextMenu)
 
-    # 📄 Ruta absoluta del HTML
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    ruta = os.path.join(base_dir, "index.html")
+    # 🪟 Icono de la ventana (si el .ico está disponible)
+    icon_path = RESOURCE_DIR / "assets" / "icon.ico"
+    if icon_path.exists():
+        view.setWindowIcon(QIcon(str(icon_path)))
 
-    if not os.path.exists(ruta):
-        logger.error("Archivo no encontrado: %s", ruta)
-        sys.exit(1)
-
-    # 🌐 Cargar archivo local
-    view.load(QUrl.fromLocalFile(ruta))
+    # 🌐 La UI se sirve desde el propio API local: mismo origen que la API,
+    # lo que mantiene estable localStorage/"recordar sesión" entre ejecuciones.
+    url = f"http://{API_HOST}:{API_PORT}/app/"
+    view.load(QUrl(url))
 
     # 🔍 Zoom
     view.setZoomFactor(0.9)

@@ -9,3 +9,6 @@ AGENTS.md
 /planes
 template-agents
 /bugs
+/build
+/dist
+*.spec~

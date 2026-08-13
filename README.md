@@ -8,7 +8,7 @@ El proyecto comenzó como un prototipo CLI y evolucionó a una arquitectura con 
 
 El frontend web está **completamente conectado a la API** con datos reales: autenticación, dashboard, cuentas, movimientos, categorías y ajustes (perfil, moneda, tema y backup). Versión actual: **0.4.0**.
 
-> ⚠ Pendiente: empaquetado como aplicación de escritorio distribuible (ver roadmap en `porHacer.md`, Fase 8).
+La app también se empaqueta como `.exe` de Windows (`dist\FlujoCaja\FlujoCaja.exe`), sin requerir Python ni internet.
 
 ## Tecnologías
 
@@ -137,3 +137,18 @@ La suite usa una base SQLite temporal aislada (override de `%APPDATA%` en `tests
 
 Este repositorio se publica únicamente con fines de demostración y portafolio.
 No se autoriza la reutilización, distribución o uso comercial del código sin permiso expreso del autor.
+
+### Componentes de terceros
+
+FlujoCaja incluye componentes de terceros (framework web, GUI, fuentes e iconos)
+bajo sus propias licencias de código abierto. El aviso completo de terceros y los
+textos de licencia se empaquetan junto a la aplicación:
+
+- **Aviso completo:** [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md)
+- **Stack GUI:** PyQt6 (GPL-3.0) y binarios Qt (LGPL-3.0) — ver aviso para las
+  implicaciones si el `.exe` llegara a distribuirse.
+- **Fuentes:** SIL OFL 1.1 (`web/fonts/OFL.txt`) y Material Symbols (Apache-2.0,
+  `web/fonts/LICENSE-MaterialSymbols.txt`).
+- **Iconos:** Font Awesome Free (CC BY 4.0 · OFL 1.1 · MIT,
+  `web/vendor/fontawesome/LICENSE.txt`).
+- **Tailwind CSS:** MIT (`web/vendor/tailwind_LICENSE.txt`).

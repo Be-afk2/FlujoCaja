@@ -4,16 +4,16 @@ import logging
 
 from alembic import command
 from alembic.config import Config
-from rich.console import Console
 from sqlalchemy import inspect
 
-from config import DATABASE_PATH, DATABASE_URL, PROJECT_ROOT
+from bd.logging import get_console
+from config import DATABASE_PATH, DATABASE_URL, RESOURCE_DIR
 
-console = Console()
+console = get_console()
 logger = logging.getLogger(__name__)
 
-ALEMBIC_INI_PATH = PROJECT_ROOT / "alembic.ini"
-ALEMBIC_SCRIPT_LOCATION = PROJECT_ROOT / "alembic"
+ALEMBIC_INI_PATH = RESOURCE_DIR / "alembic.ini"
+ALEMBIC_SCRIPT_LOCATION = RESOURCE_DIR / "alembic"
 APP_TABLES = {"user", "movimiento", "tipo", "sesion", "cuenta", "tipocuenta", "moneda", "subtipo"}
 
 

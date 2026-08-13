@@ -46,7 +46,7 @@ Objetivo: ordenar lo existente antes de seguir agregando funcionalidad.
 - [x] Revisar archivos con textos o caracteres de codificacion rota.
 - [x] Eliminar imports duplicados o no usados.
 - [x] Reemplazar `print()` de depuracion por logging.
-- [ ] Separar datos de ejemplo de datos reales.
+- [x] Separar datos de ejemplo de datos reales.
 - [x] Revisar nombres inconsistentes: gasto, registro, movimiento.
 - [x] Definir si el termino principal sera `movimiento`.
 
@@ -237,12 +237,20 @@ Objetivo: convertir los datos registrados en informacion util.
 
 Objetivo: distribuir la app como aplicacion local usable.
 
-- [ ] Definir modo desarrollo y modo produccion.
-- [ ] Empaquetar con PyInstaller u otra herramienta.
-- [ ] Incluir frontend estatico en el paquete.
-- [ ] Incluir inicializacion de base de datos.
-- [ ] Guardar base de datos y logs en carpeta de usuario.
-- [ ] Documentar instalacion y ejecucion final.
+- [x] Definir modo desarrollo y modo produccion (`IS_FROZEN`/`RESOURCE_DIR`/`WEB_DIR`/`EXE_DIR` en `config.py`).
+- [x] Empaquetar con PyInstaller (`FlujoCaja.spec` one-dir + `build.ps1`, `pyinstaller` en dev).
+- [x] Incluir frontend estatico en el paquete (`web/` + `assets/`, vendoring offline de Tailwind/fuentes/iconos).
+- [x] Incluir inicializacion de base de datos (SQLModel + migraciones Alembic embebidas en `_internal`).
+- [x] Guardar base de datos y logs en carpeta de usuario (`%APPDATA%\FlujoCaja\`).
+- [x] Documentar instalacion y ejecucion final (README: seccion "Instalacion para usuarios finales" y "Como construir el .exe").
+
+### Notas de la Fase 8
+
+- El server FastAPI corre **in-process** (`api/server.py`, hilo de uvicorn con `log_config=None`).
+  - `log_config=None` es obligatorio: en un exe sin consola `sys.stdout is None` y uvicorn crashea al configurar su formatter.
+- La ventana PyQt6 carga `http://127.0.0.1:8000/app/` (se sirve desde `web/` empaquetada).
+- Importante: mientras la instancia empaquetada este corriendo, el puerto 8000 queda ocupado (dialogo "puerto ocupado" si se abre otra).
+- Rebuild tras cambios de codigo: `.\build.ps1` (o `python -m PyInstaller --noconfirm --clean FlujoCaja.spec`).
 
 ---
 

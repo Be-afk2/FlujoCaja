@@ -1,18 +1,19 @@
 import logging
 import shutil
-from rich.console import Console
 from bd.database import init_db
 from bd.bootstrap import bootstrap_db
+from bd.logging import get_console
 from bd.migrations import existing_tables, APP_TABLES
-from config import DATABASE_PATH, DATA_DIR, PROJECT_ROOT
+from config import DATABASE_PATH, DATA_DIR, EXE_DIR
 
-console = Console()
+console = get_console()
 logger = logging.getLogger(__name__)
 
 
 def _migrar_db_legacy():
-    """Copia database.db de la raíz del proyecto a DATA_DIR si existe allá pero no acá."""
-    legacy = PROJECT_ROOT / "database.db"
+    """Copia database.db del directorio de la app (junto al exe en prod, raíz en dev)
+    a DATA_DIR si existe allá pero no acá."""
+    legacy = EXE_DIR / "database.db"
     if legacy.exists() and not DATABASE_PATH.exists():
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         shutil.copy2(legacy, DATABASE_PATH)

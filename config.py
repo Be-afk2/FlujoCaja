@@ -1,10 +1,24 @@
 from pathlib import Path
 import os
+import sys
 
 APP_NAME = "FlujoCaja"
 
 # Ruta raíz del proyecto (directorio donde está este archivo)
 PROJECT_ROOT = Path(__file__).resolve().parent
+
+# True cuando la app corre dentro de un exe generado con PyInstaller.
+IS_FROZEN = getattr(sys, "frozen", False)
+
+# Directorio de recursos: en el exe apunta a _MEIPASS (extracción temporal de
+# PyInstaller); en desarrollo, a la raíz del proyecto.
+RESOURCE_DIR = Path(getattr(sys, "_MEIPASS", PROJECT_ROOT))
+
+# Directorio donde vive el frontend estático (empaquetado en prod, local en dev).
+WEB_DIR = RESOURCE_DIR / "web"
+
+# Directorio donde el usuario descomprime el exe (solo aplica en producción).
+EXE_DIR = Path(sys.executable).resolve().parent if IS_FROZEN else PROJECT_ROOT
 
 # Nombre del archivo SQLite
 DATABASE_FILENAME = "database.db"
@@ -16,46 +30,14 @@ DATABASE_PATH = DATA_DIR / DATABASE_FILENAME
 # bd/migrations.py (Alembic), alembic/env.py
 DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
-# Host donde escucha FastAPI — usado en main.py y build_api_command()
+# Host y puerto donde escucha el API local
 API_HOST = "127.0.0.1"
-# Puerto del servidor — usado en main.py y build_api_command()
 API_PORT = 8000
-# Ruta ASGI para uvicorn ("api.mainApi:app") — usado en build_api_command()
-API_IMPORT_PATH = "api.mainApi:app"
-# Habilita --reload en modo debug — usado en build_api_command()
-API_RELOAD_IN_DEBUG = True
-# Segundos de espera antes de abrir la ventana web — usado en main.py
-API_STARTUP_DELAY_SECONDS = 1
-# Tiempo máximo para que cargue el frontend — usado en main.py
-FRONTEND_LOAD_TIMEOUT_SECONDS = 30
-# Variable de entorno que activa el modo debug (ej: $env:DEBUG=1) — usado en is_debug_enabled()
+# Variable de entorno que activa el modo debug (ej: $env:DEBUG=1)
 DEBUG_ENV_VAR = "DEBUG"
 
 
 def is_debug_enabled() -> bool:
     """Retorna True si la variable DEBUG_ENV_VAR está en "1".
-    Usado en main.py para decidir si lanza la API en modo debug."""
+    Usado en main.py y api/mainApi.py para decidir si la API corre en modo debug."""
     return os.environ.get(DEBUG_ENV_VAR, "0") == "1"
-
-
-def build_api_command(python_executable: str, debug: bool = False) -> list[str]:
-    """Construye la lista de argumentos para lanzar Uvicorn como subproceso.
-    Usado en main.py al arrancar el servidor API."""
-    command = [
-        python_executable,
-        "-m",
-        "uvicorn",
-        API_IMPORT_PATH,
-        "--host",
-        API_HOST,
-        "--port",
-        str(API_PORT),
-    ]
-
-    if debug and API_RELOAD_IN_DEBUG:
-        command.append("--reload")
-
-    if debug:
-        command.extend(["--log-level", "debug"])
-
-    return command
