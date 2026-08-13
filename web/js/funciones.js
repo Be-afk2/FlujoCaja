@@ -196,13 +196,14 @@ function redirigirLogin() {
 }
 
 /**
- * Formatea un monto como moneda con signo de dólar.
+ * Formatea un monto como moneda con un símbolo dado.
  * @param {number} monto
+ * @param {string} simbolo - Símbolo de la moneda (por defecto '$').
  * @returns {string}
  */
-function formatearDinero(monto) {
+function formatearDinero(monto, simbolo = '$') {
     const numero = Number(monto) || 0;
-    return '$' + numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return simbolo + numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /**
@@ -313,11 +314,12 @@ async function cargarSelectorTipos(selectId, seleccionado = null) {
  * @param {Object} opciones
  * @param {Object} opciones.cuentasMap - Mapa id -> nombre de cuenta.
  * @param {Object} opciones.tiposMap - Mapa id -> nombre de tipo.
+ * @param {Object} opciones.simbolosMap - Mapa cuenta_id -> símbolo de moneda.
  * @param {boolean} opciones.conAcciones - Si mostrar botones Editar/Eliminar.
  * @param {Function|null} opciones.onEditar - Callback con el movimiento.
  * @param {Function|null} opciones.onEliminar - Callback con el movimiento.
  */
-function renderTablaMovimientos(tbodyId, movimientos, { cuentasMap = {}, tiposMap = {}, conAcciones = false, onEditar = null, onEliminar = null } = {}) {
+function renderTablaMovimientos(tbodyId, movimientos, { cuentasMap = {}, tiposMap = {}, simbolosMap = {}, conAcciones = false, onEditar = null, onEliminar = null } = {}) {
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
 
@@ -328,7 +330,8 @@ function renderTablaMovimientos(tbodyId, movimientos, { cuentasMap = {}, tiposMa
 
     tbody.innerHTML = movimientos.map(m => {
         const esIngreso = Number(m.monto) > 0;
-        const montoHtml = `<span class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-rose-500'}">${esIngreso ? '+' : ''}${formatearDinero(m.monto)}</span>`;
+        const simbolo = simbolosMap[m.cuenta_id] || '$';
+        const montoHtml = `<span class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-rose-500'}">${esIngreso ? '+' : ''}${formatearDinero(m.monto, simbolo)}</span>`;
         const nombreTipo = tiposMap[m.tipo_id] || `Tipo ${m.tipo_id}`;
         const nombreCuenta = cuentasMap[m.cuenta_id] || `Cuenta ${m.cuenta_id}`;
         const acciones = conAcciones

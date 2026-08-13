@@ -3,42 +3,80 @@
 
 const NOMBRES_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
+// ==================== ESTADO DE MONEDAS ====================
+
+const MONEDA_STORAGE_KEY = 'panel_moneda';
+
+let cuentasGlobales = [];
+let monedaPorCuenta = {}; // cuenta_id -> moneda_id
+let simboloMoneda = {};  // moneda_id -> simbolo
+
+function monedaSeleccionada() {
+    const sel = document.getElementById('filtroMoneda');
+    return sel ? sel.value : '';
+}
+
+function simboloPara(cuentaId) {
+    return simboloMoneda[monedaPorCuenta[cuentaId]] || '$';
+}
+
+async function cargarDatosMaestros() {
+    const [cuentas, monedas] = await Promise.all([get('cuentas/'), get('monedas/')]);
+    cuentasGlobales = cuentas || [];
+    monedaPorCuenta = {};
+    simboloMoneda = {};
+    (monedas || []).forEach(m => { simboloMoneda[m.id] = m.simbolo || '$'; });
+    (cuentas || []).forEach(c => { monedaPorCuenta[c.id] = c.moneda_id; });
+
+    const sel = document.getElementById('filtroMoneda');
+    if (sel) {
+        const enUso = [...new Set((cuentas || []).map(c => c.moneda_id))];
+        sel.innerHTML = enUso.map(id => {
+            const m = (monedas || []).find(x => x.id === id);
+            return m ? `<option value="${m.id}">${m.nombre} (${m.simbolo})</option>` : '';
+        }).join('');
+
+        if (enUso.length > 0) {
+            const recordada = localStorage.getItem(MONEDA_STORAGE_KEY);
+            const valor = enUso.some(id => String(id) === recordada) ? recordada : String(enUso[0]);
+            sel.value = valor;
+        }
+    }
+    return { cuentas, monedas };
+}
+
+function guardarMonedaSeleccionada() {
+    const valor = monedaSeleccionada();
+    if (valor) localStorage.setItem(MONEDA_STORAGE_KEY, valor);
+}
+
 // ==================== MÉTRICAS PRINCIPALES ====================
 
 async function cargarDashboard() {
     const ahora = new Date();
     const anio = ahora.getFullYear();
     const mes = ahora.getMonth() + 1;
+    const monedaId = monedaSeleccionada();
 
     try {
         const [resumen, movimientos, cuentas] = await Promise.all([
-            get(`resumen/mensual?anio=${anio}&mes=${mes}`),
-            get('movimientos/?cantidad=5'),
+            get(`resumen/mensual?anio=${anio}&mes=${mes}&moneda_id=${monedaId}`),
+            get(`movimientos/?cantidad=5&moneda_id=${monedaId}`),
             get('cuentas/'),
         ]);
 
-        // Métricas del mes (agregar por cuenta)
+        // Moneda específica: sumar solo las cuentas de esa moneda.
+        const cuentasFiltradas = (cuentas || []).filter(c => String(c.moneda_id) === String(monedaId));
+        const simbolo = simboloMoneda[monedaId] || '$';
         const ingresos = (resumen || []).reduce((s, r) => s + (r.total_ingresos || 0), 0);
         const gastos = (resumen || []).reduce((s, r) => s + (r.total_gastos || 0), 0);
-
-        const elIngresos = document.getElementById('ingresosMes');
-        const elGastos = document.getElementById('gastosMes');
-        if (elIngresos) elIngresos.textContent = formatearDinero(ingresos);
-        if (elGastos) elGastos.textContent = formatearDinero(gastos);
-
-        // Flujo neto del mes
         const neto = ingresos - gastos;
-        const elNeto = document.getElementById('flujoNeto');
-        if (elNeto) {
-            elNeto.textContent = formatearDinero(neto);
-            elNeto.classList.remove('text-emerald-500', 'text-rose-500');
-            elNeto.classList.add(neto >= 0 ? 'text-emerald-500' : 'text-rose-500');
-        }
+        const saldoTotal = (cuentasFiltradas || []).reduce((s, c) => s + (c.saldo || 0), 0);
 
-        // Saldo total = suma de saldos de cuentas
-        const saldoTotal = (cuentas || []).reduce((s, c) => s + (c.saldo || 0), 0);
-        const elSaldo = document.getElementById('saldoTotal');
-        if (elSaldo) elSaldo.textContent = formatearDinero(saldoTotal);
+        pintarTarjeta('saldoTotal', saldoTotal, simbolo);
+        pintarTarjeta('ingresosMes', ingresos, simbolo);
+        pintarTarjeta('gastosMes', gastos, simbolo);
+        pintarTarjeta('flujoNeto', neto, simbolo, neto >= 0 ? 'text-emerald-500' : 'text-rose-500');
 
         await renderTransaccionesRecientes((movimientos || {}).data || []);
         renderGrafico();
@@ -46,6 +84,14 @@ async function cargarDashboard() {
     } catch (error) {
         console.error('Error cargando dashboard:', error);
     }
+}
+
+function pintarTarjeta(id, valor, simbolo, clase = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = formatearDinero(valor, simbolo);
+    el.classList.remove('text-emerald-500', 'text-rose-500');
+    if (clase) el.classList.add(clase);
 }
 
 // ==================== TRANSACCIONES RECIENTES ====================
@@ -65,7 +111,8 @@ async function renderTransaccionesRecientes(movimientos) {
             get('tipos/?cantidad=50'),
         ]);
         const cuentasMap = {};
-        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; });
+        const simbolosMap = {};
+        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; simbolosMap[c.id] = simboloPara(c.id); });
         const tiposMap = {};
         tipos.forEach(t => { tiposMap[t.id] = t.nombre; });
 
@@ -76,6 +123,7 @@ async function renderTransaccionesRecientes(movimientos) {
                 : 'bg-slate-800 text-slate-400 group-hover:bg-slate-700';
             const nombreTipo = tiposMap[m.tipo_id] || 'Movimiento';
             const nombreCuenta = cuentasMap[m.cuenta_id] || '';
+            const simbolo = simbolosMap[m.cuenta_id] || '$';
             return `
             <div class="flex items-center justify-between p-4 hover:bg-slate-800 transition-colors rounded-xl group">
                 <div class="flex items-center space-x-4">
@@ -92,7 +140,7 @@ async function renderTransaccionesRecientes(movimientos) {
                     </div>
                 </div>
                 <div class="text-right">
-                    <p class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-slate-200'} text-sm">${esIngreso ? '+' : ''}${formatearDinero(m.monto)}</p>
+                    <p class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-slate-200'} text-sm">${esIngreso ? '+' : ''}${formatearDinero(m.monto, simbolo)}</p>
                 </div>
             </div>`;
         }).join('');
@@ -119,8 +167,8 @@ function mesesDelAnioActual() {
     return NOMBRES_MESES.map((label, i) => ({ anio, mes: i + 1, label }));
 }
 
-async function obtenerResumenAnual(anio) {
-    const r = await get(`resumen/anual?anio=${anio}`);
+async function obtenerResumenAnual(anio, monedaId) {
+    const r = await get(`resumen/anual?anio=${anio}&moneda_id=${monedaId}`);
     const porMes = {};
     (r || []).forEach(item => {
         const clave = `${item.anio}-${item.mes}`;
@@ -136,11 +184,12 @@ async function renderGrafico() {
     if (!contenedor) return;
 
     const rango = document.getElementById('rangoGrafico')?.value || '6m';
+    const monedaId = monedaSeleccionada();
     const meses = rango === '6m' ? ultimosNMeses(6) : mesesDelAnioActual();
 
     try {
         const anios = [...new Set(meses.map(m => m.anio))];
-        const mapas = await Promise.all(anios.map(obtenerResumenAnual));
+        const mapas = await Promise.all(anios.map(a => obtenerResumenAnual(a, monedaId)));
         const porMes = Object.assign({}, ...mapas);
 
         const datos = meses.map(m => ({
@@ -173,9 +222,11 @@ async function renderCategoriasGasto() {
     const contenedor = document.getElementById('categoriasGasto');
     if (!contenedor) return;
 
+    const monedaId = monedaSeleccionada();
+
     try {
         const [resp, tipos] = await Promise.all([
-            get('movimientos/?cantidad=200&es_ingreso=false'),
+            get(`movimientos/?cantidad=200&es_ingreso=false&moneda_id=${monedaId}`),
             get('tipos/?cantidad=50'),
         ]);
 
@@ -198,6 +249,7 @@ async function renderCategoriasGasto() {
         }
 
         const total = categorias.reduce((s, c) => s + c.monto, 0);
+        const simbolo = simboloMoneda[monedaId] || '$';
 
         contenedor.innerHTML = categorias.slice(0, 5).map(c => {
             const pct = Math.round((c.monto / total) * 100);
@@ -205,7 +257,7 @@ async function renderCategoriasGasto() {
             <div class="space-y-1">
                 <div class="flex justify-between text-sm mb-1">
                     <span class="font-medium text-slate-300">${c.nombre}</span>
-                    <span class="text-slate-500">${formatearDinero(c.monto)} (${pct}%)</span>
+                    <span class="text-slate-500">${formatearDinero(c.monto, simbolo)} (${pct}%)</span>
                 </div>
                 <div class="w-full bg-slate-800 rounded-full h-2">
                     <div class="bg-emerald-500 h-2 rounded-full" style="width: ${pct}%"></div>
@@ -234,9 +286,11 @@ function setTipoEditar(type) {
 
 function filtrosQuery(cantidad = '50') {
     const params = new URLSearchParams({ cantidad });
+    const moneda = document.getElementById('filtroMoneda')?.value;
     const cuenta = document.getElementById('filtroCuenta')?.value;
     const desde = document.getElementById('filtroDesde')?.value;
     const hasta = document.getElementById('filtroHasta')?.value;
+    if (moneda) params.set('moneda_id', moneda);
     if (cuenta) params.set('cuenta_id', cuenta);
     if (desde) params.set('fecha_desde', fechaParaAPI(desde));
     if (hasta) params.set('fecha_hasta', fechaParaAPI(hasta));
@@ -264,13 +318,15 @@ async function cargarMovimientos() {
         ]);
 
         const cuentasMap = {};
-        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; });
+        const simbolosMap = {};
+        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; simbolosMap[c.id] = simboloPara(c.id); });
         const tiposMap = {};
         tipos.forEach(t => { tiposMap[t.id] = t.nombre; });
 
         renderTablaMovimientos('tbodyMovimientos', resp.data, {
             cuentasMap,
             tiposMap,
+            simbolosMap,
             conAcciones: true,
             onEditar: abrirModalEditar,
             onEliminar: confirmarEliminar,
@@ -557,6 +613,11 @@ async function eliminarMovimiento() {
 
 function initPanel() {
     document.getElementById('rangoGrafico')?.addEventListener('change', renderGrafico);
+    document.getElementById('filtroMoneda')?.addEventListener('change', () => {
+        guardarMonedaSeleccionada();
+        cargarDashboard();
+        cargarMovimientos();
+    });
 
     document.getElementById('filtroCuenta')?.addEventListener('change', cargarMovimientos);
     document.getElementById('filtroDesde')?.addEventListener('change', cargarMovimientos);
@@ -578,8 +639,10 @@ function initPanel() {
         if (select && select.options[0]) select.options[0].textContent = 'Todas';
     });
 
-    cargarDashboard();
-    cargarMovimientos();
+    cargarDatosMaestros().then(() => {
+        cargarDashboard();
+        cargarMovimientos();
+    });
 }
 
 if (document.readyState === 'loading') {

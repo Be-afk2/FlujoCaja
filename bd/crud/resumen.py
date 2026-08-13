@@ -1,10 +1,10 @@
 from datetime import date
 from typing import Optional
 
-from sqlmodel import Session, select, func
+from sqlmodel import Session, func, select
 
 from bd.database import engine
-from bd.models import ResumenMensual, User, Movimiento
+from bd.models import Cuenta, Movimiento, ResumenMensual, User
 
 
 def _get_o_crear(session: Session, user_id: str, cuenta_id: int, anio: int, mes: int) -> ResumenMensual | None:
@@ -131,30 +131,53 @@ def recalcular_todos(user: User) -> int:
     return count
 
 
-def get_resumenes_anual(user: User, anio: int) -> list[ResumenMensual]:
+def _filtro_moneda(moneda_id: Optional[int], user_id: str) -> list:
+    """Devuelve condiciones extra para filtrar resúmenes por moneda de la cuenta."""
+    if moneda_id is None:
+        return []
+    subquery = select(Cuenta.id).where(
+        Cuenta.moneda_id == moneda_id,
+        Cuenta.user_id == user_id,
+    )
+    return [ResumenMensual.cuenta_id.in_(subquery)]
+
+
+def get_resumenes_anual(user: User, anio: int, moneda_id: Optional[int] = None) -> list[ResumenMensual]:
     with Session(engine) as session:
-        return session.exec(
-            select(ResumenMensual).where(
-                ResumenMensual.user_id == str(user.id),
-                ResumenMensual.anio == anio,
-            )
-        ).all()
+        condiciones = [
+            ResumenMensual.user_id == str(user.id),
+            ResumenMensual.anio == anio,
+            *_filtro_moneda(moneda_id, str(user.id)),
+        ]
+        return session.exec(select(ResumenMensual).where(*condiciones)).all()
 
 
-def get_resumen_mensual(user: User, anio: int, mes: int) -> list[ResumenMensual]:
+def get_resumen_mensual(
+    user: User, anio: int, mes: int, moneda_id: Optional[int] = None
+) -> list[ResumenMensual]:
     with Session(engine) as session:
-        return session.exec(
-            select(ResumenMensual).where(
-                ResumenMensual.user_id == str(user.id),
-                ResumenMensual.anio == anio,
-                ResumenMensual.mes == mes,
-            )
-        ).all()
+        condiciones = [
+            ResumenMensual.user_id == str(user.id),
+            ResumenMensual.anio == anio,
+            ResumenMensual.mes == mes,
+            *_filtro_moneda(moneda_id, str(user.id)),
+        ]
+        return session.exec(select(ResumenMensual).where(*condiciones)).all()
 
 
-def get_resumen_rango(user: User, desde_anio: int, desde_mes: int, hasta_anio: int, hasta_mes: int) -> list[ResumenMensual]:
+def get_resumen_rango(
+    user: User,
+    desde_anio: int,
+    desde_mes: int,
+    hasta_anio: int,
+    hasta_mes: int,
+    moneda_id: Optional[int] = None,
+) -> list[ResumenMensual]:
     with Session(engine) as session:
-        condiciones = [ResumenMensual.user_id == str(user.id)]
+        condiciones = [
+            ResumenMensual.user_id == str(user.id),
+            *_filtro_moneda(moneda_id, str(user.id)),
+        ]
 
         if desde_anio == hasta_anio:
             condiciones.append(ResumenMensual.anio == desde_anio)

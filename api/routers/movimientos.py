@@ -1,24 +1,25 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+
+from api.dependencies import validate_token
 from bd.crud.movimiento import (
     crear_movimiento,
     crear_movimientos_bulk,
-    get_movimiento,
-    update_movimiento,
     delete_movimiento,
+    get_movimiento,
     movimientos_filtrados,
+    update_movimiento,
 )
 from bd.models.user import User
-from api.dependencies import validate_token
+
 from .dtos.movimientoDto import (
     MovimientoCreate,
-    MovimientoUpdate,
     MovimientoFilter,
-    MovimientoResponse,
-    MovimientoListResponse,
     MovimientoImportRequest,
     MovimientoImportResponse,
+    MovimientoListResponse,
+    MovimientoResponse,
+    MovimientoUpdate,
 )
 
 router = APIRouter(prefix="/movimientos", tags=["Movimientos"])
@@ -33,6 +34,7 @@ def listar_movimientos(filtros: MovimientoFilter = Depends(), user: User = Depen
         fecha_desde=filtros.fecha_desde,
         fecha_hasta=filtros.fecha_hasta,
         cuenta_id=filtros.cuenta_id,
+        moneda_id=filtros.moneda_id,
         tipo_id=filtros.tipo_id,
         subtipo_id=filtros.subtipo_id,
         es_ingreso=filtros.es_ingreso,

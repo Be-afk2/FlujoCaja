@@ -106,6 +106,27 @@ def test_filtro_por_es_ingreso(client, auth_headers, crear_cuenta, crear_movimie
     assert r.json()["data"][0]["monto"] == -50.0
 
 
+def test_filtro_por_moneda(client, auth_headers, crear_cuenta, crear_movimiento):
+    headers = auth_headers("mov12")
+    monedas = client.get("/monedas/", headers=headers).json()
+    assert len(monedas) >= 2
+    moneda_a, moneda_b = monedas[0]["id"], monedas[1]["id"]
+
+    cuenta_a = crear_cuenta(headers, nombre="A", moneda=moneda_a)
+    cuenta_b = crear_cuenta(headers, nombre="B", moneda=moneda_b)
+    crear_movimiento(headers, cuenta_a["id"], monto=100.0)
+    crear_movimiento(headers, cuenta_b["id"], monto=200.0)
+
+    r = client.get("/movimientos/", params={"moneda_id": moneda_a}, headers=headers)
+    assert r.status_code == 200
+    assert r.json()["total"] == 1
+    assert r.json()["data"][0]["monto"] == 100.0
+
+    r = client.get("/movimientos/", params={"moneda_id": moneda_b}, headers=headers)
+    assert r.json()["total"] == 1
+    assert r.json()["data"][0]["monto"] == 200.0
+
+
 def test_filtro_por_cuenta(client, auth_headers, crear_cuenta, crear_movimiento):
     headers = auth_headers("mov9")
     cuenta_a = crear_cuenta(headers, nombre="A")

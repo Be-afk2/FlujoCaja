@@ -1,5 +1,6 @@
 from datetime import date, datetime
-from typing import Annotated, Optional, List
+from typing import Annotated, List, Optional
+
 from pydantic import BaseModel, BeforeValidator
 
 
@@ -34,6 +35,7 @@ class MovimientoFilter(BaseModel):
     fecha_desde: Optional[DateFromString] = None
     fecha_hasta: Optional[DateFromString] = None
     cuenta_id: Optional[int] = None
+    moneda_id: Optional[int] = None
     tipo_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     es_ingreso: Optional[bool] = None

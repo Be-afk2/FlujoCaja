@@ -1,11 +1,13 @@
 from datetime import date
 from typing import Optional
-from sqlmodel import Session, select, and_
-from bd.database import engine
-from bd.models import Movimiento, Cuenta, Subtipo, User
+
+from sqlalchemy.orm import selectinload
+from sqlmodel import Session, and_, select
+
 from bd.crud.cuenta import actualizar_saldo
 from bd.crud.resumen import actualizar_por_movimiento
-from sqlalchemy.orm import selectinload
+from bd.database import engine
+from bd.models import Cuenta, Movimiento, Subtipo, User
 
 
 def fecha_hoy() -> tuple[int, int, int]:
@@ -216,6 +218,7 @@ def movimientos_filtrados(
     fecha_desde: Optional[date] = None,
     fecha_hasta: Optional[date] = None,
     cuenta_id: Optional[int] = None,
+    moneda_id: Optional[int] = None,
     tipo_id: Optional[int] = None,
     subtipo_id: Optional[int] = None,
     es_ingreso: Optional[bool] = None,
@@ -231,6 +234,12 @@ def movimientos_filtrados(
             condiciones.append(Movimiento.fecha <= fecha_hasta)
         if cuenta_id is not None:
             condiciones.append(Movimiento.cuenta_id == cuenta_id)
+        if moneda_id is not None:
+            subquery = select(Cuenta.id).where(
+                Cuenta.moneda_id == moneda_id,
+                Cuenta.user_id == str(user.id),
+            )
+            condiciones.append(Movimiento.cuenta_id.in_(subquery))
         if tipo_id is not None:
             condiciones.append(Movimiento.tipo_id == tipo_id)
         if subtipo_id is not None:

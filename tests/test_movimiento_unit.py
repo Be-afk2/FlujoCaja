@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 
 from bd.crud.cuenta import crear_cuenta
 from bd.crud.movimiento import crear_movimiento, delete_movimiento, get_movimiento, update_movimiento
+from bd.crud.resumen import get_resumen_mensual
 from bd.crud.user import crear_usuario
 from bd.database import engine
 from bd.models import Cuenta, Moneda, ResumenMensual, TipoCuenta, User
@@ -100,3 +101,27 @@ def test_usuario_no_accede_a_movimiento_de_otro():
         raise AssertionError("no debió crear un movimiento con cuenta ajena")
     except ValueError:
         pass
+
+
+def test_resumen_mensual_filtra_por_moneda():
+    user = crear_usuario("unit_mon", "Test", "clave123")
+    with Session(engine) as s:
+        monedas = s.exec(select(Moneda).limit(2)).all()
+        tipo_cuenta = s.exec(select(TipoCuenta)).first()
+    assert len(monedas) == 2
+
+    cuenta_a = crear_cuenta("A", "", tipo_cuenta.id, monedas[0].id, user)
+    cuenta_b = crear_cuenta("B", "", tipo_cuenta.id, monedas[1].id, user)
+    crear_movimiento(1000.0, 1, cuenta_a.id, user, fecha=date(2026, 3, 5))
+    crear_movimiento(200.0, 1, cuenta_b.id, user, fecha=date(2026, 3, 6))
+
+    total = get_resumen_mensual(user, 2026, 3)
+    assert len(total) == 2
+
+    filtrado_a = get_resumen_mensual(user, 2026, 3, moneda_id=monedas[0].id)
+    assert len(filtrado_a) == 1
+    assert filtrado_a[0].cuenta_id == cuenta_a.id
+
+    filtrado_b = get_resumen_mensual(user, 2026, 3, moneda_id=monedas[1].id)
+    assert len(filtrado_b) == 1
+    assert filtrado_b[0].cuenta_id == cuenta_b.id
