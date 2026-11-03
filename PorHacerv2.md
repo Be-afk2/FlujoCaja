@@ -1,4 +1,4 @@
-# FlujoCaja - Roadmap tecnico V2
+﻿# FlujoCaja - Roadmap tecnico V2
 
 Tareas derivadas de `idea.md`. Incorpora la **Fase 9 - Entidades y deudas** y
 mantiene pendiente la **Fase 7.5 - Inteligencia financiera basada en datos**.
@@ -29,58 +29,58 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
 - [x] Calcular estado: `pendiente = monto_original − suma(abonos)`; `pagada` si `<= 0`; `vencida` si `> 0` y `vencimiento < hoy`; `pendiente` en el resto.
 - [x] Validar `monto_original > 0` y que el abono no supere el pendiente.
 - [ ] Advertir en UI si la cuenta del pago difiere de la moneda de la deuda (helper `monedas_distintas` listo en `bd/domain/deuda.py`; falta UI en 9.8).
-- [ ] Mostrar saldos de entidad por moneda (cálculo `calcular_saldos_por_moneda` listo en `bd/domain/deuda.py`; falta UI en 9.8).
-- [ ] Bloquear edición/eliminación de movimientos con `es_deuda=True` desde la tabla general de movimientos (se hará en 9.3).
+- [x] Mostrar saldos de entidad por moneda (cálculo `calcular_saldos_por_moneda` + `listar_entidades` por moneda; la UI llega en 9.8).
+- [x] Bloquear edición/eliminación de movimientos con `es_deuda=True` desde la tabla general de movimientos (implementado en 9.3).
 
 ### 9.3 Refactor de movimientos
 
-- [ ] Extraer `_crear_movimiento_sesion(session, ..., es_deuda=False)` en `bd/crud/movimiento.py`.
-- [ ] Extraer `_actualizar_movimiento_sesion(session, mov, ...)`.
-- [ ] Extraer `_eliminar_movimiento_sesion(session, mov)`.
-- [ ] Hacer que las funciones públicas usen las internas y hagan commit.
-- [ ] Bloquear `crear_movimiento` y `update_movimiento` si `es_deuda=True`.
-- [ ] Devolver error claro en `delete_movimiento` si el movimiento pertenece a una deuda.
-- [ ] Agregar `es_deuda: Optional[bool]` a `MovimientoFilter` y `movimientos_filtrados`.
+- [x] Extraer `_crear_movimiento_sesion(session, ..., es_deuda=False)` en `bd/crud/movimiento.py`.
+- [x] Extraer `_actualizar_movimiento_sesion(session, mov, ...)`.
+- [x] Extraer `_eliminar_movimiento_sesion(session, mov)`.
+- [x] Hacer que las funciones públicas usen las internas y hagan commit.
+- [x] Bloquear `crear_movimiento` y `update_movimiento` si `es_deuda=True`.
+- [x] Devolver error claro en `delete_movimiento` si el movimiento pertenece a una deuda.
+- [x] Agregar `es_deuda: Optional[bool]` a `MovimientoFilter` y `movimientos_filtrados`.
 
 ### 9.4 CRUD
 
-- [ ] Crear `bd/crud/entidad.py` (crear, listar con saldos por moneda, detalle, editar, eliminar con bloqueo si tiene deudas).
-- [ ] Crear `bd/crud/deuda.py` con transacciones atómicas (deuda + movimiento + saldo + resumen).
-- [ ] Implementar alta de deuda sin cuenta (solo obligación, sin mover saldos).
-- [ ] Implementar alta de deuda con cuenta (desembolso inicial + actualización de saldo).
-- [ ] Implementar registro de pago/cobro/abono con cuenta obligatoria.
-- [ ] Implementar edición de deuda (descripción/vencimiento siempre; monto/moneda/dirección solo sin abonos).
-- [ ] Implementar edición de abono (revertir movimiento anterior y aplicar el nuevo).
-- [ ] Implementar eliminación de abono (borrar movimiento vinculado, revertir saldo y resumen).
-- [ ] Implementar eliminación de deuda (borrar todos sus movimientos y revertir saldos).
+- [x] Crear `bd/crud/entidad.py` (crear, listar con saldos por moneda, detalle, editar, eliminar con bloqueo si tiene deudas).
+- [x] Crear `bd/crud/deuda.py` con transacciones atómicas (deuda + movimiento + saldo + resumen).
+- [x] Implementar alta de deuda sin cuenta (solo obligación, sin mover saldos).
+- [x] Implementar alta de deuda con cuenta (desembolso inicial + actualización de saldo).
+- [x] Implementar registro de pago/cobro/abono con cuenta obligatoria.
+- [x] Implementar edición de deuda (descripción/vencimiento siempre; monto/moneda/dirección solo sin abonos).
+- [x] Implementar edición de abono (revertir movimiento anterior y aplicar el nuevo).
+- [x] Implementar eliminación de abono (borrar movimiento vinculado, revertir saldo y resumen).
+- [x] Implementar eliminación de deuda (borrar todos sus movimientos y revertir saldos).
 
 ### 9.5 Resumen y reportes
 
-- [ ] Actualizar `actualizar_por_movimiento` para aceptar `es_deuda` y `old_es_deuda`.
-- [ ] Actualizar `recalcular_mes` para calcular `total_ingresos_deuda` y `total_gastos_deuda`.
-- [ ] Mantener en `ResumenMensual` el total general (incluye deudas) más el desglose.
+- [x] Actualizar `actualizar_por_movimiento` para aceptar `es_deuda` y `old_es_deuda`.
+- [x] Actualizar `recalcular_mes` para calcular `total_ingresos_deuda` y `total_gastos_deuda`.
+- [x] Mantener en `ResumenMensual` el total general (incluye deudas) más el desglose.
 - [ ] Agregar `incluir_deudas: bool = True` a `/resumen/mensual`, `/resumen/anual` y `/resumen/rango`; restar el desglose cuando sea `false`.
 
 ### 9.6 API y DTOs
 
-- [ ] Extraer `DateFromString` a `api/routers/dtos/common.py` y reutilizarlo.
-- [ ] Crear `api/routers/dtos/entidadDto.py`: `EntidadCreate`, `EntidadUpdate`, `EntidadResponse`, `SaldoEntidad`, `EntidadDetailResponse`.
-- [ ] Crear `api/routers/dtos/deudaDto.py`: `DeudaCreate`, `DeudaUpdate`, `DeudaResponse`, `PagoDeudaCreate`, `PagoDeudaResponse`.
-- [ ] Crear `api/routers/entidades.py`:
-  - [ ] `GET /entidades/` (saldos por moneda, pendientes, próximo vencimiento).
-  - [ ] `POST /entidades/` → 201.
-  - [ ] `GET /entidades/{id}` (entidad + deudas + pagos).
-  - [ ] `PUT /entidades/{id}`.
-  - [ ] `DELETE /entidades/{id}` → 400 si tiene deudas.
-- [ ] Crear `api/routers/deudas.py`:
-  - [ ] `GET /deudas/` con filtros `entidad_id`, `direccion`, `estado`.
-  - [ ] `POST /deudas/` → 201, acepta `cuenta_inicial_id` opcional.
-  - [ ] `PUT /deudas/{id}`.
-  - [ ] `DELETE /deudas/{id}` (deuda + pagos + movimientos vinculados).
-  - [ ] `POST /deudas/{id}/pagos` → 201.
-  - [ ] `PUT /deudas/{id}/pagos/{pago_id}`.
-  - [ ] `DELETE /deudas/{id}/pagos/{pago_id}`.
-- [ ] Registrar ambos routers en `api/mainApi.py` (con `Depends(validate_token)` y `tags`).
+- [x] Extraer `DateFromString` a `api/routers/dtos/common.py` y reutilizarlo.
+- [x] Crear `api/routers/dtos/entidadDto.py`: `EntidadCreate`, `EntidadUpdate`, `EntidadResponse`, `SaldoEntidad`, `EntidadDetailResponse`.
+- [x] Crear `api/routers/dtos/deudaDto.py`: `DeudaCreate`, `DeudaUpdate`, `DeudaResponse`, `PagoDeudaCreate`, `PagoDeudaResponse`.
+- [x] Crear `api/routers/entidades.py`:
+  - [x] `GET /entidades/` (saldos por moneda, pendientes, próximo vencimiento).
+  - [x] `POST /entidades/` → 201.
+  - [x] `GET /entidades/{id}` (entidad + deudas + pagos).
+  - [x] `PUT /entidades/{id}`.
+  - [x] `DELETE /entidades/{id}` → 400 si tiene deudas.
+- [x] Crear `api/routers/deudas.py`:
+  - [x] `GET /deudas/` con filtros `entidad_id`, `direccion`, `estado`.
+  - [x] `POST /deudas/` → 201, acepta `cuenta_inicial_id` opcional.
+  - [x] `PUT /deudas/{id}`.
+  - [x] `DELETE /deudas/{id}` (deuda + pagos + movimientos vinculados).
+  - [x] `POST /deudas/{id}/pagos` → 201.
+  - [x] `PUT /deudas/{id}/pagos/{pago_id}`.
+  - [x] `DELETE /deudas/{id}/pagos/{pago_id}`.
+- [x] Registrar ambos routers en `api/mainApi.py` (con `Depends(validate_token)` y `tags`).
 
 ### 9.7 Migración, seeds y compatibilidad
 
@@ -257,3 +257,4 @@ y cuentas sin incorporar datos externos ni decisiones automatizadas.
 - Adjuntos o comprobantes.
 - Historial de auditoría de cambios.
 - Deudas compartidas entre usuarios.
+

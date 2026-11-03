@@ -33,6 +33,128 @@ def _validar_subtipo(subtipo_id: int, tipo_id: int, session: Session) -> None:
         )
 
 
+def _crear_movimiento_sesion(
+    session: Session,
+    *,
+    monto: float,
+    tipo_id: int,
+    cuenta_id: int,
+    user: User,
+    subtipo_id: Optional[int] = None,
+    descripcion: Optional[str] = None,
+    fecha: Optional[date] = None,
+    es_deuda: bool = False,
+) -> Movimiento:
+    """Crea el movimiento sin hacer commit (lo usan movimientos y deudas)."""
+    _validar_cuenta(cuenta_id, user, session)
+    if subtipo_id is not None:
+        _validar_subtipo(subtipo_id, tipo_id, session)
+
+    nuevo_movimiento = Movimiento(
+        monto=monto,
+        es_ingreso=monto > 0,
+        es_deuda=es_deuda,
+        tipo_id=tipo_id,
+        subtipo_id=subtipo_id,
+        cuenta_id=cuenta_id,
+        user_id=str(user.id),
+        descripcion=descripcion,
+        fecha=fecha or date.today(),
+    )
+    session.add(nuevo_movimiento)
+    session.flush()
+    actualizar_saldo(cuenta_id, monto, session=session)
+    actualizar_por_movimiento(
+        session,
+        str(user.id),
+        cuenta_id,
+        monto,
+        nuevo_movimiento.fecha,
+        es_deuda=es_deuda,
+    )
+    return nuevo_movimiento
+
+
+def _actualizar_movimiento_sesion(
+    session: Session,
+    mov: Movimiento,
+    *,
+    monto: Optional[float] = None,
+    tipo_id: Optional[int] = None,
+    subtipo_id: Optional[int] = None,
+    cuenta_id: Optional[int] = None,
+    descripcion: Optional[str] = None,
+    fecha: Optional[date] = None,
+) -> Movimiento:
+    """Actualiza el movimiento sin hacer commit (lo usan movimientos y deudas)."""
+    if cuenta_id is not None:
+        cuenta = session.get(Cuenta, cuenta_id)
+        if not cuenta:
+            raise ValueError(f"Cuenta {cuenta_id} no existe")
+        if cuenta.user_id != mov.user_id:
+            raise ValueError(f"Cuenta {cuenta_id} no pertenece al usuario")
+    if subtipo_id is not None:
+        _validar_subtipo(subtipo_id, tipo_id or mov.tipo_id, session)
+
+    saldo_anterior = mov.monto
+    cuenta_anterior = mov.cuenta_id
+    fecha_anterior = mov.fecha
+
+    if monto is not None:
+        mov.monto = monto
+        mov.es_ingreso = monto > 0
+    if tipo_id is not None:
+        mov.tipo_id = tipo_id
+    if subtipo_id is not None:
+        mov.subtipo_id = subtipo_id
+    if cuenta_id is not None:
+        mov.cuenta_id = cuenta_id
+    if descripcion is not None:
+        mov.descripcion = descripcion
+    if fecha is not None:
+        mov.fecha = fecha
+
+    session.add(mov)
+    session.flush()
+    actualizar_saldo(cuenta_anterior, -saldo_anterior, session=session)
+    actualizar_saldo(mov.cuenta_id, mov.monto, session=session)
+    actualizar_por_movimiento(
+        session,
+        mov.user_id,
+        mov.cuenta_id,
+        mov.monto,
+        mov.fecha,
+        old_monto=saldo_anterior,
+        old_cuenta_id=cuenta_anterior,
+        old_fecha=fecha_anterior,
+        es_deuda=mov.es_deuda,
+        old_es_deuda=mov.es_deuda,
+    )
+    return mov
+
+
+def _eliminar_movimiento_sesion(session: Session, mov: Movimiento) -> None:
+    """Elimina el movimiento y revierte saldo/resumen sin hacer commit."""
+    monto = mov.monto
+    cuenta_id = mov.cuenta_id
+    user_id = mov.user_id
+    fecha = mov.fecha
+    es_deuda = mov.es_deuda
+
+    session.delete(mov)
+    session.flush()
+    actualizar_saldo(cuenta_id, -monto, session=session)
+    actualizar_por_movimiento(
+        session,
+        user_id,
+        cuenta_id,
+        0.0,
+        fecha,
+        old_monto=monto,
+        old_es_deuda=es_deuda,
+    )
+
+
 def crear_movimiento(
     monto: float,
     tipo_id: int,
@@ -42,26 +164,17 @@ def crear_movimiento(
     descripcion: Optional[str] = None,
     fecha: Optional[date] = None,
 ) -> Movimiento:
-    ingreso = monto > 0
-
     with Session(engine) as session:
-        _validar_cuenta(cuenta_id, user, session)
-        if subtipo_id is not None:
-            _validar_subtipo(subtipo_id, tipo_id, session)
-        nuevo_movimiento = Movimiento(
+        nuevo_movimiento = _crear_movimiento_sesion(
+            session,
             monto=monto,
-            es_ingreso=ingreso,
             tipo_id=tipo_id,
-            subtipo_id=subtipo_id,
             cuenta_id=cuenta_id,
-            user_id=str(user.id),
+            user=user,
+            subtipo_id=subtipo_id,
             descripcion=descripcion,
-            fecha=fecha or date.today(),
+            fecha=fecha,
         )
-        session.add(nuevo_movimiento)
-        session.flush()
-        actualizar_saldo(cuenta_id, monto, session=session)
-        actualizar_por_movimiento(session, str(user.id), cuenta_id, monto, nuevo_movimiento.fecha)
         session.commit()
         session.refresh(nuevo_movimiento)
 
@@ -89,34 +202,15 @@ def crear_movimientos_bulk(filas: list[dict], user: User) -> dict:
     with Session(engine) as session:
         for idx, fila in enumerate(filas, start=1):
             try:
-                cuenta_id = fila["cuenta_id"]
-                tipo_id = fila["tipo_id"]
-                monto = fila["monto"]
-
-                _validar_cuenta(cuenta_id, user, session)
-                subtipo_id = fila.get("subtipo_id")
-                if subtipo_id is not None:
-                    _validar_subtipo(subtipo_id, tipo_id, session)
-
-                nuevo_movimiento = Movimiento(
-                    monto=monto,
-                    es_ingreso=monto > 0,
-                    tipo_id=tipo_id,
-                    subtipo_id=subtipo_id,
-                    cuenta_id=cuenta_id,
-                    user_id=str(user.id),
-                    descripcion=fila.get("descripcion"),
-                    fecha=fila.get("fecha") or date.today(),
-                )
-                session.add(nuevo_movimiento)
-                session.flush()
-                actualizar_saldo(cuenta_id, monto, session=session)
-                actualizar_por_movimiento(
+                _crear_movimiento_sesion(
                     session,
-                    str(user.id),
-                    cuenta_id,
-                    monto,
-                    nuevo_movimiento.fecha,
+                    monto=fila["monto"],
+                    tipo_id=fila["tipo_id"],
+                    cuenta_id=fila["cuenta_id"],
+                    user=user,
+                    subtipo_id=fila.get("subtipo_id"),
+                    descripcion=fila.get("descripcion"),
+                    fecha=fila.get("fecha"),
                 )
                 importados += 1
             except (ValueError, KeyError, TypeError) as e:
@@ -141,43 +235,20 @@ def update_movimiento(
         mov = session.get(Movimiento, movimiento_id)
         if not mov or mov.user_id != str(user.id):
             return None
+        if mov.es_deuda:
+            raise ValueError(
+                "Los movimientos de deuda se gestionan desde el modulo de deudas"
+            )
 
-        if cuenta_id is not None:
-            _validar_cuenta(cuenta_id, user, session)
-        if subtipo_id is not None:
-            _validar_subtipo(subtipo_id, tipo_id or mov.tipo_id, session)
-
-        saldo_anterior = mov.monto
-        cuenta_anterior = mov.cuenta_id
-        fecha_anterior = mov.fecha
-
-        if monto is not None:
-            mov.monto = monto
-            mov.es_ingreso = monto > 0
-        if tipo_id is not None:
-            mov.tipo_id = tipo_id
-        if subtipo_id is not None:
-            mov.subtipo_id = subtipo_id
-        if cuenta_id is not None:
-            mov.cuenta_id = cuenta_id
-        if descripcion is not None:
-            mov.descripcion = descripcion
-        if fecha is not None:
-            mov.fecha = fecha
-
-        session.add(mov)
-        session.flush()
-        actualizar_saldo(cuenta_anterior, -saldo_anterior, session=session)
-        actualizar_saldo(mov.cuenta_id, mov.monto, session=session)
-        actualizar_por_movimiento(
+        _actualizar_movimiento_sesion(
             session,
-            str(user.id),
-            mov.cuenta_id,
-            mov.monto,
-            mov.fecha,
-            old_monto=saldo_anterior,
-            old_cuenta_id=cuenta_anterior,
-            old_fecha=fecha_anterior,
+            mov,
+            monto=monto,
+            tipo_id=tipo_id,
+            subtipo_id=subtipo_id,
+            cuenta_id=cuenta_id,
+            descripcion=descripcion,
+            fecha=fecha,
         )
         session.commit()
         session.refresh(mov)
@@ -190,22 +261,12 @@ def delete_movimiento(movimiento_id: int, user: User) -> bool:
         mov = session.get(Movimiento, movimiento_id)
         if not mov or mov.user_id != str(user.id):
             return False
+        if mov.es_deuda:
+            raise ValueError(
+                "Los movimientos de deuda se gestionan desde el modulo de deudas"
+            )
 
-        monto = mov.monto
-        cuenta_id = mov.cuenta_id
-        user_id = mov.user_id
-        fecha = mov.fecha
-        session.delete(mov)
-        session.flush()
-        actualizar_saldo(cuenta_id, -monto, session=session)
-        actualizar_por_movimiento(
-            session,
-            user_id,
-            cuenta_id,
-            0.0,
-            fecha,
-            old_monto=monto,
-        )
+        _eliminar_movimiento_sesion(session, mov)
         session.commit()
 
     return True
@@ -222,6 +283,7 @@ def movimientos_filtrados(
     tipo_id: Optional[int] = None,
     subtipo_id: Optional[int] = None,
     es_ingreso: Optional[bool] = None,
+    es_deuda: Optional[bool] = None,
 ):
     offset = (pagina - 1) * cantidad
 
@@ -246,6 +308,8 @@ def movimientos_filtrados(
             condiciones.append(Movimiento.subtipo_id == subtipo_id)
         if es_ingreso is not None:
             condiciones.append(Movimiento.es_ingreso == es_ingreso)
+        if es_deuda is not None:
+            condiciones.append(Movimiento.es_deuda == es_deuda)
         statement = (
             select(Movimiento)
             .options(selectinload(Movimiento.tipo))
@@ -258,4 +322,4 @@ def movimientos_filtrados(
         total = session.exec(select(Movimiento.id).where(and_(*condiciones))).all()
         resultados = session.exec(statement).all()
 
-    return resultados, len(total)   
+    return resultados, len(total)

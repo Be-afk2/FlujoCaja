@@ -8,7 +8,18 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from api.dependencies import validate_token
-from api.routers import auth, cuenta, datos, moneda, movimientos, resumen, subtipos, tipos
+from api.routers import (
+    auth,
+    cuenta,
+    datos,
+    deudas,
+    entidades,
+    moneda,
+    movimientos,
+    resumen,
+    subtipos,
+    tipos,
+)
 from bd.logging import setup_logging
 from config import DATABASE_PATH, WEB_DIR, is_debug_enabled
 
@@ -97,5 +108,7 @@ app.include_router(subtipos.router, dependencies=[Depends(validate_token)])
 app.include_router(cuenta.router, dependencies=[Depends(validate_token)])
 app.include_router(moneda.router, dependencies=[Depends(validate_token)])
 app.include_router(resumen.router, dependencies=[Depends(validate_token)])
+app.include_router(entidades.router, dependencies=[Depends(validate_token)])
+app.include_router(deudas.router, dependencies=[Depends(validate_token)])
 app.include_router(datos.router, dependencies=[Depends(validate_token)])
 

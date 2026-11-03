@@ -12,9 +12,11 @@ from .deuda import (
     SUBTIPO_PRESTAMO_RECIBIDO,
     SUBTIPOS_DEUDAS,
     TIPO_DEUDAS,
+    TIPOS_ENTIDAD,
     SaldoMoneda,
     calcular_pendiente,
     calcular_saldos_por_moneda,
+    es_pago_final,
     estado_deuda,
     monedas_distintas,
     monto_con_signo,
@@ -25,6 +27,7 @@ from .deuda import (
     validar_direccion,
     validar_evento,
     validar_monto_original,
+    validar_tipo_entidad,
 )
 
 __all__ = [
@@ -41,9 +44,11 @@ __all__ = [
     "SUBTIPO_PRESTAMO_RECIBIDO",
     "SUBTIPOS_DEUDAS",
     "TIPO_DEUDAS",
+    "TIPOS_ENTIDAD",
     "SaldoMoneda",
     "calcular_pendiente",
     "calcular_saldos_por_moneda",
+    "es_pago_final",
     "estado_deuda",
     "monedas_distintas",
     "monto_con_signo",
@@ -54,4 +59,5 @@ __all__ = [
     "validar_direccion",
     "validar_evento",
     "validar_monto_original",
+    "validar_tipo_entidad",
 ]

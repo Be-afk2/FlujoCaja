@@ -35,7 +35,12 @@ def _crear_resumen(session: Session, user_id: str, cuenta_id: int, anio: int, me
 
 
 def _limpiar_si_cero(session: Session, r: ResumenMensual) -> None:
-    if r.total_ingresos == 0 and r.total_gastos == 0:
+    if (
+        r.total_ingresos == 0
+        and r.total_gastos == 0
+        and r.total_ingresos_deuda == 0
+        and r.total_gastos_deuda == 0
+    ):
         session.delete(r)
 
 
@@ -49,6 +54,8 @@ def actualizar_por_movimiento(
     old_monto: Optional[float] = None,
     old_cuenta_id: Optional[int] = None,
     old_fecha: Optional[date] = None,
+    es_deuda: bool = False,
+    old_es_deuda: bool = False,
 ) -> None:
     if old_monto is not None:
         old_cid = old_cuenta_id if old_cuenta_id is not None else cuenta_id
@@ -58,8 +65,12 @@ def actualizar_por_movimiento(
         if r is not None:
             if old_monto > 0:
                 r.total_ingresos -= old_monto
+                if old_es_deuda:
+                    r.total_ingresos_deuda -= old_monto
             else:
                 r.total_gastos -= abs(old_monto)
+                if old_es_deuda:
+                    r.total_gastos_deuda -= abs(old_monto)
             r.neto = r.total_ingresos - r.total_gastos
             _limpiar_si_cero(session, r)
 
@@ -69,14 +80,18 @@ def actualizar_por_movimiento(
             r = _crear_resumen(session, user_id, cuenta_id, fecha.year, fecha.month)
         if monto > 0:
             r.total_ingresos += monto
+            if es_deuda:
+                r.total_ingresos_deuda += monto
         else:
             r.total_gastos += abs(monto)
+            if es_deuda:
+                r.total_gastos_deuda += abs(monto)
         r.neto = r.total_ingresos - r.total_gastos
 
 
 def recalcular_mes(session: Session, user_id: str, cuenta_id: int, anio: int, mes: int) -> ResumenMensual | None:
     resultados = session.exec(
-        select(Movimiento.monto).where(
+        select(Movimiento.monto, Movimiento.es_deuda).where(
             Movimiento.user_id == user_id,
             Movimiento.cuenta_id == cuenta_id,
             func.extract("year", Movimiento.fecha) == anio,
@@ -84,18 +99,27 @@ def recalcular_mes(session: Session, user_id: str, cuenta_id: int, anio: int, me
         )
     ).all()
 
-    total_ingresos = sum(m for m in resultados if m > 0)
-    total_gastos = sum(abs(m) for m in resultados if m < 0)
+    total_ingresos = sum(m for m, _ in resultados if m > 0)
+    total_gastos = sum(abs(m) for m, _ in resultados if m < 0)
+    total_ingresos_deuda = sum(m for m, es_deuda in resultados if es_deuda and m > 0)
+    total_gastos_deuda = sum(abs(m) for m, es_deuda in resultados if es_deuda and m < 0)
 
     resumen = _get_o_crear(session, user_id, cuenta_id, anio, mes)
 
     if resumen is None:
-        if total_ingresos == 0 and total_gastos == 0:
+        if (
+            total_ingresos == 0
+            and total_gastos == 0
+            and total_ingresos_deuda == 0
+            and total_gastos_deuda == 0
+        ):
             return None
         resumen = _crear_resumen(session, user_id, cuenta_id, anio, mes)
 
     resumen.total_ingresos = total_ingresos
     resumen.total_gastos = total_gastos
+    resumen.total_ingresos_deuda = total_ingresos_deuda
+    resumen.total_gastos_deuda = total_gastos_deuda
     resumen.neto = total_ingresos - total_gastos
 
     if total_ingresos == 0 and total_gastos == 0:

@@ -38,6 +38,7 @@ def listar_movimientos(filtros: MovimientoFilter = Depends(), user: User = Depen
         tipo_id=filtros.tipo_id,
         subtipo_id=filtros.subtipo_id,
         es_ingreso=filtros.es_ingreso,
+        es_deuda=filtros.es_deuda,
     )
     return {"data": resultados, "total": total, "pagina": filtros.pagina}
 
@@ -95,7 +96,10 @@ def actualizar(movimiento_id: int, datos: MovimientoUpdate, user: User = Depends
 
 @router.delete("/{movimiento_id}", summary="Eliminar un movimiento")
 def eliminar(movimiento_id: int, user: User = Depends(validate_token)):
-    ok = delete_movimiento(movimiento_id, user)
+    try:
+        ok = delete_movimiento(movimiento_id, user)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     if not ok:
         raise HTTPException(status_code=404, detail="Movimiento no encontrado")
     return {"message": "Movimiento eliminado"}

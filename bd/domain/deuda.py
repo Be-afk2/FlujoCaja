@@ -25,6 +25,8 @@ EVENTOS = (EVENTO_DESEMBOLSO, EVENTO_PAGO)
 
 TIPO_DEUDAS = "Deudas"
 
+TIPOS_ENTIDAD = ("persona", "empresa", "otro")
+
 SUBTIPO_PRESTAMO_OTORGADO = "Préstamo otorgado"
 SUBTIPO_PRESTAMO_RECIBIDO = "Préstamo recibido"
 SUBTIPO_ABONO_DEUDA = "Abono deuda"
@@ -53,6 +55,13 @@ def validar_direccion(direccion: str) -> None:
     if direccion not in DIRECCIONES:
         raise ValueError(
             f"Direccion invalida: {direccion!r}. Use 'cobrar' o 'pagar'"
+        )
+
+
+def validar_tipo_entidad(tipo: str) -> None:
+    if tipo not in TIPOS_ENTIDAD:
+        raise ValueError(
+            f"Tipo de entidad invalido: {tipo!r}. Use uno de {TIPOS_ENTIDAD}"
         )
 
 
@@ -113,6 +122,10 @@ def subtipo_deuda(direccion: str, evento: str, es_final: bool = False) -> str:
 
 def calcular_pendiente(monto_original: float, total_abonos: float = 0.0) -> float:
     return monto_original - total_abonos
+
+
+def es_pago_final(pendiente_restante: float) -> bool:
+    return pendiente_restante <= _EPSILON
 
 
 def validar_monto_original(monto: float) -> None:

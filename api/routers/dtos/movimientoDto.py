@@ -1,16 +1,9 @@
-from datetime import date, datetime
-from typing import Annotated, List, Optional
+from datetime import date
+from typing import List, Optional
 
-from pydantic import BaseModel, BeforeValidator
+from pydantic import BaseModel
 
-
-def _parse_fecha(v: str | date | None) -> date | None:
-    if v is None or isinstance(v, date):
-        return v
-    return datetime.strptime(v, "%d-%m-%Y").date()
-
-
-DateFromString = Annotated[date, BeforeValidator(_parse_fecha)]
+from .common import DateFromString
 
 
 class MovimientoCreate(BaseModel):
@@ -39,6 +32,7 @@ class MovimientoFilter(BaseModel):
     tipo_id: Optional[int] = None
     subtipo_id: Optional[int] = None
     es_ingreso: Optional[bool] = None
+    es_deuda: Optional[bool] = None
     pagina: int = 1
     cantidad: int = 10
 
@@ -47,6 +41,7 @@ class MovimientoResponse(BaseModel):
     id: int
     monto: float
     es_ingreso: bool
+    es_deuda: bool
     tipo_id: int
     subtipo_id: Optional[int]
     cuenta_id: int
