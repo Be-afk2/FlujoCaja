@@ -1,12 +1,26 @@
-from .user import User
-from .movimiento import Movimiento
-from .tipo import Tipo
-from .sesion import Sesion
 from .cuentas import Cuenta
-from .tipoCuenta import TipoCuenta
+from .deuda import Deuda, PagoDeuda
+from .entidad import Entidad
 from .moneda import Moneda
-from .subTipo import Subtipo
+from .movimiento import Movimiento
 from .resumen import ResumenMensual
+from .sesion import Sesion
+from .subTipo import Subtipo
+from .tipo import Tipo
+from .tipoCuenta import TipoCuenta
+from .user import User
 
-
-__all__ = ["User", "Movimiento", "Tipo","Sesion","Cuenta","TipoCuenta","Moneda","Subtipo","ResumenMensual"]
+__all__ = [
+    "User",
+    "Movimiento",
+    "Tipo",
+    "Sesion",
+    "Cuenta",
+    "TipoCuenta",
+    "Moneda",
+    "Subtipo",
+    "ResumenMensual",
+    "Entidad",
+    "Deuda",
+    "PagoDeuda",
+]

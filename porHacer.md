@@ -231,7 +231,6 @@ Objetivo: convertir los datos registrados en informacion util.
 - [x] Backup y restauracion manual de la base de datos (GET/POST `/datos/backup`, `/datos/restaurar`).
 - [x] Gestion de perfil y cambio de contraseña (GET/PUT `/auth/me`, PUT `/auth/me/password`).
 
----
 
 ## Fase 8 - Empaquetado
 

@@ -1,14 +1,62 @@
+# Entornos virtuales
 /venv
+/.venv
+venv/
+.venv/
+
+# Pruebas / temporales
 /test
-database.db
-__pycache__
 indexar.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+
+# Herramientas
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Base de datos local y logs
+database.db
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+*.log
+/data/
+/logs/
+
+# Configuración local sensible
+.env
+.env.*
+!.env.example
+
+# Empaquetado
+/build/
+/dist/
+*.spec~
+*.zip
+
+# Entorno / editores / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Excluidos del proyecto
 /tools
 AGENTS.md
-
 /planes
 template-agents
 /bugs
-/build
-/dist
-*.spec~
+idea.md

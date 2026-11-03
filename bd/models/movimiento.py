@@ -1,19 +1,20 @@
 from datetime import date
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
+from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from bd.models.user import User
-    from bd.models.tipo import Tipo
-    from bd.models.subTipo import Subtipo
     from bd.models.cuentas import Cuenta
+    from bd.models.subTipo import Subtipo
+    from bd.models.tipo import Tipo
+    from bd.models.user import User
 
 
 class Movimiento(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     monto: float
     es_ingreso: bool
+    es_deuda: bool = Field(default=False, index=True)
 
     tipo_id: int = Field(foreign_key="tipo.id")
     tipo: Optional["Tipo"] = Relationship(back_populates="movimientos")

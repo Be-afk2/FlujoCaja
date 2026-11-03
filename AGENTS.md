@@ -89,6 +89,8 @@ See `porHacer.md` for full roadmap. Priority items: connect all web pages to rea
 
 El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp`) para responder consultas estructurales sin leer archivos uno por uno.
 
+**Nombre MCP de este proyecto:** `C-Users-cleoe-OneDrive-Documentos-GitHub-FlujoCaja`. Usa este nombre exacto al llamar herramientas MCP; el nombre corto `FlujoCaja` no se reconoce. Antes de indexar, consulta `list_projects` o intenta consultar el grafo con el nombre exacto para confirmar que sigue disponible.
+
 **Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP.
 
 ### Helper (portable)
@@ -105,6 +107,9 @@ python ruta/a/tools/mcp.py code <patron>
 python ruta/a/tools/mcp.py schema
 python ruta/a/tools/mcp.py projects
 python ruta/a/tools/mcp.py index   # re-indexar
+
+# Para este proyecto, si la herramienta requiere nombre explícito
+python ruta/a/tools/mcp.py -p C-Users-cleoe-OneDrive-Documentos-GitHub-FlujoCaja search "<patron>"
 
 # Para otro proyecto (por nombre)
 python ruta/a/tools/mcp.py -p Otro-Proyecto search "class .*"

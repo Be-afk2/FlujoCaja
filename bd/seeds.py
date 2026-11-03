@@ -3,7 +3,8 @@ import logging
 from sqlmodel import Session, select
 
 from bd.database import engine
-from bd.models import Moneda, Tipo, TipoCuenta
+from bd.domain.deuda import SUBTIPOS_DEUDAS, TIPO_DEUDAS
+from bd.models import Moneda, Subtipo, Tipo, TipoCuenta
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,12 @@ DEFAULT_TIPOS = [
     {"nombre": "Freelance", "descripcion": "Trabajos independientes"},
     {"nombre": "Inversiones", "descripcion": "Rendimientos de inversiones"},
     {"nombre": "Varios", "descripcion": "Otros ingresos"},
+    {"nombre": TIPO_DEUDAS, "descripcion": "Préstamos, deudas y cobros"},
 ]
+
+DEFAULT_SUBTIPOS = {
+    TIPO_DEUDAS: list(SUBTIPOS_DEUDAS),
+}
 
 DEFAULT_TIPOS_CUENTA = [
     {"tipo": "Efectivo"},
@@ -54,6 +60,17 @@ def _seed_tipo(session: Session, nombre: str, descripcion: str | None = None) ->
     return True
 
 
+def _seed_subtipo(session: Session, tipo_id: int, nombre: str) -> bool:
+    existente = session.exec(
+        select(Subtipo).where(Subtipo.tipo_id == tipo_id, Subtipo.nombre == nombre)
+    ).first()
+    if existente:
+        return False
+
+    session.add(Subtipo(nombre=nombre, tipo_id=tipo_id))
+    return True
+
+
 def _seed_tipo_cuenta(session: Session, tipo: str) -> bool:
     existente = session.exec(select(TipoCuenta).where(TipoCuenta.tipo == tipo)).first()
     if existente:
@@ -66,6 +83,7 @@ def _seed_tipo_cuenta(session: Session, tipo: str) -> bool:
 def seed_db() -> None:
     monedas_creadas = 0
     tipos_creados = 0
+    subtipos_creados = 0
     tipos_cuenta_creados = 0
 
     with Session(engine) as session:
@@ -76,6 +94,15 @@ def seed_db() -> None:
         for tipo in DEFAULT_TIPOS:
             if _seed_tipo(session, tipo["nombre"], tipo.get("descripcion")):
                 tipos_creados += 1
+        session.flush()
+
+        for tipo_nombre, subtipos in DEFAULT_SUBTIPOS.items():
+            tipo = session.exec(select(Tipo).where(Tipo.nombre == tipo_nombre)).first()
+            if tipo is None:
+                continue
+            for subtipo_nombre in subtipos:
+                if _seed_subtipo(session, tipo.id, subtipo_nombre):
+                    subtipos_creados += 1
 
         for tipo_cuenta in DEFAULT_TIPOS_CUENTA:
             if _seed_tipo_cuenta(session, tipo_cuenta["tipo"]):
@@ -84,8 +111,9 @@ def seed_db() -> None:
         session.commit()
 
     logger.info(
-        "Seeds aplicados: %s monedas, %s tipos y %s tipos de cuenta",
+        "Seeds aplicados: %s monedas, %s tipos, %s subtipos y %s tipos de cuenta",
         monedas_creadas,
         tipos_creados,
+        subtipos_creados,
         tipos_cuenta_creados,
     )

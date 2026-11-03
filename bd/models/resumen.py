@@ -1,5 +1,6 @@
-from sqlmodel import SQLModel, Field, UniqueConstraint
 from typing import Optional
+
+from sqlmodel import Field, SQLModel, UniqueConstraint
 
 
 class ResumenMensual(SQLModel, table=True):
@@ -16,3 +17,5 @@ class ResumenMensual(SQLModel, table=True):
     total_ingresos: float = 0.0
     total_gastos: float = 0.0
     neto: float = 0.0
+    total_ingresos_deuda: float = 0.0
+    total_gastos_deuda: float = 0.0
