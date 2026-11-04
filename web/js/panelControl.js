@@ -6,10 +6,28 @@ const NOMBRES_MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', '
 // ==================== ESTADO DE MONEDAS ====================
 
 const MONEDA_STORAGE_KEY = 'panel_moneda';
+const DEUDAS_STORAGE_KEY = 'incluir_deudas_totales';
 
 let cuentasGlobales = [];
 let monedaPorCuenta = {}; // cuenta_id -> moneda_id
 let simboloMoneda = {};  // moneda_id -> simbolo
+
+function incluirDeudasEnTotales() {
+    const toggle = document.getElementById('toggleDeudas');
+    return toggle ? toggle.checked : true;
+}
+
+function restaurarToggleDeudas() {
+    const toggle = document.getElementById('toggleDeudas');
+    if (!toggle) return;
+    const guardado = localStorage.getItem(DEUDAS_STORAGE_KEY);
+    toggle.checked = guardado === null ? true : guardado === 'true';
+}
+
+function guardarToggleDeudas() {
+    const toggle = document.getElementById('toggleDeudas');
+    if (toggle) localStorage.setItem(DEUDAS_STORAGE_KEY, String(toggle.checked));
+}
 
 function monedaSeleccionada() {
     const sel = document.getElementById('filtroMoneda');
@@ -68,8 +86,15 @@ async function cargarDashboard() {
         // Moneda específica: sumar solo las cuentas de esa moneda.
         const cuentasFiltradas = (cuentas || []).filter(c => String(c.moneda_id) === String(monedaId));
         const simbolo = simboloMoneda[monedaId] || '$';
-        const ingresos = (resumen || []).reduce((s, r) => s + (r.total_ingresos || 0), 0);
-        const gastos = (resumen || []).reduce((s, r) => s + (r.total_gastos || 0), 0);
+        const incluirDeudas = incluirDeudasEnTotales();
+        const ingresos = (resumen || []).reduce(
+            (s, r) => s + (r.total_ingresos || 0) - (incluirDeudas ? 0 : (r.total_ingresos_deuda || 0)),
+            0
+        );
+        const gastos = (resumen || []).reduce(
+            (s, r) => s + (r.total_gastos || 0) - (incluirDeudas ? 0 : (r.total_gastos_deuda || 0)),
+            0
+        );
         const neto = ingresos - gastos;
         const saldoTotal = (cuentasFiltradas || []).reduce((s, c) => s + (c.saldo || 0), 0);
 
@@ -77,6 +102,14 @@ async function cargarDashboard() {
         pintarTarjeta('ingresosMes', ingresos, simbolo);
         pintarTarjeta('gastosMes', gastos, simbolo);
         pintarTarjeta('flujoNeto', neto, simbolo, neto >= 0 ? 'text-emerald-500' : 'text-rose-500');
+
+        const sufijo = incluirDeudas ? '' : ' · sin deudas';
+        const subIngresos = document.getElementById('ingresosMesSub');
+        const subGastos = document.getElementById('gastosMesSub');
+        const subNeto = document.getElementById('flujoNetoSub');
+        if (subIngresos) subIngresos.textContent = `Mes actual${sufijo}`;
+        if (subGastos) subGastos.textContent = `Mes actual${sufijo}`;
+        if (subNeto) subNeto.textContent = `Ingresos - Gastos${sufijo}`;
 
         await renderTransaccionesRecientes((movimientos || {}).data || []);
         renderGrafico();
@@ -124,6 +157,9 @@ async function renderTransaccionesRecientes(movimientos) {
             const nombreTipo = tiposMap[m.tipo_id] || 'Movimiento';
             const nombreCuenta = cuentasMap[m.cuenta_id] || '';
             const simbolo = simbolosMap[m.cuenta_id] || '$';
+            const badgeDeuda = m.es_deuda
+                ? '<span class="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Deuda</span>'
+                : '';
             return `
             <div class="flex items-center justify-between p-4 hover:bg-slate-800 transition-colors rounded-xl group">
                 <div class="flex items-center space-x-4">
@@ -135,7 +171,7 @@ async function renderTransaccionesRecientes(movimientos) {
                         </svg>
                     </div>
                     <div>
-                        <p class="font-semibold text-slate-200 text-sm">${nombreTipo}</p>
+                        <p class="font-semibold text-slate-200 text-sm">${nombreTipo}${badgeDeuda}</p>
                         <p class="text-xs text-slate-500">${nombreCuenta} • ${formatearFechaLegible(m.fecha)}</p>
                     </div>
                 </div>
@@ -167,14 +203,14 @@ function mesesDelAnioActual() {
     return NOMBRES_MESES.map((label, i) => ({ anio, mes: i + 1, label }));
 }
 
-async function obtenerResumenAnual(anio, monedaId) {
+async function obtenerResumenAnual(anio, monedaId, incluirDeudas) {
     const r = await get(`resumen/anual?anio=${anio}&moneda_id=${monedaId}`);
     const porMes = {};
     (r || []).forEach(item => {
         const clave = `${item.anio}-${item.mes}`;
         if (!porMes[clave]) porMes[clave] = { ingresos: 0, gastos: 0 };
-        porMes[clave].ingresos += item.total_ingresos || 0;
-        porMes[clave].gastos += item.total_gastos || 0;
+        porMes[clave].ingresos += (item.total_ingresos || 0) - (incluirDeudas ? 0 : (item.total_ingresos_deuda || 0));
+        porMes[clave].gastos += (item.total_gastos || 0) - (incluirDeudas ? 0 : (item.total_gastos_deuda || 0));
     });
     return porMes;
 }
@@ -189,7 +225,8 @@ async function renderGrafico() {
 
     try {
         const anios = [...new Set(meses.map(m => m.anio))];
-        const mapas = await Promise.all(anios.map(a => obtenerResumenAnual(a, monedaId)));
+        const incluirDeudas = incluirDeudasEnTotales();
+        const mapas = await Promise.all(anios.map(a => obtenerResumenAnual(a, monedaId, incluirDeudas)));
         const porMes = Object.assign({}, ...mapas);
 
         const datos = meses.map(m => ({
@@ -223,10 +260,11 @@ async function renderCategoriasGasto() {
     if (!contenedor) return;
 
     const monedaId = monedaSeleccionada();
+    const filtroDeuda = incluirDeudasEnTotales() ? '' : '&es_deuda=false';
 
     try {
         const [resp, tipos] = await Promise.all([
-            get(`movimientos/?cantidad=200&es_ingreso=false&moneda_id=${monedaId}`),
+            get(`movimientos/?cantidad=200&es_ingreso=false&moneda_id=${monedaId}${filtroDeuda}`),
             get('tipos/?cantidad=50'),
         ]);
 
@@ -612,6 +650,11 @@ async function eliminarMovimiento() {
 // ==================== INICIALIZACIÓN ====================
 
 function initPanel() {
+    restaurarToggleDeudas();
+    document.getElementById('toggleDeudas')?.addEventListener('change', () => {
+        guardarToggleDeudas();
+        cargarDashboard();
+    });
     document.getElementById('rangoGrafico')?.addEventListener('change', renderGrafico);
     document.getElementById('filtroMoneda')?.addEventListener('change', () => {
         guardarMonedaSeleccionada();

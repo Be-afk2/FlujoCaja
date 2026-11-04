@@ -253,6 +253,22 @@ Objetivo: distribuir la app como aplicacion local usable.
 
 ---
 
+## Fase 9 - Entidades y deudas
+
+Objetivo: registrar personas/empresas y deudas en ambas direcciones (me deben / yo debo) sin romper saldos ni resumen.
+
+- [x] Modelos `Entidad`, `Deuda`, `PagoDeuda`; `Movimiento.es_deuda` y desglose de deudas en `ResumenMensual`.
+- [x] Migracion Alembic y seeds del tipo "Deudas" con subtipos (prestamo, abono, pago, cobro).
+- [x] CRUD con transacciones atomicas: deuda/pago + movimiento + saldo + resumen.
+- [x] API `/entidades` y `/deudas` (CRUD, pagos, filtros, `moneda_distinta`, bloqueo de movimientos de deuda).
+- [x] Frontend `web/pages/deudas.html` + `web/js/deudas.js`: entidades, saldos por moneda, deudas, abonos, modales, historial y avisos de moneda distinta.
+- [x] Item "Deudas" en el sidebar compartido; helpers `cargarSelectorMonedas`/`escaparHtml` en `funciones.js`.
+- [ ] Tests dedicados `tests/test_entidades.py` y `tests/test_deudas.py`.
+- [ ] Toggle "Incluir deudas en totales" y badges "Deuda" en dashboard/transacciones.
+- [ ] Prueba manual end-to-end de la pagina de deudas.
+
+---
+
 ## Prioridad inmediata
 
 1. Ordenar configuracion y ruta de base de datos.

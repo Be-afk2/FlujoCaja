@@ -38,6 +38,21 @@ function cerrarSesion() {
 // ==================== UTILIDADES ====================
 
 /**
+ * Escapa texto para insertarlo de forma segura dentro de HTML.
+ * @param {*} valor
+ * @returns {string}
+ */
+function escaparHtml(valor) {
+    return String(valor ?? '').replace(/[&<>"']/g, caracter => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+    }[caracter]));
+}
+
+/**
  * Realiza una petición HTTP genérica a la API.
  * @param {string} path - Ruta de la petición (sin incluir baseUrl)
  * @param {Object} options - Opciones de configuración
@@ -283,14 +298,30 @@ async function cargarSubtipos(selectId, tipoId, seleccionado = null) {
  * Llena un <select> con las cuentas del usuario.
  * @param {string} selectId - ID del elemento select.
  * @param {number|null} seleccionado - ID de cuenta a preseleccionar.
+ * @param {Array|null} cuentas - Lista ya cargada (opcional, evita otra petición).
  */
-async function cargarSelectorCuentas(selectId, seleccionado = null) {
+async function cargarSelectorCuentas(selectId, seleccionado = null, cuentas = null) {
     const select = document.getElementById(selectId);
     if (!select) return;
-    const cuentas = await get('cuentas/');
+    const lista = cuentas || await get('cuentas/');
     select.innerHTML = '<option value="">Seleccionar cuenta</option>' +
-        cuentas.map(c => `<option value="${c.id}" ${Number(c.id) === Number(seleccionado) ? 'selected' : ''}>${c.nombre}</option>`).join('');
-    return cuentas;
+        lista.map(c => `<option value="${c.id}" data-moneda="${c.moneda_id}" ${Number(c.id) === Number(seleccionado) ? 'selected' : ''}>${escaparHtml(c.nombre)}</option>`).join('');
+    return lista;
+}
+
+/**
+ * Llena un <select> con las monedas disponibles.
+ * @param {string} selectId - ID del elemento select.
+ * @param {number|null} seleccionado - ID de moneda a preseleccionar.
+ * @param {Array|null} monedas - Lista ya cargada (opcional, evita otra petición).
+ */
+async function cargarSelectorMonedas(selectId, seleccionado = null, monedas = null) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+    const lista = monedas || await get('monedas/');
+    select.innerHTML = '<option value="">Seleccionar moneda</option>' +
+        lista.map(m => `<option value="${m.id}" ${Number(m.id) === Number(seleccionado) ? 'selected' : ''}>${escaparHtml(m.nombre)} (${escaparHtml(m.simbolo)})</option>`).join('');
+    return lista;
 }
 
 /**
@@ -334,15 +365,22 @@ function renderTablaMovimientos(tbodyId, movimientos, { cuentasMap = {}, tiposMa
         const montoHtml = `<span class="font-bold ${esIngreso ? 'text-emerald-500' : 'text-rose-500'}">${esIngreso ? '+' : ''}${formatearDinero(m.monto, simbolo)}</span>`;
         const nombreTipo = tiposMap[m.tipo_id] || `Tipo ${m.tipo_id}`;
         const nombreCuenta = cuentasMap[m.cuenta_id] || `Cuenta ${m.cuenta_id}`;
+        const badgeDeuda = m.es_deuda
+            ? '<span class="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">Deuda</span>'
+            : '';
         const acciones = conAcciones
-            ? `<div class="flex gap-2 justify-end">
-                 <button type="button" data-accion="editar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">Editar</button>
-                 <button type="button" data-accion="eliminar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 transition-colors">Eliminar</button>
-               </div>`
+            ? (m.es_deuda
+                ? `<div class="flex justify-end">
+                     <a href="deudas.html" class="px-3 py-1 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors">Gestionar en Deudas</a>
+                   </div>`
+                : `<div class="flex gap-2 justify-end">
+                     <button type="button" data-accion="editar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors">Editar</button>
+                     <button type="button" data-accion="eliminar" data-id="${m.id}" class="px-3 py-1 text-xs font-semibold rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600/30 transition-colors">Eliminar</button>
+                   </div>`)
             : '';
         return `<tr class="border-b border-slate-800">
             <td class="px-4 py-3 text-sm text-slate-400 whitespace-nowrap">${formatearFechaLegible(m.fecha)}</td>
-            <td class="px-4 py-3 text-sm text-slate-200">${nombreTipo}</td>
+            <td class="px-4 py-3 text-sm text-slate-200">${nombreTipo}${badgeDeuda}</td>
             <td class="px-4 py-3 text-sm text-slate-400">${nombreCuenta}</td>
             <td class="px-4 py-3 text-sm text-right">${montoHtml}</td>
             ${conAcciones ? `<td class="px-4 py-3">${acciones}</td>` : ''}

@@ -28,7 +28,7 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
 - [x] Implementar subtipos automáticos bajo tipo **"Deudas"**: Préstamo otorgado, Préstamo recibido, Abono deuda, Pago deuda, Cobro deuda.
 - [x] Calcular estado: `pendiente = monto_original − suma(abonos)`; `pagada` si `<= 0`; `vencida` si `> 0` y `vencimiento < hoy`; `pendiente` en el resto.
 - [x] Validar `monto_original > 0` y que el abono no supere el pendiente.
-- [ ] Advertir en UI si la cuenta del pago difiere de la moneda de la deuda (helper `monedas_distintas` listo en `bd/domain/deuda.py`; falta UI en 9.8).
+- [x] Advertir en UI si la cuenta del pago difiere de la moneda de la deuda (helper `monedas_distintas` listo en `bd/domain/deuda.py`; UI en 9.8 con `moneda_distinta` y avisos en modales).
 - [x] Mostrar saldos de entidad por moneda (cálculo `calcular_saldos_por_moneda` + `listar_entidades` por moneda; la UI llega en 9.8).
 - [x] Bloquear edición/eliminación de movimientos con `es_deuda=True` desde la tabla general de movimientos (implementado en 9.3).
 
@@ -96,25 +96,25 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
 
 ### 9.8 Frontend
 
-- [ ] Crear `web/pages/deudas.html` + `web/js/deudas.js` con layout de dos paneles.
-- [ ] Panel izquierdo: buscador de entidades, tarjetas (nombre, tipo, saldo neto por moneda, pendientes, próximo vencimiento), botón "Nueva entidad", filtro de moneda.
-- [ ] Panel derecho: cabecera de entidad, resumen (a favor, en contra, neto), filtros (Todas / Me deben / Yo debo / Vencidas / Pagadas), botón "Nueva deuda".
-- [ ] Lista de deudas con badge de dirección, descripción, monto original, pendiente, vencimiento, estado, barra de progreso, historial de pagos expandible y acciones (Abonar/Pagar/Cobrar, Editar, Eliminar).
-- [ ] Modal nueva/editar entidad.
-- [ ] Modal nueva deuda (dirección, monto, moneda, fecha, vencimiento, descripción, checkbox "Registrar movimiento inicial en una cuenta", selector de cuenta condicional, texto dinámico "Sale de mi cuenta"/"Entra a mi cuenta").
-- [ ] Modal registrar pago/cobro (pendiente actual y resultante, monto, fecha, cuenta, nota, advertencia de moneda distinta).
-- [ ] Modal editar deuda y editar abono.
-- [ ] Confirmación de eliminación con aviso de reversión de movimientos.
-- [ ] Agregar ítem **"Deudas"** al sidebar en `web/components/sidemenu.html`.
-- [ ] Agregar `cargarSelectorMonedas(selectId, seleccionado)` en `web/js/funciones.js` y reutilizar `cargarSelectorCuentas`, `fechaParaAPI`, `formatearDinero`.
+- [x] Crear `web/pages/deudas.html` + `web/js/deudas.js` con layout de dos paneles.
+- [x] Panel izquierdo: buscador de entidades, tarjetas (nombre, tipo, saldo neto por moneda, pendientes, próximo vencimiento), botón "Nueva entidad", filtro de moneda.
+- [x] Panel derecho: cabecera de entidad, resumen (a favor, en contra, neto), filtros (Todas / Me deben / Yo debo / Vencidas / Pagadas), botón "Nueva deuda".
+- [x] Lista de deudas con badge de dirección, descripción, monto original, pendiente, vencimiento, estado, barra de progreso, historial de pagos expandible y acciones (Abonar/Pagar/Cobrar, Editar, Eliminar).
+- [x] Modal nueva/editar entidad.
+- [x] Modal nueva deuda (dirección, monto, moneda, fecha, vencimiento, descripción, checkbox "Registrar movimiento inicial en una cuenta", selector de cuenta condicional, texto dinámico "Sale de mi cuenta"/"Entra a mi cuenta").
+- [x] Modal registrar pago/cobro (pendiente actual y resultante, monto, fecha, cuenta, nota, advertencia de moneda distinta).
+- [x] Modal editar deuda y editar abono.
+- [x] Confirmación de eliminación con aviso de reversión de movimientos.
+- [x] Agregar ítem **"Deudas"** al sidebar en `web/components/sidemenu.html`.
+- [x] Agregar `cargarSelectorMonedas(selectId, seleccionado)` en `web/js/funciones.js` y reutilizar `cargarSelectorCuentas`, `fechaParaAPI`, `formatearDinero`.
 
 ### 9.9 Dashboard y transacciones
 
-- [ ] Agregar toggle "Incluir deudas en totales" persistido en `localStorage`.
-- [ ] Aplicar el toggle a tarjetas y gráficos (`web/js/panelControl.js`).
-- [ ] Pasar `es_deuda=false` al gráfico de categorías cuando el toggle esté desactivado.
-- [ ] Mostrar badge "Deuda" en la tabla de movimientos y en recientes.
-- [ ] Mantener la visualización de movimientos de deuda en el listado general sin permitir editarlos desde ahí.
+- [x] Agregar toggle "Incluir deudas en totales" persistido en `localStorage` (clave `incluir_deudas_totales`).
+- [x] Aplicar el toggle a tarjetas y gráficos (`web/js/panelControl.js`); el balance total sigue mostrando el saldo real de las cuentas.
+- [x] Pasar `es_deuda=false` al gráfico de categorías cuando el toggle esté desactivado.
+- [x] Mostrar badge "Deuda" en la tabla de movimientos y en recientes.
+- [x] Mantener la visualización de movimientos de deuda en el listado general sin permitir editarlos desde ahí (acción "Gestionar en Deudas").
 
 ### 9.10 Tests y calidad
 
@@ -133,9 +133,9 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
   - [ ] Moneda distinta: sin conversión y sin romper cálculos.
   - [ ] Aislamiento de entidades, deudas y pagos entre usuarios.
 - [ ] Tests de reportes: `resumen/*?incluir_deudas=false` resta el desglose; `movimientos/?es_deuda=false` filtra; movimiento de deuda no editable/eliminable desde `/movimientos`.
-- [ ] Ejecutar `python -m pytest tests -v`.
-- [ ] Ejecutar `python -m ruff check tests api/mainApi.py` (o `.\run_lint.ps1`).
-- [ ] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
+- [x] Ejecutar `python -m pytest tests -v` (47 passed).
+- [x] Ejecutar `python -m ruff check tests api/mainApi.py` (o `.\run_lint.ps1`).
+- [x] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
 - [ ] Prueba manual end-to-end de la página de deudas.
 
 ---
@@ -242,8 +242,8 @@ y cuentas sin incorporar datos externos ni decisiones automatizadas.
 - [ ] Refactor de movimientos con `es_deuda` y desglose de resumen.
 - [ ] CRUD de entidades y deudas con transacciones atómicas.
 - [ ] API: DTOs, routers, registro en `mainApi.py`.
-- [ ] Frontend: página de deudas, sidebar, modales.
-- [ ] Dashboard: toggle de deudas + badges.
+- [x] Frontend: página de deudas, sidebar, modales.
+- [x] Dashboard: toggle de deudas + badges.
 - [ ] Tests + lint + prueba manual.
 - [ ] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
 

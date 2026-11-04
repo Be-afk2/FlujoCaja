@@ -50,6 +50,18 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - `python-multipart` añadido a `requirements.txt` (necesario para `UploadFile`)
 - Frontend: botones backup/restaurar activos en `ajustes.html`, helpers `downloadFile()`/`uploadFile()` en `funciones.js`
 
+## Key refactors (Fase 9 — Entidades y deudas)
+
+- Modelos `Entidad`, `Deuda`, `PagoDeuda`; `Movimiento.es_deuda`; desglose `total_ingresos_deuda`/`total_gastos_deuda` en `ResumenMensual`.
+- CRUD atómico en `bd/crud/entidad.py` / `bd/crud/deuda.py`: deuda/pago + movimiento + saldo + resumen en la misma transacción.
+- Reglas: montos siempre positivos, signo según `direccion` (`cobrar`/`pagar`); `pendiente = monto_original − abonos`; estados `pendiente|vencida|pagada`; sobrepago → 400.
+- API: `/entidades` (listar con saldos por moneda, detalle, CRUD; DELETE bloqueado si tiene deudas) y `/deudas` (CRUD, `POST/PUT/DELETE /deudas/{id}/pagos`, filtros `entidad_id`/`direccion`/`estado`).
+- `PagoDeudaResponse.moneda_distinta` se calcula comparando la moneda de la cuenta con la de la deuda (sin conversión); el detalle de entidad no lo incluye, el frontend lo deduce con `cuentas`.
+- Editar deuda con abonos: solo permite `descripcion`/`vencimiento`; `monto_original`/`moneda_id`/`direccion` quedan bloqueados.
+- Frontend: `web/pages/deudas.html` + `web/js/deudas.js` + `web/css/deudas.css`; dos paneles, filtros por moneda/tipo/dirección/estado, modales de entidad/deuda/pago y confirmaciones de borrado.
+- Sidebar: ítem "Deudas" en `web/components/sidemenu.html`; helpers `cargarSelectorMonedas()`/`escaparHtml()` y `cargarSelectorCuentas()` con `data-moneda` en `funciones.js`.
+- Fechas de escritura en `dd-mm-YYYY` (`fechaParaAPI`); respuestas de la API en ISO.
+
 ## Key refactors (Fase 5 — Frontend conectado, en curso)
 
 - Token storage unified: `guardarToken()`, `obtenerToken()`, `cerrarSesion()` in `funciones.js`

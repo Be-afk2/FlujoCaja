@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deudas y Entidades - FlujoCaja</title>
+  <script src="../vendor/tailwind.js"></script>
+  <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../css/fonts.css">
+  <link rel="stylesheet" href="../css/deudas.css">
+</head>
+
+<body class="bg-slate-900 text-slate-200 min-h-screen flex overflow-hidden antialiased select-none">
+
+  <aside class="w-64 bg-slate-900 text-white flex-col hidden md:flex border-r border-slate-800 flex-shrink-0"
+    data-component="../components/sidemenu.html" data-purpose="sidebar"></aside>
+
+  <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-900">
+
+    <header class="sticky top-0 z-20 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Deudas y Entidades</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Gestioná quién te debe y a quién le debés. Los saldos se muestran por moneda, sin conversión automática.</p>
+      </div>
+
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 focus-within:border-emerald-500 transition-colors">
+          <i class="fa-solid fa-coins text-slate-400 text-xs"></i>
+          <label for="filtroMoneda" class="text-xs text-slate-400 font-medium whitespace-nowrap">Moneda:</label>
+          <select id="filtroMoneda" class="bg-transparent text-xs sm:text-sm text-slate-200 font-semibold focus:outline-none cursor-pointer pr-2">
+            <option value="todas">Todas las monedas</option>
+          </select>
+        </div>
+
+        <button id="btnNuevaEntidad" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-4 py-2 rounded-xl text-sm transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/40">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span>Nueva entidad</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-4 sm:p-6 lg:p-8 space-y-6 flex-1 flex flex-col">
+
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" id="cardsResumen">
+        <div class="bg-slate-800/90 border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">A favor</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-sm border border-emerald-500/20">
+              <i class="fa-solid fa-arrow-down-left"></i>
+            </div>
+          </div>
+          <div>
+            <div id="resumenAFavor" class="text-lg sm:text-2xl font-bold text-emerald-400 tracking-tight">—</div>
+            <p class="text-[11px] text-slate-400 mt-1">Total que te deben pendiente</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">En contra</span>
+            <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-sm border border-rose-500/20">
+              <i class="fa-solid fa-arrow-up-right"></i>
+            </div>
+          </div>
+          <div>
+            <div id="resumenEnContra" class="text-lg sm:text-2xl font-bold text-rose-400 tracking-tight">—</div>
+            <p class="text-[11px] text-slate-400 mt-1">Total que debés a otros</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Neto global</span>
+            <div id="badgeNetoIcon" class="w-8 h-8 rounded-lg bg-slate-700/60 text-slate-300 flex items-center justify-center text-sm border border-slate-700">
+              <i class="fa-solid fa-scale-balanced"></i>
+            </div>
+          </div>
+          <div>
+            <div id="resumenNeto" class="text-lg sm:text-2xl font-bold text-slate-200 tracking-tight">—</div>
+            <p class="text-[11px] text-slate-400 mt-1">Diferencia neta exigible</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/90 border border-slate-800 rounded-2xl p-4 sm:p-5 relative overflow-hidden flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Pendientes</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-sm border border-amber-500/20">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+          </div>
+          <div>
+            <div id="resumenPendientes" class="text-lg sm:text-2xl font-bold text-amber-400 tracking-tight">—</div>
+            <p class="text-[11px] text-slate-400 mt-1">Compromisos activos sin liquidar</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+
+        <section class="lg:col-span-4 bg-slate-800/70 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-base text-white flex items-center gap-2">
+              <i class="fa-solid fa-users text-emerald-400 text-sm"></i>
+              <span>Entidades</span>
+              <span id="contadorEntidades" class="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-semibold">0</span>
+            </h3>
+            <button id="btnNuevaEntidadMini" class="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 hover:underline">
+              <i class="fa-solid fa-plus text-[10px]"></i> Crear
+            </button>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+              <input type="text" id="buscarEntidad" placeholder="Buscar entidad por nombre..." class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+
+            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800" id="filtroTipoEntidadContainer">
+              <button type="button" data-tipo="todas" class="tab-tipo flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-200 bg-slate-800 shadow-sm transition-all text-center">Todas</button>
+              <button type="button" data-tipo="persona" class="tab-tipo flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition-all text-center">Personas</button>
+              <button type="button" data-tipo="empresa" class="tab-tipo flex-1 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-slate-200 transition-all text-center">Empresas</button>
+            </div>
+          </div>
+
+          <div id="listaEntidades" class="space-y-2.5 max-h-[560px] overflow-y-auto pr-1">
+            <div class="text-center py-8 text-slate-500 text-sm">Cargando entidades...</div>
+          </div>
+        </section>
+
+        <section class="lg:col-span-8 bg-slate-800/70 border border-slate-800 rounded-2xl p-4 sm:p-6 flex flex-col gap-6" id="panelDetalleContainer">
+
+          <div id="detalleSkeleton" class="hidden animate-pulse space-y-6">
+            <div class="h-20 bg-slate-800 rounded-xl"></div>
+            <div class="h-16 bg-slate-800 rounded-xl"></div>
+            <div class="h-48 bg-slate-800 rounded-xl"></div>
+          </div>
+
+          <div id="detalleContent" class="space-y-6">
+            <div id="detalleVacio" class="text-center py-16">
+              <i class="fa-solid fa-address-book text-slate-600 text-4xl mb-3"></i>
+              <h3 class="text-base font-bold text-slate-300">Seleccioná una entidad</h3>
+              <p class="text-xs text-slate-500 mt-1">Elegí una entidad de la lista para ver su detalle y gestionar deudas.</p>
+            </div>
+
+            <div id="detalleReal" class="hidden space-y-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+                <div class="flex items-start gap-4">
+                  <div id="detalleAvatar" class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xl shadow-inner flex-shrink-0">
+                    —
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h2 id="detalleNombre" class="text-xl sm:text-2xl font-bold text-white tracking-tight">Entidad</h2>
+                      <span id="detalleBadgeTipo" class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700/60 text-slate-300 border border-slate-600">
+                        Persona
+                      </span>
+                    </div>
+                    <p id="detalleDescripcion" class="text-xs sm:text-sm text-slate-400 mt-1">Sin descripción adicional</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2 flex-wrap">
+                  <button id="btnEditarEntidad" class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-slate-200 transition-colors">
+                    <i class="fa-solid fa-pen-to-square text-xs text-slate-400"></i>
+                    <span>Editar</span>
+                  </button>
+                  <button id="btnEliminarEntidad" class="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-xl text-xs font-semibold text-rose-400 transition-colors">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                    <span>Eliminar</span>
+                  </button>
+                  <button id="btnNuevaDeuda" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-xl text-xs font-bold text-slate-950 transition-colors shadow-sm">
+                    <i class="fa-solid fa-plus text-xs"></i>
+                    <span>Nueva deuda</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5">Saldos con esta entidad</h4>
+                <div id="detalleSaldosContainer" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+              </div>
+
+              <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+                  <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg text-xs">
+                    <span class="text-slate-500 font-medium">Dirección:</span>
+                    <select id="filtroDireccion" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer">
+                      <option value="todas">Todas</option>
+                      <option value="cobrar">Me deben</option>
+                      <option value="pagar">Yo debo</option>
+                    </select>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg text-xs">
+                    <span class="text-slate-500 font-medium">Estado:</span>
+                    <select id="filtroEstado" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer">
+                      <option value="todas">Todos</option>
+                      <option value="pendiente">Pendientes</option>
+                      <option value="vencida">Vencidas</option>
+                      <option value="pagada">Pagadas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg text-xs">
+                  <i class="fa-solid fa-arrow-down-short-wide text-slate-500"></i>
+                  <span class="text-slate-500 font-medium">Ordenar:</span>
+                  <select id="filtroOrden" class="bg-transparent text-slate-200 font-semibold focus:outline-none cursor-pointer">
+                    <option value="vencimiento">Vencimiento más próximo</option>
+                    <option value="monto">Monto mayor</option>
+                    <option value="fecha">Fecha más reciente</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="space-y-4" id="listaDeudasContainer"></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="modalEntidad" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modalEntidadTitulo">
+    <div class="bg-slate-800 w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
+        <h3 id="modalEntidadTitulo" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-emerald-400"></i>
+          <span>Nueva Entidad</span>
+        </h3>
+        <button type="button" class="modal-cerrar text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors" data-modal="modalEntidad">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formEntidad" class="space-y-4">
+        <input type="hidden" id="entidadEditId">
+
+        <div>
+          <label for="inputNombreEntidad" class="block text-xs font-semibold text-slate-300 mb-1.5">Nombre de la entidad *</label>
+          <input type="text" id="inputNombreEntidad" placeholder="Ej. Juan Pérez o Distribuidora Sur" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:outline-none transition-colors">
+          <p id="errorNombreEntidad" class="hidden text-rose-400 text-xs mt-1 font-medium">El nombre es obligatorio.</p>
+        </div>
+
+        <div>
+          <label for="selectTipoEntidad" class="block text-xs font-semibold text-slate-300 mb-1.5">Tipo de entidad</label>
+          <select id="selectTipoEntidad" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors">
+            <option value="persona">Persona</option>
+            <option value="empresa">Empresa</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="textareaDescripcionEntidad" class="block text-xs font-semibold text-slate-300 mb-1.5">Descripción o nota</label>
+          <textarea id="textareaDescripcionEntidad" rows="3" placeholder="Información de contacto, vínculo o notas..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none transition-colors"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
+          <button type="button" class="modal-cerrar px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalEntidad">Cancelar</button>
+          <button type="submit" id="btnGuardarEntidad" class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition-colors shadow-md">Guardar entidad</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalDeuda" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modalDeudaTitulo">
+    <div class="bg-slate-800 w-full max-w-lg rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative my-8">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
+        <h3 id="modalDeudaTitulo" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar text-emerald-400"></i>
+          <span>Nueva Deuda</span>
+        </h3>
+        <button type="button" class="modal-cerrar text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors" data-modal="modalDeuda">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formDeuda" class="space-y-4">
+        <input type="hidden" id="deudaEditId">
+
+        <div>
+          <label for="selectEntidadDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Entidad *</label>
+          <select id="selectEntidadDeuda" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1.5">Dirección de la deuda *</label>
+          <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-700">
+            <button type="button" id="btnDirCobrar" class="py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/40 transition-all">
+              <i class="fa-solid fa-arrow-down-left"></i> Me deben (A favor)
+            </button>
+            <button type="button" id="btnDirPagar" class="py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 transition-all">
+              <i class="fa-solid fa-arrow-up-right"></i> Yo debo (En contra)
+            </button>
+          </div>
+          <input type="hidden" id="inputDireccionDeuda" value="cobrar">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="inputMontoDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Monto original *</label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-sm">$</span>
+              <input type="number" id="inputMontoDeuda" min="1" step="any" placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-8 pr-3 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors">
+            </div>
+            <p id="errorMontoDeuda" class="hidden text-rose-400 text-xs mt-1 font-medium">Ingresá un monto válido mayor a 0.</p>
+          </div>
+
+          <div>
+            <label for="selectMonedaDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Moneda *</label>
+            <select id="selectMonedaDeuda" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="inputFechaDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha de registro</label>
+            <input type="date" id="inputFechaDeuda" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none transition-colors">
+          </div>
+          <div>
+            <label for="inputVencimientoDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha de vencimiento</label>
+            <input type="date" id="inputVencimientoDeuda" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none transition-colors">
+          </div>
+        </div>
+
+        <div>
+          <label for="textareaDescripcionDeuda" class="block text-xs font-semibold text-slate-300 mb-1.5">Motivo o descripción</label>
+          <textarea id="textareaDescripcionDeuda" rows="2" placeholder="Ej. Préstamo para el auto, Factura pendiente #402..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none transition-colors"></textarea>
+        </div>
+
+        <div id="bloqueMovimientoInicial" class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-700 space-y-3">
+          <div class="flex items-center justify-between">
+            <label for="checkMovimientoInicial" class="text-xs font-semibold text-slate-200 flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="checkMovimientoInicial" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700 focus:ring-0 cursor-pointer">
+              <span>Registrar movimiento de dinero inicial</span>
+            </label>
+          </div>
+
+          <div id="contenedorCuentaInicial" class="space-y-2 pt-1">
+            <label for="selectCuentaInicial" class="block text-xs font-medium text-slate-400">Cuenta de origen/destino</label>
+            <select id="selectCuentaInicial" class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none transition-colors"></select>
+
+            <div id="textoMovimientoDinamico" class="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+              <i class="fa-solid fa-arrow-up text-xs"></i>
+              <span>El dinero sale de tu cuenta hacia la entidad.</span>
+            </div>
+
+            <div id="advertenciaMonedaCuenta" class="hidden p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>La cuenta está en otra moneda. El monto se registrará sin conversión automática.</span>
+            </div>
+
+            <p id="avisoSinCuentasInicial" class="hidden text-amber-400 text-xs mt-1">No tenés cuentas creadas. Podés guardar la deuda sin movimiento inicial.</p>
+          </div>
+        </div>
+
+        <div id="avisoEdicionBloqueada" class="hidden p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-start gap-2">
+          <i class="fa-solid fa-lock mt-0.5"></i>
+          <div>
+            <strong>Campos monetarios bloqueados:</strong> Esta deuda ya posee pagos registrados. Podés actualizar la descripción, la fecha y el vencimiento.
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
+          <button type="button" class="modal-cerrar px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalDeuda">Cancelar</button>
+          <button type="submit" id="btnSubmitDeuda" class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition-colors shadow-md">Crear deuda</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalPago" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="modalPagoTitulo">
+    <div class="bg-slate-800 w-full max-w-md rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-700 mb-4">
+        <h3 id="modalPagoTitulo" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-money-bill-transfer text-emerald-400"></i>
+          <span>Registrar pago</span>
+        </h3>
+        <button type="button" class="modal-cerrar text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors" data-modal="modalPago">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="formPago" class="space-y-4">
+        <input type="hidden" id="pagoDeudaId">
+        <input type="hidden" id="pagoEditId">
+
+        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-700 space-y-1.5 text-xs">
+          <div class="flex justify-between text-slate-400">
+            <span>Deuda:</span>
+            <span id="pagoContextoDeuda" class="font-semibold text-slate-200 text-right">—</span>
+          </div>
+          <div class="flex justify-between text-slate-400">
+            <span>Pendiente actual:</span>
+            <span id="pagoContextoPendiente" class="font-bold text-amber-400">—</span>
+          </div>
+          <div class="flex justify-between text-slate-400 pt-1 border-t border-slate-800">
+            <span>Saldo restante después de abonar:</span>
+            <span id="pagoContextoRestante" class="font-bold text-emerald-400">—</span>
+          </div>
+        </div>
+
+        <div>
+          <label for="inputMontoPago" class="block text-xs font-semibold text-slate-300 mb-1.5">Monto del abono *</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-sm">$</span>
+            <input type="number" id="inputMontoPago" min="0.01" step="any" placeholder="0.00" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-8 pr-3 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors">
+          </div>
+          <p id="errorMontoPago" class="hidden text-rose-400 text-xs mt-1 font-medium">El monto debe ser mayor a 0 y no puede superar el pendiente.</p>
+          <p id="avisoCancelacion" class="hidden text-emerald-400 text-xs mt-1 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-circle-check"></i> Este pago cancelará la deuda totalmente.
+          </p>
+        </div>
+
+        <div>
+          <label for="selectCuentaPago" class="block text-xs font-semibold text-slate-300 mb-1.5">Cuenta bancaria o de efectivo *</label>
+          <select id="selectCuentaPago" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors"></select>
+          <p id="avisoMonedaPago" class="hidden text-amber-400 text-xs mt-1">La cuenta está en otra moneda. No se aplicará conversión.</p>
+          <p id="avisoSinCuentasPago" class="hidden text-amber-400 text-xs mt-1">Necesitás al menos una cuenta para registrar pagos o cobros.</p>
+        </div>
+
+        <div>
+          <label for="inputFechaPago" class="block text-xs font-semibold text-slate-300 mb-1.5">Fecha del pago</label>
+          <input type="date" id="inputFechaPago" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none transition-colors">
+        </div>
+
+        <div>
+          <label for="textareaNotaPago" class="block text-xs font-semibold text-slate-300 mb-1.5">Nota o número de transferencia</label>
+          <textarea id="textareaNotaPago" rows="2" placeholder="Ej. Transferencia Banco Galicia #8912..." class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none transition-colors"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
+          <button type="button" class="modal-cerrar px-4 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalPago">Cancelar</button>
+          <button type="submit" id="btnSubmitPago" class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-600 text-slate-950 transition-colors shadow-md">Registrar pago</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modalEliminarEntidad" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center">
+      <div id="eliminarEntidadBloqueado" class="space-y-4">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">No se puede eliminar esta entidad</h3>
+          <p class="text-xs text-slate-400 mt-2">
+            La entidad <strong id="nombreEntidadBloqueada" class="text-slate-200">—</strong> todavía tiene deudas registradas. Primero eliminá sus deudas antes de borrar la entidad.
+          </p>
+        </div>
+        <div class="pt-2">
+          <button type="button" class="modal-cerrar w-full py-2.5 rounded-xl text-sm font-bold bg-slate-700 hover:bg-slate-600 text-slate-200 transition-colors" data-modal="modalEliminarEntidad">
+            Entendido
+          </button>
+        </div>
+      </div>
+
+      <div id="eliminarEntidadPermitido" class="hidden space-y-4">
+        <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-white">¿Eliminar esta entidad?</h3>
+          <p class="text-xs text-slate-400 mt-2">
+            Estás a punto de borrar a <strong id="nombreEntidadAEliminar" class="text-slate-200">—</strong>. Esta acción no se puede deshacer.
+          </p>
+        </div>
+        <div class="flex items-center gap-3 pt-2">
+          <button type="button" class="modal-cerrar flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalEliminarEntidad">Cancelar</button>
+          <button type="button" id="btnConfirmarEliminarEntidad" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-600 text-white transition-colors shadow-md">Eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEliminarDeuda" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">¿Eliminar esta deuda?</h3>
+        <p class="text-xs text-slate-300 mt-2" id="detalleDeudaEliminar">—</p>
+        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800 text-[11px] text-amber-400/90 text-left mt-3 flex items-start gap-2">
+          <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+          <span>Se eliminarán también los abonos vinculados y se revertirán los saldos en las cuentas correspondientes.</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" class="modal-cerrar flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalEliminarDeuda">Cancelar</button>
+        <button type="button" id="btnConfirmarEliminarDeuda" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-600 text-white transition-colors shadow-md">Eliminar deuda</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEliminarPago" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">¿Eliminar este pago?</h3>
+        <p class="text-xs text-slate-300 mt-2" id="detallePagoEliminar">—</p>
+        <p class="text-[11px] text-slate-400 mt-2">
+          Se eliminará el movimiento vinculado y se restaurará el saldo en tu cuenta.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" class="modal-cerrar flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-modal="modalEliminarPago">Cancelar</button>
+        <button type="button" id="btnConfirmarEliminarPago" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-600 text-white transition-colors shadow-md">Eliminar pago</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/funciones.js"></script>
+  <script src="../js/notificaciones.js"></script>
+  <script src="../js/deudas.js"></script>
+  <script src="../js/loadmenu.js"></script>
+</body>
+
+</html>
