@@ -77,12 +77,14 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - Tailwind configured via inline `<script>` in `index.html` (no build step).
 - Frontend uses `sessionStorage` for token (key: `auth_token`) and `localStorage` for `remember_session` flag.
 - `obtener_usuario_por_token()` only checks the **first** `Sesion` row → single active session by design; isolation tests log in users sequentially.
+- **No usar `backdrop-filter`/`backdrop-blur` en el frontend:** en Qt WebEngine/Windows provoca parpadeo de toda la vista al interactuar (bug de compositor GPU). Usar fondos translúcidos sin blur.
 
 ## Tests (Fase 6)
 
 - `pytest` + `httpx` + `ruff` in `requirements-dev.txt`; config in `pyproject.toml`.
 - `tests/conftest.py` sets `os.environ["APPDATA"]` to a temp dir **before** importing app modules, so the global `engine` binds to a temp SQLite; an autouse `reset_db` fixture drops/recreates schema + seeds per test.
-- API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
+- API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`, `test_entidades`, `test_deudas`, `test_reportes`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
+- `tests/conftest.py` incluye fixtures `crear_entidad`, `crear_deuda`, `crear_pago` y `obtener_moneda` para la Fase 9.
 - Dates sent to the API use `dd-mm-YYYY` (parsed by `DateFromString`).
 - Lint is scoped to `tests/` + `api/mainApi.py` (ruff `select = ["E", "F", "I"]`).
 

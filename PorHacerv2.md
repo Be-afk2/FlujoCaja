@@ -59,7 +59,7 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
 - [x] Actualizar `actualizar_por_movimiento` para aceptar `es_deuda` y `old_es_deuda`.
 - [x] Actualizar `recalcular_mes` para calcular `total_ingresos_deuda` y `total_gastos_deuda`.
 - [x] Mantener en `ResumenMensual` el total general (incluye deudas) más el desglose.
-- [ ] Agregar `incluir_deudas: bool = True` a `/resumen/mensual`, `/resumen/anual` y `/resumen/rango`; restar el desglose cuando sea `false`.
+- [x] Agregar `incluir_deudas: bool = True` a `/resumen/mensual`, `/resumen/anual` y `/resumen/rango`; restar el desglose cuando sea `false`.
 
 ### 9.6 API y DTOs
 
@@ -118,25 +118,25 @@ yo debo), con abonos parciales, saldos por moneda y movimientos vinculados.
 
 ### 9.10 Tests y calidad
 
-- [ ] Crear `tests/test_entidades.py`: crear, listar, editar, eliminar sin deudas, eliminar con deudas → 400.
-- [ ] Crear `tests/test_deudas.py`:
-  - [ ] Deuda sin cuenta: no mueve saldo, pendiente = monto.
-  - [ ] Deuda con cuenta: saldo según tabla de signos, movimiento `es_deuda=True` con tipo/subtipo correctos, resumen con desglose.
-  - [ ] Abono parcial: saldo correcto, pendiente reducido, subtipo "Abono deuda".
-  - [ ] Pago final: estado `pagada`, subtipo "Pago deuda"/"Cobro deuda".
-  - [ ] Sobrepago → 400.
-  - [ ] Pago con cuenta de otro usuario → 400.
-  - [ ] Editar abono: saldo y pendiente recalculados.
-  - [ ] Eliminar abono: movimiento eliminado, saldo revertido, pendiente restaurado.
-  - [ ] Eliminar deuda: todos los movimientos revertidos.
-  - [ ] Deuda vencida: estado `vencida`.
-  - [ ] Moneda distinta: sin conversión y sin romper cálculos.
-  - [ ] Aislamiento de entidades, deudas y pagos entre usuarios.
-- [ ] Tests de reportes: `resumen/*?incluir_deudas=false` resta el desglose; `movimientos/?es_deuda=false` filtra; movimiento de deuda no editable/eliminable desde `/movimientos`.
-- [x] Ejecutar `python -m pytest tests -v` (47 passed).
+- [x] Crear `tests/test_entidades.py`: crear, listar, editar, eliminar sin deudas, eliminar con deudas → 400.
+- [x] Crear `tests/test_deudas.py`:
+  - [x] Deuda sin cuenta: no mueve saldo, pendiente = monto.
+  - [x] Deuda con cuenta: saldo según tabla de signos, movimiento `es_deuda=True` con tipo/subtipo correctos, resumen con desglose.
+  - [x] Abono parcial: saldo correcto, pendiente reducido, subtipo "Abono deuda".
+  - [x] Pago final: estado `pagada`, subtipo "Pago deuda"/"Cobro deuda".
+  - [x] Sobrepago → 400.
+  - [x] Pago con cuenta de otro usuario → 400.
+  - [x] Editar abono: saldo y pendiente recalculados.
+  - [x] Eliminar abono: movimiento eliminado, saldo revertido, pendiente restaurado.
+  - [x] Eliminar deuda: todos los movimientos revertidos.
+  - [x] Deuda vencida: estado `vencida`.
+  - [x] Moneda distinta: sin conversión y sin romper cálculos.
+  - [x] Aislamiento de entidades, deudas y pagos entre usuarios.
+- [x] Tests de reportes: `resumen/*?incluir_deudas=false` resta el desglose; `movimientos/?es_deuda=false` filtra; movimiento de deuda no editable/eliminable desde `/movimientos` (`tests/test_reportes.py`).
+- [x] Ejecutar `python -m pytest tests -v` (73 passed).
 - [x] Ejecutar `python -m ruff check tests api/mainApi.py` (o `.\run_lint.ps1`).
 - [x] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
-- [ ] Prueba manual end-to-end de la página de deudas.
+- [x] Prueba manual end-to-end de la página de deudas.
 
 ---
 
@@ -238,14 +238,14 @@ y cuentas sin incorporar datos externos ni decisiones automatizadas.
 
 ## Orden de implementación
 
-- [ ] Modelos + migración + seeds + exports.
-- [ ] Refactor de movimientos con `es_deuda` y desglose de resumen.
-- [ ] CRUD de entidades y deudas con transacciones atómicas.
-- [ ] API: DTOs, routers, registro en `mainApi.py`.
+- [x] Modelos + migración + seeds + exports.
+- [x] Refactor de movimientos con `es_deuda` y desglose de resumen.
+- [x] CRUD de entidades y deudas con transacciones atómicas.
+- [x] API: DTOs, routers, registro en `mainApi.py`.
 - [x] Frontend: página de deudas, sidebar, modales.
 - [x] Dashboard: toggle de deudas + badges.
 - [ ] Tests + lint + prueba manual.
-- [ ] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
+- [x] Documentación: actualizar `AGENTS.md` y `porHacer.md` con la Fase 9.
 
 ---
 

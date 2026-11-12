@@ -124,3 +124,89 @@ def crear_movimiento(client, crear_tipo):
         return r.json()
 
     return _crear
+
+
+@pytest.fixture()
+def crear_entidad(client):
+    def _crear(
+        headers: dict,
+        nombre: str = "Entidad test",
+        tipo: str = "persona",
+        descripcion: str | None = None,
+    ) -> dict:
+        body: dict = {"nombre": nombre, "tipo": tipo}
+        if descripcion is not None:
+            body["descripcion"] = descripcion
+        r = client.post("/entidades/", json=body, headers=headers)
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    return _crear
+
+
+@pytest.fixture()
+def obtener_moneda(client):
+    def _obtener(headers: dict, indice: int = 0) -> int:
+        monedas = client.get("/monedas/", headers=headers).json()
+        assert len(monedas) > indice
+        return monedas[indice]["id"]
+
+    return _obtener
+
+
+@pytest.fixture()
+def crear_deuda(client, obtener_moneda):
+    def _crear(
+        headers: dict,
+        entidad_id: int,
+        monto: float = 1000.0,
+        direccion: str = "cobrar",
+        moneda_id: int | None = None,
+        cuenta_inicial_id: int | None = None,
+        descripcion: str | None = None,
+        fecha: str | None = None,
+        vencimiento: str | None = None,
+    ) -> dict:
+        if moneda_id is None:
+            moneda_id = obtener_moneda(headers)
+        body: dict = {
+            "entidad_id": entidad_id,
+            "direccion": direccion,
+            "monto_original": monto,
+            "moneda_id": moneda_id,
+        }
+        if cuenta_inicial_id is not None:
+            body["cuenta_inicial_id"] = cuenta_inicial_id
+        if descripcion is not None:
+            body["descripcion"] = descripcion
+        if fecha is not None:
+            body["fecha"] = fecha
+        if vencimiento is not None:
+            body["vencimiento"] = vencimiento
+        r = client.post("/deudas/", json=body, headers=headers)
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    return _crear
+
+
+@pytest.fixture()
+def crear_pago(client):
+    def _crear(
+        headers: dict,
+        deuda_id: int,
+        cuenta_id: int,
+        monto: float,
+        fecha: str | None = None,
+        descripcion: str | None = None,
+    ) -> dict:
+        body: dict = {"monto": monto, "cuenta_id": cuenta_id}
+        if fecha is not None:
+            body["fecha"] = fecha
+        if descripcion is not None:
+            body["descripcion"] = descripcion
+        r = client.post(f"/deudas/{deuda_id}/pagos", json=body, headers=headers)
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    return _crear

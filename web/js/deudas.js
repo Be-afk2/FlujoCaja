@@ -25,6 +25,8 @@ const deudasState = {
 
 const deudasEl = id => document.getElementById(id);
 
+let busquedaTimer = null;
+
 // ==================== HELPERS ====================
 
 function esc(valor) {
@@ -290,6 +292,7 @@ async function cargarDetalleEntidad(entidadId, silencioso = false) {
     const token = ++deudasState.cargaDetalleToken;
     const skeleton = deudasEl("detalleSkeleton");
     const content = deudasEl("detalleContent");
+    const cargaInicial = !deudasState.entidad;
 
     if (!entidadId) {
         deudasState.entidad = null;
@@ -298,8 +301,12 @@ async function cargarDetalleEntidad(entidadId, silencioso = false) {
     }
 
     if (!silencioso) {
-        skeleton?.classList.remove("hidden");
-        content?.classList.add("hidden");
+        if (cargaInicial) {
+            skeleton?.classList.remove("hidden");
+            content?.classList.add("hidden");
+        } else {
+            content?.classList.add("opacity-60", "pointer-events-none");
+        }
     }
 
     try {
@@ -314,8 +321,12 @@ async function cargarDetalleEntidad(entidadId, silencioso = false) {
         mostrarNotificacion(error.message || "No se pudo cargar la entidad", "error");
     } finally {
         if (!silencioso) {
-            skeleton?.classList.add("hidden");
-            content?.classList.remove("hidden");
+            if (cargaInicial) {
+                skeleton?.classList.add("hidden");
+                content?.classList.remove("hidden");
+            } else {
+                content?.classList.remove("opacity-60", "pointer-events-none");
+            }
         }
     }
 }
@@ -1226,7 +1237,8 @@ function enlazarEventos() {
 
     deudasEl("buscarEntidad")?.addEventListener("input", event => {
         deudasState.busquedaEntidad = event.target.value;
-        renderListaEntidades();
+        clearTimeout(busquedaTimer);
+        busquedaTimer = setTimeout(renderListaEntidades, 150);
     });
 
     document.querySelectorAll(".tab-tipo").forEach(boton => {
