@@ -4,6 +4,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from bd.models.deuda import Deuda
+    from bd.models.deudaMensual import DeudaMensual
 
 
 class Entidad(SQLModel, table=True):
@@ -14,3 +15,4 @@ class Entidad(SQLModel, table=True):
     descripcion: Optional[str] = Field(default=None)
 
     deudas: List["Deuda"] = Relationship(back_populates="entidad")
+    deudas_mensuales: List["DeudaMensual"] = Relationship(back_populates="entidad")

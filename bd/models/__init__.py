@@ -1,5 +1,6 @@
 from .cuentas import Cuenta
 from .deuda import Deuda, PagoDeuda
+from .deudaMensual import CuotaMensual, DeudaMensual, PagoCuotaMensual
 from .entidad import Entidad
 from .moneda import Moneda
 from .movimiento import Movimiento
@@ -23,4 +24,7 @@ __all__ = [
     "Entidad",
     "Deuda",
     "PagoDeuda",
+    "DeudaMensual",
+    "CuotaMensual",
+    "PagoCuotaMensual",
 ]
