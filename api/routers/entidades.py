@@ -11,6 +11,7 @@ from bd.crud.entidad import (
 from bd.crud.exceptions import RecursoNoEncontradoError
 from bd.models.user import User
 
+from .deudasMensuales import deuda_mensual_detalle_response
 from .dtos.entidadDto import (
     EntidadCreate,
     EntidadDetailResponse,
@@ -128,6 +129,10 @@ def detalle(entidad_id: int, user: User = Depends(validate_token)):
         "deudas_pendientes": item["deudas_pendientes"],
         "proximo_vencimiento": item["proximo_vencimiento"],
         "deudas": [_deuda_detalle(deuda) for deuda in item["deudas"]],
+        "deudas_mensuales": [
+            deuda_mensual_detalle_response(deuda, user)
+            for deuda in item["deudas_mensuales"]
+        ],
     }
 
 

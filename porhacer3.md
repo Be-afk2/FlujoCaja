@@ -64,48 +64,71 @@ Decisiones acordadas:
 
 Archivo `bd/crud/deudaMensual.py`:
 
-- [ ] Crear/listar/editar/cancelar/eliminar plantillas.
-- [ ] Generar y sincronizar cuotas.
-- [ ] Pagar cuota, editar pago, eliminar pago.
-- [ ] Resumen y próximas.
-- [ ] Reutilizar `_crear_movimiento_sesion`, `_actualizar_movimiento_sesion`, `_eliminar_movimiento_sesion` y `actualizar_saldo`.
+- [x] Crear/listar/editar/cancelar/eliminar plantillas.
+- [x] Generar y sincronizar cuotas.
+- [x] Pagar cuota, editar pago, eliminar pago.
+- [x] Resumen y próximas.
+- [x] Reutilizar `_crear_movimiento_sesion`, `_actualizar_movimiento_sesion`, `_eliminar_movimiento_sesion` y `actualizar_saldo`.
+
+Decisiones acordadas:
+
+- Auto-sync de cuotas en `listar`, `obtener`, `proximas` y `resumen` (idempotente).
+- Edición estructural (modalidad, fecha_inicio, cuotas_totales, monto_total) solo sin pagos; el resto actualiza únicamente cuotas futuras impagas.
+- Pago en lote todo o nada en una sola transacción.
+- `pendiente_total`: recurrentes solo cuotas ya aparecidas; planes todas las impagas.
 
 ### 10.4 Integración con entidades
 
 En `bd/crud/entidad.py`:
 
-- [ ] Sumar pendientes de mensuales a `saldos` como `en_contra`.
-- [ ] Incluir la próxima cuota en `proximo_vencimiento`.
-- [ ] Agregar `deudas_mensuales` al detalle de entidad.
-- [ ] Para recurrentes, sumar solo cuotas ya aparecidas e impagas.
-- [ ] Para planes, sumar todas las cuotas impagas (incluidas futuras).
+- [x] Sumar pendientes de mensuales a `saldos` como `en_contra`.
+- [x] Incluir la próxima cuota en `proximo_vencimiento`.
+- [x] Agregar `deudas_mensuales` al detalle de entidad.
+- [x] Para recurrentes, sumar solo cuotas ya aparecidas e impagas.
+- [x] Para planes, sumar todas las cuotas impagas (incluidas futuras).
+
+Decisiones acordadas:
+
+- Se incluyen todas las plantillas asociadas (también canceladas); solo se excluyen cuotas canceladas.
+- `deudas_pendientes` suma una plantilla con al menos una cuota pendiente computable.
+- `proximo_vencimiento` usa la menor `fecha_limite` de cualquier cuota pendiente (incluidas futuras generadas y vencidas).
+- El detalle devuelve todas las plantillas con resumen y su lista de cuotas.
+- Eliminar entidad se bloquea si tiene deudas mensuales asociadas.
 
 ### 10.5 API y DTOs
 
-- [ ] Crear router `api/routers/deudasMensuales.py` y registrarlo en `api/mainApi.py` (con `Depends(validate_token)` y `tags`):
-  - [ ] `GET /deudas-mensuales/`
-  - [ ] `POST /deudas-mensuales/` → 201
-  - [ ] `GET /deudas-mensuales/proximas?dias=7&moneda_id=`
-  - [ ] `GET /deudas-mensuales/resumen?moneda_id=`
-  - [ ] `GET /deudas-mensuales/{id}`
-  - [ ] `PUT /deudas-mensuales/{id}`
-  - [ ] `POST /deudas-mensuales/{id}/cancelar`
-  - [ ] `DELETE /deudas-mensuales/{id}`
-  - [ ] `POST /deudas-mensuales/cuotas/{cuota_id}/pagar`
-  - [ ] `PUT /deudas-mensuales/cuotas/{cuota_id}/pagos/{pago_id}`
-  - [ ] `DELETE /deudas-mensuales/cuotas/{cuota_id}/pagos/{pago_id}`
-- [ ] Crear `api/routers/dtos/deudaMensualDto.py`:
-  - [ ] `DeudaMensualCreate`
-  - [ ] `DeudaMensualUpdate`
-  - [ ] `DeudaMensualResponse`
-  - [ ] `DeudaMensualListItem`
-  - [ ] `CuotaMensualResponse`
-  - [ ] `PagoCuotaMensualCreate`
-  - [ ] `PagoCuotaMensualResponse`
-  - [ ] `DeudaMensualDetailResponse`
-  - [ ] `ProximaCuotaItem`
-  - [ ] `ResumenDeudasMensuales`
-- [ ] Usar `DateFromString` (`dd-mm-YYYY`) en las fechas.
+- [x] Crear router `api/routers/deudasMensuales.py` y registrarlo en `api/mainApi.py` (con `Depends(validate_token)` y `tags`):
+  - [x] `GET /deudas-mensuales/`
+  - [x] `POST /deudas-mensuales/` → 201
+  - [x] `GET /deudas-mensuales/proximas?dias=7&moneda_id=`
+  - [x] `GET /deudas-mensuales/resumen?moneda_id=`
+  - [x] `GET /deudas-mensuales/{id}`
+  - [x] `PUT /deudas-mensuales/{id}`
+  - [x] `POST /deudas-mensuales/{id}/cancelar`
+  - [x] `DELETE /deudas-mensuales/{id}`
+  - [x] `POST /deudas-mensuales/cuotas/{cuota_id}/pagar`
+  - [x] `PUT /deudas-mensuales/cuotas/{cuota_id}/pagos/{pago_id}`
+  - [x] `DELETE /deudas-mensuales/cuotas/{cuota_id}/pagos/{pago_id}`
+- [x] Crear `api/routers/dtos/deudaMensualDto.py`:
+  - [x] `DeudaMensualCreate`
+  - [x] `DeudaMensualUpdate`
+  - [x] `DeudaMensualResponse`
+  - [x] `DeudaMensualListItem`
+  - [x] `CuotaMensualResponse`
+  - [x] `PagoCuotaMensualCreate`
+  - [x] `PagoCuotaMensualResponse`
+  - [x] `DeudaMensualDetailResponse`
+  - [x] `ProximaCuotaItem`
+  - [x] `ResumenDeudasMensuales`
+- [x] Usar `DateFromString` (`dd-mm-YYYY`) en las fechas.
+
+Decisiones acordadas:
+
+- `PagoCuotaMensualCreate.monto` es opcional; si falta se usa el monto de la cuota (pago completo). El mismo DTO se reutiliza en `PUT`.
+- Endpoint extra `POST /deudas-mensuales/pagar-lote` con DTO `PagarCuotasMensualesCreate` para pagar varias cuotas en una transacción todo-o-nada.
+- `DeudaMensualDetailResponse.cuotas` anida `pagos` dentro de cada cuota.
+- `GET /entidades/{id}` ahora expone `deudas_mensuales` con el mismo formato de detalle (incluye pagos).
+- DTOs extra: `PagarCuotasMensualesCreate` y `ResumenCuotasMensuales` (para `vencidas`/`proximas`).
 
 ### 10.6 Migración
 

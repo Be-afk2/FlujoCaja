@@ -13,6 +13,7 @@ from api.routers import (
     cuenta,
     datos,
     deudas,
+    deudasMensuales,
     entidades,
     moneda,
     movimientos,
@@ -110,5 +111,6 @@ app.include_router(moneda.router, dependencies=[Depends(validate_token)])
 app.include_router(resumen.router, dependencies=[Depends(validate_token)])
 app.include_router(entidades.router, dependencies=[Depends(validate_token)])
 app.include_router(deudas.router, dependencies=[Depends(validate_token)])
+app.include_router(deudasMensuales.router, dependencies=[Depends(validate_token)])
 app.include_router(datos.router, dependencies=[Depends(validate_token)])
 

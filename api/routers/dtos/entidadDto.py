@@ -4,6 +4,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 from .deudaDto import DeudaDetailResponse
+from .deudaMensualDto import DeudaMensualDetailResponse
 
 
 class EntidadCreate(BaseModel):
@@ -40,3 +41,4 @@ class EntidadListItem(EntidadResponse):
 
 class EntidadDetailResponse(EntidadListItem):
     deudas: List[DeudaDetailResponse]
+    deudas_mensuales: List[DeudaMensualDetailResponse]
