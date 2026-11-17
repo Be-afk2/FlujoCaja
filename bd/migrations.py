@@ -26,6 +26,9 @@ APP_TABLES = {
     "entidad",
     "deuda",
     "pagodeuda",
+    "deudamensual",
+    "cuotamensual",
+    "pagocuotamensual",
 }
 
 

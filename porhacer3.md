@@ -132,11 +132,18 @@ Decisiones acordadas:
 
 ### 10.6 Migración
 
-- [ ] Crear `alembic/versions/20261114_0004_deudas_mensuales.py` con `down_revision = "20261103_0003_entidades_deudas"`.
-- [ ] Crear tablas `deudamensual`, `cuotamensual`, `pagocuotamensual`.
-- [ ] Agregar índices y claves foráneas.
-- [ ] Agregar las tablas a `APP_TABLES` en `bd/migrations.py`.
-- [ ] No modificar tablas existentes.
+- [x] Crear `alembic/versions/20261114_0004_deudas_mensuales.py` con `down_revision = "20261103_0003_entidades_deudas"`.
+- [x] Crear tablas `deudamensual`, `cuotamensual`, `pagocuotamensual`.
+- [x] Agregar índices y claves foráneas.
+- [x] Agregar las tablas a `APP_TABLES` en `bd/migrations.py`.
+- [x] No modificar tablas existentes.
+
+Decisiones acordadas:
+
+- La migración 0004 solo se creó y verificó; **no se aplicó** a `database.db` real (sigue en 0003).
+- Se probó `upgrade head`/`downgrade base` en una base vacía temporal y `0003 → 0004 → 0003` sobre una copia de la base real, conservando usuarios, movimientos, entidades, deudas y pagos.
+- `alembic check` no detecta diferencias entre la migración y `SQLModel.metadata`.
+- Sin `ondelete` en FKs, siguiendo el estilo de las migraciones existentes; el CRUD elimina en orden.
 
 ### 10.7 Frontend
 
