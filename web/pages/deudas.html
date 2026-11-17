@@ -33,6 +33,12 @@
           </select>
         </div>
 
+        <a href="deudasMensuales.html"
+          class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-200 font-semibold px-4 py-2 rounded-xl text-sm transition-all duration-150 active:scale-95">
+          <i class="fa-solid fa-calendar-days text-xs text-emerald-400"></i>
+          <span>Deudas mensuales</span>
+        </a>
+
         <button id="btnNuevaEntidad" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-semibold px-4 py-2 rounded-xl text-sm transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/40">
           <i class="fa-solid fa-plus text-xs"></i>
           <span>Nueva entidad</span>
@@ -94,6 +100,38 @@
             <p class="text-[11px] text-slate-400 mt-1">Compromisos activos sin liquidar</p>
           </div>
         </div>
+      </section>
+
+      <section id="cardMensuales" class="hidden bg-slate-800/70 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">Deudas mensuales</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Pagos fijos y planes en cuotas, aparte de las deudas puntuales.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 flex-1 max-w-md">
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Compromiso</p>
+            <p id="resumenMensualCompromiso" class="text-sm font-bold text-white mt-0.5">—</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Pendiente</p>
+            <p id="resumenMensualPendiente" class="text-sm font-bold text-sky-400 mt-0.5">—</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Vencidas</p>
+            <p id="resumenMensualVencidas" class="text-sm font-bold text-rose-400 mt-0.5">—</p>
+          </div>
+        </div>
+
+        <a href="deudasMensuales.html" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-700 text-emerald-400 text-xs font-bold transition-colors flex-shrink-0">
+          Ver deudas mensuales
+          <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
       </section>
 
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
@@ -215,6 +253,18 @@
               </div>
 
               <div class="space-y-4" id="listaDeudasContainer"></div>
+
+              <div class="pt-4 border-t border-slate-800 space-y-3">
+                <div class="flex items-center justify-between gap-3">
+                  <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Deudas mensuales</h4>
+                  <a id="btnNuevaMensualEntidad" href="deudasMensuales.html"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition-colors">
+                    <i class="fa-solid fa-plus text-[10px]"></i>
+                    <span>Nueva mensual</span>
+                  </a>
+                </div>
+                <div id="listaMensualesContainer" class="space-y-2"></div>
+              </div>
             </div>
           </div>
         </section>

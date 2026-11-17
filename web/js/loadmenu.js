@@ -14,6 +14,7 @@ async function loadComponents() {
 
     marcarMenuActivo()
     cargarNombreUsuario()
+    cargarBadgeDeudasMensuales()
 }
 
 /**
@@ -32,8 +33,26 @@ function marcarMenuActivo() {
 }
 
 /**
- * Rellena el nombre de usuario del menú lateral desde la sesión activa.
+ * Muestra en el menú lateral la cantidad de cuotas mensuales vencidas.
  */
+async function cargarBadgeDeudasMensuales() {
+    const badge = document.getElementById('badgeDeudasMensuales');
+    if (!badge || typeof get !== 'function' || typeof obtenerToken !== 'function' || !obtenerToken()) return;
+
+    try {
+        const resumen = await get('deudas-mensuales/resumen');
+        const cantidad = Number(resumen?.vencidas?.cantidad) || 0;
+        badge.textContent = String(cantidad);
+        badge.classList.toggle('hidden', cantidad === 0);
+        badge.title = cantidad === 1 ? '1 cuota vencida' : `${cantidad} cuotas vencidas`;
+    } catch (error) {
+        badge.classList.add('hidden');
+        console.warn('No se pudo cargar el badge de deudas mensuales:', error.message);
+    }
+}
+
+window.addEventListener('deudas-mensuales-actualizadas', cargarBadgeDeudasMensuales);
+
 async function cargarNombreUsuario() {
     const nombreEl = document.getElementById('userName');
     if (!nombreEl || typeof get !== 'function') return;

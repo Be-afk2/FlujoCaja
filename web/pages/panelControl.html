@@ -172,6 +172,28 @@
                 </div>
             </section>
             <!-- END: Key Metric Cards -->
+            <!-- BEGIN: Pagos mensuales -->
+            <section class="bg-slate-800 rounded-2xl shadow-sm border border-slate-800" data-purpose="monthly-payments">
+                <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+                            <i class="fa-solid fa-calendar-days text-sm"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-white">Pagos mensuales</h3>
+                            <p class="text-xs text-slate-500">Vencidas y próximas de los próximos 7 días</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="panelPagosMensualesResumen" class="text-xs text-slate-500"></span>
+                        <a href="deudasMensuales.html" class="text-sm text-emerald-500 hover:underline font-medium">Ver todas</a>
+                    </div>
+                </div>
+                <div id="listaPagosMensuales" class="divide-y divide-slate-800">
+                    <div class="p-6 text-center text-slate-500 text-sm">Cargando pagos mensuales...</div>
+                </div>
+            </section>
+            <!-- END: Pagos mensuales -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <!-- BEGIN: Income vs Expenses Chart -->
                 <section class="lg:col-span-2 bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-800"
@@ -415,6 +437,58 @@
       </div>
     </div>
     <!-- END: Modal Confirmar Eliminar -->
+
+    <!-- BEGIN: Modal Pagar Cuota Mensual -->
+    <div id="modalPagoMensual" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
+      <div class="bg-slate-800 rounded-xl border border-slate-800 shadow-xl w-full max-w-md p-6">
+        <div class="flex items-start justify-between pb-3 border-b border-slate-800 mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white">Pagar cuota mensual</h2>
+              <p class="text-xs text-slate-500">Registrá el pago del compromiso</p>
+            </div>
+          </div>
+          <button type="button" data-cerrar-pago-mensual class="text-slate-500 hover:text-slate-300 transition-colors text-xl">&times;</button>
+        </div>
+
+        <p id="panelPagoMensualInfo" class="mb-4 p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300"></p>
+
+        <form id="formPagoMensual" class="space-y-4">
+          <input type="hidden" id="panelPagoMensualCuotaId" />
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="panelPagoMensualCuenta">Cuenta de débito *</label>
+            <select id="panelPagoMensualCuenta"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all">
+              <option value="">Seleccionar cuenta</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="panelPagoMensualFecha">Fecha de pago</label>
+            <input id="panelPagoMensualFecha" type="date"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all [color-scheme:dark]" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-400 mb-1" for="panelPagoMensualDescripcion">Nota</label>
+            <input id="panelPagoMensualDescripcion" type="text" placeholder="Opcional"
+              class="w-full px-4 py-2 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:ring-2 focus:ring-brand focus:border-brand transition-all" />
+          </div>
+          <div class="flex gap-3 pt-3 border-t border-slate-800">
+            <button type="button" data-cerrar-pago-mensual
+              class="flex-1 py-2.5 rounded-lg bg-slate-800 text-slate-300 font-semibold hover:bg-slate-700 transition-colors">
+              Cancelar
+            </button>
+            <button type="submit" id="btnConfirmarPagoMensual"
+              class="flex-1 py-2.5 rounded-lg bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 transition-colors">
+              Confirmar pago
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- END: Modal Pagar Cuota Mensual -->
 
     <script src="../js/funciones.js"></script>
     <script src="../js/notificaciones.js"></script>

@@ -149,33 +149,33 @@ Decisiones acordadas:
 
 Página nueva:
 
-- [ ] Crear `web/pages/deudasMensuales.html`.
-- [ ] Crear `web/js/deudasMensuales.js`.
-- [ ] Crear `web/css/deudasMensuales.css`.
-- [ ] Header con filtros por moneda, categoría, estado y modalidad.
-- [ ] Cards: compromiso mensual, pendiente total, vencidas, próximas.
-- [ ] Panel izquierdo: lista de deudas mensuales con búsqueda.
-- [ ] Panel derecho: detalle con cuotas actuales, vencidas, próximas e historial de pagos.
-- [ ] Modales: crear/editar plantilla, pagar cuota, pagar varias atrasadas, cancelar, eliminar, editar/eliminar pago.
-- [ ] Sin `backdrop-filter` (quirk de Qt WebEngine).
+- [x] Crear `web/pages/deudasMensuales.html`.
+- [x] Crear `web/js/deudasMensuales.js`.
+- [x] Crear `web/css/deudasMensuales.css`.
+- [x] Header con filtros por moneda, categoría, estado y modalidad.
+- [x] Cards: compromiso mensual, pendiente total, vencidas, próximas.
+- [x] Panel izquierdo: lista de deudas mensuales con búsqueda.
+- [x] Panel derecho: detalle con cuotas actuales, vencidas, próximas e historial de pagos.
+- [x] Modales: crear/editar plantilla, pagar cuota, pagar varias atrasadas, cancelar, eliminar, editar/eliminar pago.
+- [x] Sin `backdrop-filter` (quirk de Qt WebEngine).
 
 Sidebar:
 
-- [ ] Nuevo ítem "Deudas mensuales" en `web/components/sidemenu.html`.
-- [ ] Badge de vencidas.
+- [x] Nuevo ítem "Deudas mensuales" en `web/components/sidemenu.html`.
+- [x] Badge de vencidas.
 
 Deudas existente:
 
-- [ ] Botón "Deudas mensuales" en `web/pages/deudas.html`.
-- [ ] Card/resumen de mensuales en `web/js/deudas.js`.
-- [ ] Sección de mensuales en el detalle de entidad si tiene entidad asociada.
+- [x] Botón "Deudas mensuales" en `web/pages/deudas.html`.
+- [x] Card/resumen de mensuales en `web/js/deudas.js`.
+- [x] Sección de mensuales en el detalle de entidad si tiene entidad asociada.
 
 Inicio:
 
-- [ ] Bloque "Pagos mensuales" con vencidas y próximas (7 días por defecto) en `web/pages/panelControl.html` + `web/js/panelControl.js`.
-- [ ] Botón **Pagar**.
-- [ ] Modal rápido con cuenta, fecha y nota.
-- [ ] Refrescar al pagar.
+- [x] Bloque "Pagos mensuales" con vencidas y próximas (7 días por defecto) en `web/pages/panelControl.html` + `web/js/panelControl.js`.
+- [x] Botón **Pagar**.
+- [x] Modal rápido con cuenta, fecha y nota.
+- [x] Refrescar al pagar.
 
 Helpers reutilizados:
 
@@ -264,8 +264,8 @@ Helpers reutilizados:
 - [ ] CRUD de plantillas, cuotas y pagos.
 - [ ] Integración con entidades y resumen.
 - [ ] API: DTOs, router y registro en `mainApi.py`.
-- [ ] Frontend: página, sidebar, modales y helpers.
-- [ ] Inicio: bloque de pagos mensuales y pago rápido.
+- [x] Frontend: página, sidebar, modales y helpers.
+- [x] Inicio: bloque de pagos mensuales y pago rápido.
 - [ ] Tests + lint + prueba manual.
 - [ ] Documentación: `AGENTS.md` y `porHacer.md`.
 

@@ -358,6 +358,92 @@ function renderDetalleEntidad() {
 
     renderSaldosEntidad(entidad);
     renderDeudasEntidad(entidad);
+    renderMensualesEntidad(entidad);
+}
+
+function renderMensualesEntidad(entidad) {
+    const contenedor = deudasEl("listaMensualesContainer");
+    if (!contenedor) return;
+
+    const boton = deudasEl("btnNuevaMensualEntidad");
+    if (boton) {
+        boton.href = `deudasMensuales.html?nueva=1&entidad=${entidad.id}`;
+    }
+
+    const deudas = entidad.deudas_mensuales || [];
+    if (deudas.length === 0) {
+        contenedor.innerHTML = `
+            <div class="p-3 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-xs text-slate-500">
+                Esta entidad no tiene deudas mensuales asociadas.
+            </div>`;
+        return;
+    }
+
+    contenedor.innerHTML = deudas.map(deuda => {
+        const monedaId = Number(deuda.moneda_id);
+        const vencida = deuda.estado === "activa" && aNumero(deuda.vencidas) > 0;
+        const cancelada = deuda.estado === "cancelada";
+        const proxima = deuda.proxima
+            ? `Próx. ${fechaLegible(deuda.proxima.fecha_limite)}`
+            : cancelada
+                ? "Cancelada"
+                : "Sin próxima cuota";
+
+        return `
+            <a href="deudasMensuales.html?deuda=${deuda.id}"
+               class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-950/60 border border-slate-800 hover:border-slate-700 transition-colors">
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-sm font-semibold text-white truncate">${esc(deuda.descripcion || "Deuda mensual")}</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            cancelada
+                                ? "bg-slate-700 text-slate-400 border border-slate-600"
+                                : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                        }">${cancelada ? "Cancelada" : deuda.modalidad === "cuotas" ? "Plan" : "Recurrente"}</span>
+                        ${vencida
+                            ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/30">${deuda.vencidas} vencida${deuda.vencidas === 1 ? "" : "s"}</span>`
+                            : ""}
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                        ${formatoMoneda(deuda.monto_cuota, monedaId)} / mes · ${proxima}
+                    </p>
+                </div>
+                <div class="text-right flex-shrink-0">
+                    <p class="text-sm font-bold ${vencida ? "text-rose-400" : "text-slate-200"}">${formatoMoneda(deuda.pendiente, monedaId)}</p>
+                    <p class="text-[10px] text-slate-500">pendiente</p>
+                </div>
+            </a>`;
+    }).join("");
+}
+
+function formatoResumenMensual(monto) {
+    if (deudasState.filtroMoneda === "todas") {
+        return `Σ ${formatearNumero(monto)}`;
+    }
+    return formatoMoneda(monto, Number(deudasState.filtroMoneda));
+}
+
+async function cargarResumenMensuales() {
+    const card = deudasEl("cardMensuales");
+    if (!card) return;
+
+    try {
+        const filtro = deudasState.filtroMoneda;
+        const query = filtro === "todas" ? "" : `?moneda_id=${encodeURIComponent(filtro)}`;
+        const resumen = await get(`deudas-mensuales/resumen${query}`);
+        const vencidas = resumen.vencidas || { cantidad: 0, monto: 0 };
+
+        deudasEl("resumenMensualCompromiso").textContent = formatoResumenMensual(resumen.compromiso_mensual);
+        deudasEl("resumenMensualPendiente").textContent = formatoResumenMensual(resumen.pendiente_total);
+        deudasEl("resumenMensualVencidas").textContent = vencidas.cantidad > 0
+            ? `${vencidas.cantidad} · ${formatoResumenMensual(vencidas.monto)}`
+            : "0";
+
+        card.classList.remove("hidden");
+    } catch (error) {
+        card.classList.add("hidden");
+        console.warn("No se pudo cargar el resumen de deudas mensuales:", error.message);
+    }
 }
 
 function renderSaldosEntidad(entidad) {
@@ -1135,6 +1221,7 @@ async function recargarTodo() {
 
     renderResumenGlobal();
     renderListaEntidades();
+    await cargarResumenMensuales();
 
     if (deudasState.entidadSeleccionadaId != null) {
         await cargarDetalleEntidad(deudasState.entidadSeleccionadaId, true);
@@ -1233,6 +1320,7 @@ function enlazarEventos() {
         renderResumenGlobal();
         renderListaEntidades();
         renderDetalleEntidad();
+        cargarResumenMensuales();
     });
 
     deudasEl("buscarEntidad")?.addEventListener("input", event => {

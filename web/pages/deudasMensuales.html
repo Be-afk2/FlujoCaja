@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deudas mensuales - FlujoCaja</title>
+  <script src="../vendor/tailwind.js"></script>
+  <link rel="stylesheet" href="../vendor/fontawesome/css/all.min.css">
+  <link rel="stylesheet" href="../css/fonts.css">
+  <link rel="stylesheet" href="../css/deudasMensuales.css">
+</head>
+
+<body class="bg-slate-900 text-slate-200 min-h-screen flex overflow-hidden antialiased select-none">
+
+  <aside class="w-64 bg-slate-900 text-white flex-col hidden md:flex border-r border-slate-800 flex-shrink-0"
+    data-component="../components/sidemenu.html" data-purpose="sidebar"></aside>
+
+  <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto bg-slate-900">
+
+    <header class="sticky top-0 z-20 bg-slate-900/95 border-b border-slate-800 px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="px-2 py-0.5 rounded font-mono text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">P-04</span>
+          <span class="text-slate-400 text-xs">Módulo de pasivos</span>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-white">Deudas mensuales</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mt-0.5">Gestioná tus pagos fijos y planes en cuotas.</p>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+        <button id="dmBtnPagarAtrasadas" type="button"
+          class="hidden items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500/25 transition-all">
+          <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+          <span id="dmBtnPagarAtrasadasTexto">Pagar atrasadas</span>
+        </button>
+        <button id="dmBtnNuevaDeuda" type="button"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+          <i class="fa-solid fa-plus text-sm"></i>
+          <span>Nueva deuda</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="p-4 sm:p-6 lg:p-8 space-y-6 flex-1">
+
+      <div class="p-3 bg-slate-800/70 border border-slate-800 rounded-2xl flex flex-wrap items-center gap-2.5 shadow-sm">
+        <div class="relative">
+          <select id="dmFiltroMoneda"
+            class="appearance-none bg-slate-950 text-slate-200 text-xs md:text-sm py-2 pl-3 pr-8 rounded-xl border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <option value="todas">Todas las monedas</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+        </div>
+
+        <div class="relative">
+          <select id="dmFiltroTipo"
+            class="appearance-none bg-slate-950 text-slate-200 text-xs md:text-sm py-2 pl-3 pr-8 rounded-xl border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <option value="todas">Todas las categorías</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+        </div>
+
+        <div class="relative">
+          <select id="dmFiltroEstado"
+            class="appearance-none bg-slate-950 text-slate-200 text-xs md:text-sm py-2 pl-3 pr-8 rounded-xl border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <option value="todas">Todos los estados</option>
+            <option value="vencidas">Con cuotas vencidas</option>
+            <option value="activas">Activas</option>
+            <option value="canceladas">Canceladas</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+        </div>
+
+        <div class="relative">
+          <select id="dmFiltroModalidad"
+            class="appearance-none bg-slate-950 text-slate-200 text-xs md:text-sm py-2 pl-3 pr-8 rounded-xl border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500 cursor-pointer">
+            <option value="todas">Todas las modalidades</option>
+            <option value="recurrente">Recurrentes</option>
+            <option value="cuotas">Planes en cuotas</option>
+          </select>
+          <i class="fa-solid fa-chevron-down absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs"></i>
+        </div>
+
+        <div class="relative flex-1 min-w-[220px]">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input id="dmBusqueda" type="text" placeholder="Buscar por descripción o rubro..."
+            class="w-full bg-slate-950 text-slate-200 placeholder:text-slate-500 text-xs md:text-sm py-2 pl-8 pr-3 rounded-xl border border-slate-800 hover:border-slate-700 focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <button id="dmBtnLimpiarFiltros" type="button"
+          class="hidden px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs md:text-sm font-medium items-center gap-1.5 transition-colors">
+          <i class="fa-solid fa-xmark text-xs"></i>
+          <span>Limpiar</span>
+        </button>
+      </div>
+
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-4 md:p-5 rounded-2xl bg-slate-800/90 border border-slate-800 flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Compromiso mensual</span>
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center">
+              <i class="fa-solid fa-repeat text-sm"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h3 id="dmResumenCompromiso" class="text-2xl font-bold text-white tracking-tight">—</h3>
+            <p id="dmResumenCompromisoSub" class="text-xs text-slate-400 mt-0.5">Cuotas del mes actual</p>
+          </div>
+        </div>
+
+        <div class="p-4 md:p-5 rounded-2xl bg-slate-800/90 border border-slate-800 flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Pendiente total</span>
+            <div class="w-9 h-9 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20 flex items-center justify-center">
+              <i class="fa-solid fa-wallet text-sm"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h3 id="dmResumenPendiente" class="text-2xl font-bold text-white tracking-tight">—</h3>
+            <p id="dmResumenPendienteSub" class="text-xs text-slate-400 mt-0.5">Incluye cuotas futuras de planes</p>
+          </div>
+        </div>
+
+        <div id="dmCardVencidas" class="p-4 md:p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-rose-400 tracking-wider uppercase">Cuotas vencidas</span>
+            <div class="w-9 h-9 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center justify-center">
+              <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h3 id="dmResumenVencidas" class="text-2xl font-bold text-rose-400 tracking-tight">0</h3>
+            <p id="dmResumenVencidasSub" class="text-xs text-rose-300/80 mt-0.5">Sin cuotas vencidas</p>
+          </div>
+        </div>
+
+        <div class="p-4 md:p-5 rounded-2xl bg-slate-800/90 border border-slate-800 flex flex-col justify-between shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Próximas (7 días)</span>
+            <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+              <i class="fa-solid fa-clock text-sm"></i>
+            </div>
+          </div>
+          <div class="mt-3">
+            <h3 id="dmResumenProximas" class="text-2xl font-bold text-white tracking-tight">0</h3>
+            <p id="dmResumenProximasSub" class="text-xs text-slate-400 mt-0.5">Sin vencimientos próximos</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div class="lg:col-span-5 flex flex-col gap-4">
+          <div class="flex items-center justify-between px-1">
+            <span id="dmContadorLista" class="text-xs font-semibold text-slate-400">0 deudas registradas</span>
+            <span class="text-xs text-slate-500">Orden: <strong class="text-slate-300 font-medium">Vencidas primero</strong></span>
+          </div>
+
+          <div class="flex flex-col gap-5">
+            <div class="space-y-2.5 hidden" id="dmSeccionVencidas">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-bold text-rose-400 tracking-wider uppercase flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-exclamation text-rose-500 text-xs"></i>
+                  <span>Con cuotas vencidas</span>
+                  <span id="dmBadgeVencidas" class="px-1.5 py-0.5 rounded-full text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/30">0</span>
+                </span>
+              </div>
+              <div id="dmListaVencidas" class="flex flex-col gap-3"></div>
+            </div>
+
+            <div class="space-y-2.5 hidden" id="dmSeccionActivas">
+              <div class="flex items-center justify-between px-1">
+                <span class="text-xs font-bold text-emerald-400 tracking-wider uppercase flex items-center gap-1.5">
+                  <i class="fa-solid fa-circle-check text-emerald-500 text-xs"></i>
+                  <span>Activas al día</span>
+                  <span id="dmBadgeActivas" class="px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">0</span>
+                </span>
+              </div>
+              <div id="dmListaActivas" class="flex flex-col gap-3"></div>
+            </div>
+
+            <div class="space-y-2.5 hidden" id="dmSeccionCanceladas">
+              <button id="dmBtnCanceladas" type="button" class="w-full flex items-center justify-between px-1 py-1 text-left text-xs font-bold text-slate-400 tracking-wider uppercase hover:text-slate-200 transition-colors">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-box-archive text-slate-500 text-xs"></i>
+                  <span>Canceladas / historial</span>
+                  <span id="dmBadgeCanceladas" class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-400">0</span>
+                </span>
+                <i id="dmChevronCanceladas" class="fa-solid fa-chevron-down text-slate-500 text-xs transition-transform"></i>
+              </button>
+              <div id="dmListaCanceladas" class="flex flex-col gap-3 hidden"></div>
+            </div>
+          </div>
+
+          <div id="dmListaVacia" class="hidden p-8 rounded-2xl bg-slate-800/60 border border-slate-800 text-center">
+            <div class="w-12 h-12 mx-auto rounded-xl bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
+              <i class="fa-solid fa-filter-circle-xmark text-xl"></i>
+            </div>
+            <h4 class="text-base font-bold text-white">No hay deudas que coincidan con los filtros</h4>
+            <p class="text-xs text-slate-400 mt-1">Modificá los criterios o creá una nueva deuda mensual.</p>
+            <button type="button" id="dmBtnLimpiarVacio"
+              class="mt-4 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors">
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+
+        <div class="lg:col-span-7">
+          <div id="dmDetalleVacio" class="bg-slate-800/60 border border-slate-800 rounded-2xl p-10 text-center">
+            <i class="fa-solid fa-hand-holding-dollar text-slate-600 text-4xl mb-3"></i>
+            <h3 class="text-base font-bold text-slate-300">Seleccioná una deuda mensual</h3>
+            <p class="text-xs text-slate-500 mt-1">Elegí una de la lista para ver sus cuotas, pagos y acciones.</p>
+          </div>
+          <div id="dmDetalleContenido" class="hidden space-y-4"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal crear/editar plantilla -->
+  <div id="dmModalDeuda" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="dmModalDeudaTitulo">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl shadow-2xl p-6 modal-enter relative my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+        <h3 id="dmModalDeudaTitulo" class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-hand-holding-dollar text-emerald-400"></i>
+          <span>Nueva deuda mensual</span>
+        </h3>
+        <button type="button" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition-colors" data-dm-cerrar="dmModalDeuda">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 mb-4">
+        <button type="button" id="dmTabRecurrente" class="py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all">
+          <i class="fa-solid fa-repeat"></i> Recurrente
+        </button>
+        <button type="button" id="dmTabPlan" class="py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 transition-all">
+          <i class="fa-solid fa-layer-group"></i> Plan en cuotas
+        </button>
+      </div>
+
+      <form id="dmFormDeuda" class="space-y-3.5">
+        <input type="hidden" id="dmDeudaId">
+        <input type="hidden" id="dmModoForm" value="recurrente">
+
+        <div>
+          <label for="dmDescripcion" class="block text-xs font-semibold text-slate-300 mb-1">Descripción *</label>
+          <input id="dmDescripcion" type="text" placeholder="Ej. Alquiler, seguro del auto, notebook..."
+            class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="dmTipo" class="block text-xs font-semibold text-slate-300 mb-1">Categoría *</label>
+            <select id="dmTipo" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none">
+              <option value="">Seleccionar categoría</option>
+            </select>
+          </div>
+          <div>
+            <label for="dmSubtipo" class="block text-xs font-semibold text-slate-300 mb-1">Subtipo</label>
+            <select id="dmSubtipo" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none">
+              <option value="">Sin subtipo</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="dmEntidad" class="block text-xs font-semibold text-slate-300 mb-1">Entidad</label>
+            <select id="dmEntidad" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none">
+              <option value="">Sin entidad</option>
+            </select>
+          </div>
+          <div>
+            <label for="dmMoneda" class="block text-xs font-semibold text-slate-300 mb-1">Moneda *</label>
+            <select id="dmMoneda" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none">
+              <option value="">Seleccionar moneda</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="dmCampoMontoCuota">
+          <label for="dmMontoCuota" class="block text-xs font-semibold text-slate-300 mb-1">Monto por mes *</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
+            <input id="dmMontoCuota" type="number" min="0" step="0.01" placeholder="350000"
+              class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl pl-8 pr-3 py-2 text-sm text-slate-200 focus:outline-none" />
+          </div>
+        </div>
+
+        <div id="dmCamposPlan" class="hidden grid grid-cols-2 gap-3 p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <div>
+            <label for="dmMontoTotal" class="block text-xs font-semibold text-slate-300 mb-1">Monto total *</label>
+            <input id="dmMontoTotal" type="number" min="0" step="0.01" placeholder="600000"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label for="dmCuotasTotales" class="block text-xs font-semibold text-slate-300 mb-1">Total de cuotas *</label>
+            <input id="dmCuotasTotales" type="number" min="1" max="120" value="6"
+              class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label for="dmFechaInicio" class="block text-xs font-semibold text-slate-300 mb-1">Fecha de inicio *</label>
+            <input id="dmFechaInicio" type="date"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500 [color-scheme:dark]" />
+          </div>
+          <div>
+            <label for="dmDiaAparicion" class="block text-xs font-semibold text-slate-300 mb-1">Día de aparición</label>
+            <input id="dmDiaAparicion" type="number" min="1" max="31" value="1"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <div>
+            <label for="dmDiaLimite" class="block text-xs font-semibold text-slate-300 mb-1">Día de vencimiento</label>
+            <input id="dmDiaLimite" type="number" min="1" max="31" value="5"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+
+        <div>
+          <label for="dmCuentaDefault" class="block text-xs font-semibold text-slate-300 mb-1">Cuenta de pago habitual</label>
+          <select id="dmCuentaDefault" class="w-full bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl px-3.5 py-2 text-sm text-slate-200 focus:outline-none">
+            <option value="">Sin cuenta predeterminada</option>
+          </select>
+        </div>
+
+        <p id="dmErrorDeuda" class="hidden text-rose-400 text-xs font-medium"></p>
+        <p id="dmAvisoEstructura" class="hidden p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs">
+          Esta deuda ya tiene pagos: no podés cambiar modalidad, fecha de inicio, monto total ni cantidad de cuotas.
+        </p>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700 mt-4">
+          <button type="button" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-colors" data-dm-cerrar="dmModalDeuda">
+            Cancelar
+          </button>
+          <button id="dmBtnGuardarDeuda" type="submit" class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors shadow-md">
+            Crear deuda
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal pagar/editar pago de cuota -->
+  <div id="dmModalPago" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="dmModalPagoTitulo">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-2xl p-6 shadow-2xl modal-enter relative">
+      <div class="flex items-start justify-between pb-3 border-b border-slate-700 mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center">
+            <i class="fa-solid fa-receipt text-lg"></i>
+          </div>
+          <div>
+            <h3 id="dmModalPagoTitulo" class="text-base font-bold text-white">Pagar cuota</h3>
+            <p id="dmModalPagoSub" class="text-xs text-slate-400">Registrar salida de dinero</p>
+          </div>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white p-1 rounded-lg" data-dm-cerrar="dmModalPago">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p id="dmPagoInfo" class="mb-3 p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300"></p>
+
+      <form id="dmFormPago" class="space-y-3.5">
+        <input type="hidden" id="dmPagoCuotaId">
+        <input type="hidden" id="dmPagoPagoId">
+
+        <div>
+          <label for="dmPagoMonto" class="block text-xs font-semibold text-slate-400 mb-1">Monto del pago</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm">$</span>
+            <input id="dmPagoMonto" type="number" min="0" step="0.01" required
+              class="w-full bg-slate-950 text-white text-base py-2.5 pl-8 pr-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500" />
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1">El pago debe ser completo, igual al monto de la cuota.</p>
+        </div>
+
+        <div>
+          <label for="dmPagoCuenta" class="block text-xs font-semibold text-slate-400 mb-1">Cuenta de débito *</label>
+          <select id="dmPagoCuenta" class="w-full bg-slate-950 text-slate-200 text-sm py-2.5 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500">
+            <option value="">Seleccionar cuenta</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="dmPagoFecha" class="block text-xs font-semibold text-slate-400 mb-1">Fecha efectiva de pago</label>
+          <input id="dmPagoFecha" type="date"
+            class="w-full bg-slate-950 text-slate-200 text-sm py-2 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500 [color-scheme:dark]" />
+        </div>
+
+        <div>
+          <label for="dmPagoDescripcion" class="block text-xs font-semibold text-slate-400 mb-1">Nota o comprobante</label>
+          <input id="dmPagoDescripcion" type="text" placeholder="Ej. Transferencia 99401"
+            class="w-full bg-slate-950 text-slate-200 text-sm py-2 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500" />
+        </div>
+
+        <p id="dmErrorPago" class="hidden text-rose-400 text-xs font-medium"></p>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
+          <button type="button" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-colors" data-dm-cerrar="dmModalPago">
+            Cancelar
+          </button>
+          <button id="dmBtnPagar" type="submit" class="px-5 py-2 rounded-xl text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors shadow-md">
+            Confirmar pago
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal pagar atrasadas en bloque -->
+  <div id="dmModalLote" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="dmModalLoteTitulo">
+    <div class="bg-slate-800 border border-slate-700 w-full max-w-lg rounded-2xl p-6 shadow-2xl modal-enter relative my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center">
+            <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+          </div>
+          <div>
+            <h3 id="dmModalLoteTitulo" class="text-base font-bold text-white">Pagar cuotas atrasadas</h3>
+            <p class="text-xs text-slate-400">Seleccioná las cuotas a regularizar</p>
+          </div>
+        </div>
+        <button type="button" class="text-slate-400 hover:text-white p-1 rounded-lg" data-dm-cerrar="dmModalLote">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="dmListaLote" class="space-y-2 max-h-64 overflow-y-auto pr-1"></div>
+      <p id="dmLoteVacio" class="hidden text-xs text-slate-500 italic py-3">No hay cuotas vencidas para pagar.</p>
+
+      <div class="space-y-3 pt-3">
+        <div>
+          <label for="dmLoteCuenta" class="block text-xs font-semibold text-slate-400 mb-1">Debitar desde cuenta *</label>
+          <select id="dmLoteCuenta" class="w-full bg-slate-950 text-slate-200 text-sm py-2 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500">
+            <option value="">Seleccionar cuenta</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label for="dmLoteFecha" class="block text-xs font-semibold text-slate-400 mb-1">Fecha de pago</label>
+            <input id="dmLoteFecha" type="date" class="w-full bg-slate-950 text-slate-200 text-sm py-2 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500 [color-scheme:dark]" />
+          </div>
+          <div>
+            <label for="dmLoteDescripcion" class="block text-xs font-semibold text-slate-400 mb-1">Nota</label>
+            <input id="dmLoteDescripcion" type="text" placeholder="Pago de atrasadas" class="w-full bg-slate-950 text-slate-200 text-sm py-2 px-3 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500" />
+          </div>
+        </div>
+        <div class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center justify-between">
+          <span class="text-xs font-bold text-rose-300">Total a debitar</span>
+          <span id="dmLoteTotal" class="text-base font-bold text-rose-400">—</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-700 mt-3">
+        <button type="button" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-400 hover:text-white transition-colors" data-dm-cerrar="dmModalLote">
+          Cancelar
+        </button>
+        <button id="dmBtnPagarLote" type="button" class="px-5 py-2 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-400 text-white transition-colors shadow-md">
+          Pagar seleccionadas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmar cancelar -->
+  <div id="dmModalCancelar" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-ban"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">¿Cancelar esta deuda?</h3>
+        <p id="dmCancelarInfo" class="text-xs text-slate-300 mt-2">—</p>
+        <p class="text-[11px] text-slate-400 mt-2">Se conservarán las cuotas pagadas y se cancelarán las futuras.</p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-dm-cerrar="dmModalCancelar">Volver</button>
+        <button id="dmBtnConfirmarCancelar" type="button" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors">Cancelar deuda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmar eliminar -->
+  <div id="dmModalEliminar" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">¿Eliminar esta deuda?</h3>
+        <p id="dmEliminarInfo" class="text-xs text-slate-300 mt-2">—</p>
+        <p class="text-[11px] text-slate-400 mt-2">Se eliminarán sus cuotas, pagos y los movimientos vinculados.</p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-dm-cerrar="dmModalEliminar">Cancelar</button>
+        <button id="dmBtnConfirmarEliminar" type="button" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-600 text-white transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmar eliminar pago -->
+  <div id="dmModalEliminarPago" class="fixed inset-0 z-50 hidden custom-modal-backdrop flex items-center justify-center p-4 overflow-y-auto" role="dialog" aria-modal="true">
+    <div class="bg-slate-800 w-full max-w-sm rounded-2xl border border-slate-700 shadow-2xl p-6 modal-enter relative text-center space-y-4">
+      <div class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">¿Eliminar este pago?</h3>
+        <p id="dmEliminarPagoInfo" class="text-xs text-slate-300 mt-2">—</p>
+        <p class="text-[11px] text-slate-400 mt-2">Se eliminará el movimiento vinculado y la cuota volverá a pendiente.</p>
+      </div>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors" data-dm-cerrar="dmModalEliminarPago">Cancelar</button>
+        <button id="dmBtnConfirmarEliminarPago" type="button" class="flex-1 py-2.5 rounded-xl text-sm font-bold bg-rose-500 hover:bg-rose-600 text-white transition-colors">Eliminar pago</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/funciones.js"></script>
+  <script src="../js/notificaciones.js"></script>
+  <script src="../js/deudasMensuales.js"></script>
+  <script src="../js/loadmenu.js"></script>
+</body>
+
+</html>

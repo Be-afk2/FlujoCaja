@@ -647,6 +647,176 @@ async function eliminarMovimiento() {
     }
 }
 
+// ==================== PAGOS MENSUALES ====================
+
+let pagosMensualesItems = [];
+
+function panelSimboloMoneda(monedaId) {
+    return simboloMoneda[monedaId] || '$';
+}
+
+function panelPagoMensualInfo(item) {
+    const moneda = panelSimboloMoneda(item.moneda_id);
+    const periodo = `${NOMBRES_MESES[(Number(item.mes) || 1) - 1] || ''} ${item.anio}`;
+    const estado = item.vencida
+        ? `<span class="text-rose-400">Vencida hace ${Math.abs(Number(item.dias_restantes))} días</span>`
+        : Number(item.dias_restantes) === 0
+            ? '<span class="text-amber-400">Vence hoy</span>'
+            : `<span class="text-slate-400">Vence en ${item.dias_restantes} días</span>`;
+
+    return { moneda, periodo, estado };
+}
+
+function renderFilaPagoMensual(item) {
+    const { moneda, periodo, estado } = panelPagoMensualInfo(item);
+    return `
+        <div class="flex items-center justify-between gap-3 px-6 py-3 hover:bg-slate-800/60 transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-lg ${item.vencida ? 'bg-rose-500/10 text-rose-400 border-rose-500/30' : 'bg-slate-700/60 text-slate-300 border-slate-700'} border flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid ${item.vencida ? 'fa-triangle-exclamation' : 'fa-clock'} text-xs"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-semibold text-white truncate">${escaparHtml(item.descripcion || 'Deuda mensual')}</p>
+                    <p class="text-[11px] text-slate-500">
+                        Cuota ${item.numero} · ${periodo} · ${estado}
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="text-sm font-bold ${item.vencida ? 'text-rose-400' : 'text-slate-200'}">${formatearDinero(item.monto, moneda)}</span>
+                <button type="button" data-pagar-mensual="${item.cuota_id}"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-colors">
+                    <i class="fa-solid fa-check text-[10px]"></i>
+                    Pagar
+                </button>
+            </div>
+        </div>`;
+}
+
+function renderPagosMensuales(items) {
+    const contenedor = document.getElementById('listaPagosMensuales');
+    const resumen = document.getElementById('panelPagosMensualesResumen');
+    if (!contenedor) return;
+
+    pagosMensualesItems = Array.isArray(items) ? items : [];
+    const vencidas = pagosMensualesItems.filter(item => item.vencida);
+    const proximas = pagosMensualesItems.filter(item => !item.vencida);
+
+    if (resumen) {
+        resumen.textContent = vencidas.length > 0
+            ? `${vencidas.length} vencida${vencidas.length === 1 ? '' : 's'} · ${proximas.length} próxima${proximas.length === 1 ? '' : 's'}`
+            : `${proximas.length} próxima${proximas.length === 1 ? '' : 's'}`;
+    }
+
+    if (pagosMensualesItems.length === 0) {
+        contenedor.innerHTML = `
+            <div class="p-6 text-center">
+                <p class="text-sm text-slate-400">No tenés cuotas mensuales vencidas ni próximas en 7 días.</p>
+                <a href="deudasMensuales.html" class="inline-block mt-2 text-xs text-emerald-500 hover:underline font-medium">Gestionar deudas mensuales</a>
+            </div>`;
+        return;
+    }
+
+    const seccion = (titulo, clase, lista) => {
+        if (lista.length === 0) return '';
+        return `
+            <div>
+                <div class="px-6 py-2 bg-slate-900/60 border-b border-slate-800">
+                    <span class="text-[10px] font-bold uppercase tracking-wider ${clase}">${titulo} (${lista.length})</span>
+                </div>
+                ${lista.map(renderFilaPagoMensual).join('')}
+            </div>`;
+    };
+
+    contenedor.innerHTML = `
+        ${seccion('Vencidas', 'text-rose-400', vencidas)}
+        ${seccion('Próximas 7 días', 'text-amber-400', proximas)}`;
+}
+
+async function cargarPagosMensuales() {
+    const contenedor = document.getElementById('listaPagosMensuales');
+    if (!contenedor) return;
+
+    const moneda = monedaSeleccionada();
+    const query = new URLSearchParams({ dias: '7' });
+    if (moneda) query.set('moneda_id', moneda);
+
+    try {
+        const items = await get(`deudas-mensuales/proximas?${query.toString()}`);
+        renderPagosMensuales(items);
+    } catch (error) {
+        console.error('Error cargando pagos mensuales:', error);
+        contenedor.innerHTML = `
+            <div class="p-6 text-center text-sm text-slate-500">
+                No se pudieron cargar los pagos mensuales.
+            </div>`;
+    }
+}
+
+async function abrirModalPagoMensual(cuotaId) {
+    const item = pagosMensualesItems.find(pago => Number(pago.cuota_id) === Number(cuotaId));
+    if (!item) return;
+
+    const { moneda, periodo, estado } = panelPagoMensualInfo(item);
+    document.getElementById('panelPagoMensualCuotaId').value = item.cuota_id;
+    document.getElementById('panelPagoMensualInfo').innerHTML = `
+        <i class="fa-solid fa-circle-info text-slate-500 mr-1"></i>
+        ${escaparHtml(item.descripcion || 'Deuda mensual')} · Cuota ${item.numero} (${periodo}) · ${estado}<br>
+        <span class="text-slate-400">Monto: ${formatearDinero(item.monto, moneda)}</span>`;
+    document.getElementById('panelPagoMensualFecha').value = fechaHoyISO();
+    document.getElementById('panelPagoMensualDescripcion').value = '';
+
+    await cargarSelectorCuentas('panelPagoMensualCuenta', cuentasGlobales[0]?.id || null, cuentasGlobales);
+    document.getElementById('modalPagoMensual').classList.remove('hidden');
+}
+
+function cerrarModalPagoMensual() {
+    document.getElementById('modalPagoMensual')?.classList.add('hidden');
+}
+
+async function confirmarPagoMensual(event) {
+    event.preventDefault();
+
+    const cuotaId = Number(document.getElementById('panelPagoMensualCuotaId').value);
+    const cuentaId = Number(document.getElementById('panelPagoMensualCuenta').value);
+    const fecha = document.getElementById('panelPagoMensualFecha').value;
+    const descripcion = document.getElementById('panelPagoMensualDescripcion').value.trim();
+
+    if (!cuotaId) return;
+    if (!cuentaId) {
+        mostrarNotificacion('Seleccioná una cuenta para el pago', 'warning');
+        return;
+    }
+
+    const boton = document.getElementById('btnConfirmarPagoMensual');
+    if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Pagando...';
+    }
+
+    try {
+        await post(`deudas-mensuales/cuotas/${cuotaId}/pagar`, {
+            cuenta_id: cuentaId,
+            fecha: fechaParaAPI(fecha),
+            descripcion: descripcion || null,
+        });
+        mostrarNotificacion('Cuota mensual pagada');
+        cerrarModalPagoMensual();
+        window.dispatchEvent(new CustomEvent('deudas-mensuales-actualizadas'));
+        cargarPagosMensuales();
+        cargarDashboard();
+        cargarMovimientos();
+    } catch (error) {
+        console.error('Error pagando cuota mensual:', error);
+        mostrarNotificacion(error.message || 'No se pudo pagar la cuota mensual', 'error');
+    } finally {
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = 'Confirmar pago';
+        }
+    }
+}
+
 // ==================== INICIALIZACIÓN ====================
 
 function initPanel() {
@@ -660,6 +830,7 @@ function initPanel() {
         guardarMonedaSeleccionada();
         cargarDashboard();
         cargarMovimientos();
+        cargarPagosMensuales();
     });
 
     document.getElementById('filtroCuenta')?.addEventListener('change', cargarMovimientos);
@@ -677,6 +848,16 @@ function initPanel() {
     document.querySelectorAll('[data-cerrar-eliminar]').forEach(btn => btn.addEventListener('click', cerrarModalEliminar));
     document.getElementById('btnConfirmarEliminar')?.addEventListener('click', eliminarMovimiento);
 
+    document.getElementById('listaPagosMensuales')?.addEventListener('click', (event) => {
+        const boton = event.target.closest('[data-pagar-mensual]');
+        if (boton) abrirModalPagoMensual(boton.dataset.pagarMensual);
+    });
+    document.querySelectorAll('[data-cerrar-pago-mensual]').forEach(btn => btn.addEventListener('click', cerrarModalPagoMensual));
+    document.getElementById('formPagoMensual')?.addEventListener('submit', confirmarPagoMensual);
+    document.getElementById('modalPagoMensual')?.addEventListener('click', (event) => {
+        if (event.target.id === 'modalPagoMensual') cerrarModalPagoMensual();
+    });
+
     cargarSelectorCuentas('filtroCuenta').then(() => {
         const select = document.getElementById('filtroCuenta');
         if (select && select.options[0]) select.options[0].textContent = 'Todas';
@@ -685,6 +866,7 @@ function initPanel() {
     cargarDatosMaestros().then(() => {
         cargarDashboard();
         cargarMovimientos();
+        cargarPagosMensuales();
     });
 }
 
