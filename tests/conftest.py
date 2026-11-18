@@ -210,3 +210,63 @@ def crear_pago(client):
         return r.json()
 
     return _crear
+
+
+@pytest.fixture()
+def obtener_tipo_deudas(client):
+    def _obtener(headers: dict) -> int:
+        tipos = client.get("/tipos/?cantidad=50", headers=headers).json()
+        return next(t["id"] for t in tipos if t["nombre"] == "Deudas")
+
+    return _obtener
+
+
+@pytest.fixture()
+def crear_deuda_mensual(client, obtener_moneda, obtener_tipo_deudas):
+    def _crear(
+        headers: dict,
+        modalidad: str = "recurrente",
+        tipo_id: int | None = None,
+        moneda_id: int | None = None,
+        dia_aparicion: int = 10,
+        dia_limite: int = 20,
+        descripcion: str = "Deuda mensual test",
+        monto_cuota: float | None = None,
+        monto_total: float | None = None,
+        cuotas_totales: int | None = None,
+        fecha_inicio: str | None = None,
+        entidad_id: int | None = None,
+        subtipo_id: int | None = None,
+        cuenta_pago_default_id: int | None = None,
+    ) -> dict:
+        if tipo_id is None:
+            tipo_id = obtener_tipo_deudas(headers)
+        if moneda_id is None:
+            moneda_id = obtener_moneda(headers)
+        if modalidad == "recurrente" and monto_cuota is None:
+            monto_cuota = 100.0
+        body: dict = {
+            "modalidad": modalidad,
+            "tipo_id": tipo_id,
+            "moneda_id": moneda_id,
+            "dia_aparicion": dia_aparicion,
+            "dia_limite": dia_limite,
+            "descripcion": descripcion,
+        }
+        opcionales = {
+            "monto_cuota": monto_cuota,
+            "monto_total": monto_total,
+            "cuotas_totales": cuotas_totales,
+            "fecha_inicio": fecha_inicio,
+            "entidad_id": entidad_id,
+            "subtipo_id": subtipo_id,
+            "cuenta_pago_default_id": cuenta_pago_default_id,
+        }
+        for clave, valor in opcionales.items():
+            if valor is not None:
+                body[clave] = valor
+        r = client.post("/deudas-mensuales/", json=body, headers=headers)
+        assert r.status_code == 201, r.text
+        return r.json()
+
+    return _crear

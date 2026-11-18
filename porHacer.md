@@ -19,21 +19,21 @@ La arquitectura objetivo es:
 
 El proyecto ya cuenta con:
 
-- API REST local.
-- Modelos SQLModel para usuarios, cuentas, monedas, tipos, subtipos y movimientos.
-- Base de datos SQLite.
-- Interfaz web inicial.
-- Login, creacion de usuario y algunas pantallas conectadas parcialmente.
-- Arranque integrado desde `main.py`.
+- API REST local con autenticacion por token, DTOs y manejo de errores.
+- Modelos SQLModel para usuarios, cuentas, monedas, tipos, subtipos,
+  movimientos, entidades, deudas y deudas mensuales.
+- Base de datos SQLite con migraciones Alembic (head `0004`).
+- Interfaz web conectada al API: inicio, cuentas, movimientos, deudas,
+  deudas mensuales, reportes y ajustes.
+- Arranque integrado desde `main.py` y empaquetado con PyInstaller.
+- Suite de tests con pytest (86 tests) y lint con ruff.
 
 Pendientes principales:
 
-- Completar el CRUD de movimientos.
-- Conectar todas las pantallas web con datos reales.
-- Fortalecer sesiones y autenticacion.
-- Ordenar configuracion, rutas de datos y estructura de capas.
-- Agregar tests.
-- Preparar empaquetado como aplicacion de escritorio.
+- Prueba manual visual en PyQt6 WebEngine de deudas mensuales.
+- Completar la Fase 7.5 de inteligencia financiera (`PorHacerv2.md`).
+- Toggle "Incluir deudas en totales" y badges de deuda en dashboard/transacciones.
+- Recompilar el `.exe` cuando cierre la Fase 10.
 
 ---
 
@@ -263,21 +263,40 @@ Objetivo: registrar personas/empresas y deudas en ambas direcciones (me deben / 
 - [x] API `/entidades` y `/deudas` (CRUD, pagos, filtros, `moneda_distinta`, bloqueo de movimientos de deuda).
 - [x] Frontend `web/pages/deudas.html` + `web/js/deudas.js`: entidades, saldos por moneda, deudas, abonos, modales, historial y avisos de moneda distinta.
 - [x] Item "Deudas" en el sidebar compartido; helpers `cargarSelectorMonedas`/`escaparHtml` en `funciones.js`.
-- [ ] Tests dedicados `tests/test_entidades.py` y `tests/test_deudas.py`.
+- [x] Tests dedicados `tests/test_entidades.py` y `tests/test_deudas.py`.
 - [ ] Toggle "Incluir deudas en totales" y badges "Deuda" en dashboard/transacciones.
 - [ ] Prueba manual end-to-end de la pagina de deudas.
 
 ---
 
+## Fase 10 - Deudas mensuales
+
+Objetivo: registrar compromisos recurrentes y planes de cuotas, generar sus
+cuotas automaticamente, pagarlas desde una cuenta y conservar el historial.
+
+- [x] Modelos `DeudaMensual`, `CuotaMensual` y `PagoCuotaMensual`; relacion `Entidad.deudas_mensuales`.
+- [x] Reglas de fechas, generacion, montos, estados de pago, prioridad y cancelacion en `bd/domain/deuda_mensual.py`.
+- [x] Migracion Alembic `20261114_0004_deudas_mensuales` y tablas en `APP_TABLES`.
+- [x] CRUD atomico de plantillas, cuotas y pagos; auto-sync de cuotas recurrentes.
+- [x] Integracion con entidades: saldos `en_contra`, deudas pendientes y proximo vencimiento.
+- [x] API `/deudas-mensuales`: CRUD, `proximas`, `resumen`, `pagar-lote`, pagos y cancelacion.
+- [x] Frontend: pagina de deudas mensuales, sidebar con badge, resumen en Deudas y pagos rapidos en Inicio.
+- [x] Tests `tests/test_deudas_mensuales.py` (13 tests; suite total 86) y fixtures en `tests/conftest.py`.
+- [x] Documentacion de Fase 10 en `AGENTS.md` y `porHacer.md`.
+- [x] Cierre de la Fase 10.10 (inventario de archivos principales).
+- [x] Prueba end-to-end de flujo completo via API/TestClient.
+- [x] Decision: override de fecha limite unica descartado; cada cuota conserva su regla mensual.
+- [ ] Prueba manual visual en PyQt6 WebEngine.
+
+---
+
 ## Prioridad inmediata
 
-1. Ordenar configuracion y ruta de base de datos.
-2. Completar CRUD de gastos/movimientos.
-3. Corregir sesiones para resolver usuario desde token.
-4. Conectar pantalla de movimientos con datos reales.
-5. Agregar tests del nucleo financiero.
-6. Construir dashboard real.
-7. Preparar empaquetado.
+1. Ejecutar la prueba manual visual en PyQt6 WebEngine de deudas mensuales.
+2. Implementar el toggle de deudas en totales y badges pendientes de Fase 9.
+3. Avanzar con la Fase 7.5 de inteligencia financiera (`PorHacerv2.md`).
+4. Recompilar el `.exe` tras el cierre de Fase 10.
+5. Mantener la suite de tests y el lint en verde.
 
 ---
 

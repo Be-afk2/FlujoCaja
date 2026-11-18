@@ -140,7 +140,7 @@ Decisiones acordadas:
 
 Decisiones acordadas:
 
-- La migración 0004 solo se creó y verificó; **no se aplicó** a `database.db` real (sigue en 0003).
+- La migración 0004 quedó aplicada en la BD local: `bd/migrations.py` lleva la base a `head` al iniciar y la versión verificada es `20261114_0004_deudas_mensuales`.
 - Se probó `upgrade head`/`downgrade base` en una base vacía temporal y `0003 → 0004 → 0003` sobre una copia de la base real, conservando usuarios, movimientos, entidades, deudas y pagos.
 - `alembic check` no detecta diferencias entre la migración y `SQLModel.metadata`.
 - Sin `ondelete` en FKs, siguiendo el estilo de las migraciones existentes; el CRUD elimina en orden.
@@ -179,101 +179,95 @@ Inicio:
 
 Helpers reutilizados:
 
-- [ ] `cargarSelectorCuentas`
-- [ ] `cargarSelectorMonedas`
-- [ ] `cargarSelectorTipos`
-- [ ] `cargarSubtipos`
-- [ ] `escaparHtml`
-- [ ] `fechaParaAPI`
-- [ ] `formatearFechaLegible`
-- [ ] `mostrarNotificacion`
+- [x] `cargarSelectorCuentas`
+- [x] `cargarSelectorMonedas`
+- [x] `cargarSelectorTipos`
+- [x] `cargarSubtipos`
+- [x] `escaparHtml`
+- [x] `fechaParaAPI`
+- [x] `formatearFechaLegible`
+- [x] `mostrarNotificacion`
 
 ### 10.8 Tests
 
-- [ ] Crear `tests/test_deudas_mensuales.py` y fixtures en `tests/conftest.py`:
-  - [ ] Crear recurrente sin entidad, con categoría, y verificar cuota generada.
-  - [ ] Pagar antes / al día / atrasada y verificar `estado_pago`.
-  - [ ] Verificar movimiento con categoría elegida, `es_deuda=True`, saldo y resumen.
-  - [ ] Plan total ÷ N, ajuste de centavos y finalización.
-  - [ ] Pago de varias atrasadas con registros independientes.
-  - [ ] Cancelar conserva pagadas y cancela futuras.
-  - [ ] Editar solo afecta futuras.
-  - [ ] Eliminar revierte movimientos.
-  - [ ] Integración con entidad y resumen de Deudas.
-  - [ ] Aislamiento entre usuarios.
-  - [ ] Orden de `/proximas` (vencidas primero).
-- [ ] Ejecutar `python -m pytest tests -v`.
-- [ ] Ejecutar `python -m ruff check tests api/mainApi.py api/routers/deudasMensuales.py api/routers/dtos/deudaMensualDto.py bd/crud/deudaMensual.py bd/domain/deuda_mensual.py bd/models/deudaMensual.py`.
+- [x] Crear `tests/test_deudas_mensuales.py` y fixtures en `tests/conftest.py`:
+  - [x] Crear recurrente sin entidad, con categoría, y verificar cuota generada.
+  - [x] Pagar antes / al día / atrasada y verificar `estado_pago`.
+  - [x] Verificar movimiento con categoría elegida, `es_deuda=True`, saldo y resumen.
+  - [x] Plan total ÷ N, ajuste de centavos y finalización.
+  - [x] Pago de varias atrasadas con registros independientes.
+  - [x] Cancelar conserva pagadas y cancela futuras.
+  - [x] Editar solo afecta futuras.
+  - [x] Eliminar revierte movimientos.
+  - [x] Integración con entidad y resumen de Deudas.
+  - [x] Aislamiento entre usuarios.
+  - [x] Orden de `/proximas` (vencidas primero).
+- [x] Ejecutar `python -m pytest tests -v`.
+- [x] Ejecutar `python -m ruff check tests api/mainApi.py api/routers/deudasMensuales.py api/routers/dtos/deudaMensualDto.py bd/crud/deudaMensual.py bd/domain/deuda_mensual.py bd/models/deudaMensual.py`.
 
 ### 10.9 Documentación
 
-- [ ] Actualizar `AGENTS.md` con la Fase 10: nuevos modelos, endpoints, migración, reglas de fechas y quirks.
-- [ ] Actualizar `porHacer.md`.
+- [x] Actualizar `AGENTS.md` con la Fase 10: nuevos modelos, endpoints, migración, reglas de fechas y quirks.
+- [x] Actualizar `porHacer.md`.
 
 ### 10.10 Archivos principales
 
-- [ ] `bd/models/deudaMensual.py`
-- [ ] `bd/models/__init__.py`
-- [ ] `bd/models/entidad.py`
-- [ ] `bd/domain/deuda_mensual.py`
-- [ ] `bd/crud/deudaMensual.py`
-- [ ] `bd/crud/entidad.py`
-- [ ] `api/routers/deudasMensuales.py`
-- [ ] `api/routers/dtos/deudaMensualDto.py`
-- [ ] `api/mainApi.py`
-- [ ] `alembic/versions/20261114_0004_deudas_mensuales.py`
-- [ ] `bd/migrations.py`
-- [ ] `web/pages/deudasMensuales.html`
-- [ ] `web/js/deudasMensuales.js`
-- [ ] `web/css/deudasMensuales.css`
-- [ ] `web/components/sidemenu.html`
-- [ ] `web/pages/deudas.html`
-- [ ] `web/js/deudas.js`
-- [ ] `web/pages/panelControl.html`
-- [ ] `web/js/panelControl.js`
-- [ ] `tests/conftest.py`
-- [ ] `tests/test_deudas_mensuales.py`
-- [ ] `AGENTS.md`
-- [ ] `porHacer.md`
+- [x] `bd/models/deudaMensual.py`
+- [x] `bd/models/__init__.py`
+- [x] `bd/models/entidad.py`
+- [x] `bd/domain/deuda_mensual.py`
+- [x] `bd/crud/deudaMensual.py`
+- [x] `bd/crud/entidad.py`
+- [x] `api/routers/deudasMensuales.py`
+- [x] `api/routers/dtos/deudaMensualDto.py`
+- [x] `api/mainApi.py`
+- [x] `alembic/versions/20261114_0004_deudas_mensuales.py`
+- [x] `bd/migrations.py`
+- [x] `web/pages/deudasMensuales.html`
+- [x] `web/js/deudasMensuales.js`
+- [x] `web/css/deudasMensuales.css`
+- [x] `web/components/sidemenu.html`
+- [x] `web/pages/deudas.html`
+- [x] `web/js/deudas.js`
+- [x] `web/pages/panelControl.html`
+- [x] `web/js/panelControl.js`
+- [x] `tests/conftest.py`
+- [x] `tests/test_deudas_mensuales.py`
+- [x] `AGENTS.md`
+- [x] `porHacer.md`
 
 ---
 
-## Pendientes de confirmar
+## Decisiones resueltas
 
-1. **"Una sola fecha para todas las nuevas cuotas"**
-   - ¿Es un campo opcional al editar: "fecha límite única para las cuotas futuras que se generen desde este punto"?
-   - ¿O cada cuota futura mantiene su fecha límite mensual?
-
-2. **Entidad**
-   - ¿La página Deudas debe listar también las mensuales o solo sumarlas en saldos/resumen y dejar el listado en su página?
-
-3. **Plan de cuotas**
-   - ¿El saldo pendiente de la entidad debe incluir todas las cuotas impagas (incluidas futuras) y la recurrente solo las ya aparecidas? Es lo propuesto.
-
-4. **Inicio**
-   - ¿"Próximas" = 7 días, 30 días o la próxima cuota de cada deuda?
-   - Propuesta: vencidas + próximos 7 días, con badge de vencidas en el sidebar.
+- [x] **"Una sola fecha para todas las nuevas cuotas"** — Descartado por ahora: cada cuota futura mantiene su fecha límite mensual y `dia_limite` puede editarse para las futuras impagas. No se agrega un override de fecha única.
+- [x] **Entidad** — La página Deudas muestra resumen y sección de mensuales por entidad; el listado completo queda en la página de Deudas mensuales.
+- [x] **Plan de cuotas** — El saldo de la entidad incluye todas las cuotas impagas del plan; en recurrentes solo se suman las cuotas ya aparecidas e impagas.
+- [x] **Inicio** — "Próximas" = vencidas + próximos 7 días, con badge de vencidas en el sidebar.
 
 ---
 
 ## Orden de implementación
 
-- [ ] Modelos + relación en entidad + exports.
-- [ ] Migración Alembic + `APP_TABLES`.
-- [ ] Reglas de negocio (`bd/domain/deuda_mensual.py`).
-- [ ] CRUD de plantillas, cuotas y pagos.
-- [ ] Integración con entidades y resumen.
-- [ ] API: DTOs, router y registro en `mainApi.py`.
+- [x] Modelos + relación en entidad + exports.
+- [x] Migración Alembic + `APP_TABLES`.
+- [x] Reglas de negocio (`bd/domain/deuda_mensual.py`).
+- [x] CRUD de plantillas, cuotas y pagos.
+- [x] Integración con entidades y resumen.
+- [x] API: DTOs, router y registro en `mainApi.py`.
 - [x] Frontend: página, sidebar, modales y helpers.
 - [x] Inicio: bloque de pagos mensuales y pago rápido.
-- [ ] Tests + lint + prueba manual.
-- [ ] Documentación: `AGENTS.md` y `porHacer.md`.
+- [x] Tests + lint.
+- [x] Prueba end-to-end del flujo de deudas mensuales vía API/TestClient.
+- [ ] Prueba manual visual en PyQt6 WebEngine.
+- [x] Documentación: `AGENTS.md` y `porHacer.md`.
 
 ---
 
 ## Fuera de alcance (por ahora)
 
 - Abonos parciales por cuota (el pago es completo).
+- Override de fecha límite única para nuevas cuotas (cada cuota conserva su regla mensual).
 - Intereses, mora o recargos automáticos.
 - Conversión real entre monedas con tipo de cambio.
 - Recordatorios automáticos de vencimiento.

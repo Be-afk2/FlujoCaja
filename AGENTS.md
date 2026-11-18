@@ -27,7 +27,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - **Frontend:** static HTML/JS/Tailwind via CDN in `web/`, loaded by PyQt6 WebEngine
 - **Auth:** simple SQLite token (single-session, no JWT). Bearer token via `Authorization` header. Validated against `sesion` table.
   - Unprotected routes: `/auth/*` (login, register, session check), `/health`
-  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuentas`, `/monedas`, `/resumen`, `/health/token`, `/auth/me`, `/datos`
+  - Protected routes (require `Depends(validate_token)`): `/movimientos`, `/tipos`, `/subtipos`, `/cuentas`, `/monedas`, `/resumen`, `/entidades`, `/deudas`, `/deudas-mensuales`, `/health/token`, `/auth/me`, `/datos`
 - **Session:** Single session row in DB. Auth via `Authorization: Bearer <token>`, validated by `validate_token()` in `api/dependencies.py` which resolves the `User`. Legacy `obtener_sesion()` still present but deprecated.
 - `database.db` is gitignored; auto-created on first run.
 
@@ -38,7 +38,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - `RequestValidationError` handler normalizes 422 to `{"error", "status", "path", "details"}`
 - Auth errors return 401 with `WWW-Authenticate` header
 - CORS restricted to `["http://127.0.0.1:8000", "http://localhost:8000"]`
-- `FastAPI(title=..., description=..., version="0.3.0")` with `tags` on all 7 routers
+- `FastAPI(title=..., description=..., version="0.4.0")` with `tags` on all routers
 - All POST creation endpoints have `status_code=201`
 
 ## Key refactors (Fase 8 — Perfil, contraseña, backup/restaurar)
@@ -62,7 +62,20 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - Sidebar: ítem "Deudas" en `web/components/sidemenu.html`; helpers `cargarSelectorMonedas()`/`escaparHtml()` y `cargarSelectorCuentas()` con `data-moneda` en `funciones.js`.
 - Fechas de escritura en `dd-mm-YYYY` (`fechaParaAPI`); respuestas de la API en ISO.
 
-## Key refactors (Fase 5 — Frontend conectado, en curso)
+## Key refactors (Fase 10 — Deudas mensuales)
+
+- Modelos `DeudaMensual` (plantilla), `CuotaMensual` (ocurrencia) y `PagoCuotaMensual` (pago 1:1 con cuota y movimiento); `Entidad.deudas_mensuales`. Exportados en `bd/models/__init__.py`.
+- Modalidades: `recurrente` (`monto_modo=fijo`, usa `monto_cuota`) y `cuotas` (`monto_modo=calculado`, usa `monto_total` + `cuotas_totales`). Plantilla `activa|cancelada`; cuota `pendiente|pagada|cancelada`; `estado_pago` en pagadas `antes_de_tiempo|al_dia|atrasada`.
+- Reglas puras en `bd/domain/deuda_mensual.py`: días 1-31 ajustados al último del mes; si `dia_limite < dia_aparicion` el límite cae al mes siguiente; la primera cuota siempre pertenece al mes de `fecha_inicio`; recurrente genera hasta `max(mes actual + 1, mes inicio + 1)`; plan genera N cuotas y la última absorbe el ajuste de centavos; "futura" = `fecha_aparicion > hoy`.
+- CRUD en `bd/crud/deudaMensual.py`: auto-sync idempotente de cuotas en `listar`, detalle, `proximas` y `resumen`; cuota/pago/movimiento se crean o eliminan en la misma transacción, actualizando saldo y `ResumenMensual`. Pago completo (no parcial); el movimiento mensual siempre es gasto (`monto` negativo), `es_deuda=True` y usa el tipo/subtipo de la plantilla.
+- Edición: cambios estructurales (`modalidad`, `fecha_inicio`, `cuotas_totales`, `monto_total`) bloqueados si hay pagos; el resto solo afecta cuotas futuras impagas. Cancelar conserva pagadas y cancela futuras impagas. Eliminar borra cuotas/pagos/movimientos y revierte saldos. `pagar-lote` es todo-o-nada.
+- Entidades: `GET /entidades/{id}` incluye `deudas_mensuales` con detalle y pagos; los saldos las suman como `en_contra` (recurrente: solo cuotas ya aparecidas; plan: todas las impagas); `deudas_pendientes` y `proximo_vencimiento` también las consideran; DELETE de entidad bloqueado si tiene plantillas mensuales.
+- API `/deudas-mensuales` (protegida): CRUD de plantillas, `GET /proximas?dias=7&moneda_id=`, `GET /resumen?moneda_id=`, `POST /{id}/cancelar`, `POST /pagar-lote`, `POST /cuotas/{cuota_id}/pagar`, `PUT|DELETE /cuotas/{cuota_id}/pagos/{pago_id}`. DTOs en `api/routers/dtos/deudaMensualDto.py`; fechas de entrada `dd-mm-YYYY`, respuestas ISO.
+- Migración `alembic/versions/20261114_0004_deudas_mensuales.py` (`down_revision=0003`): crea `deudamensual`, `cuotamensual`, `pagocuotamensual`, índices y FKs; agregadas a `APP_TABLES`. Sin `ondelete`; el CRUD elimina en orden. `bd/migrations.py` lleva la base a `head` al iniciar (BD local actual en 0004).
+- Frontend: `web/pages/deudasMensuales.html` + `web/js/deudasMensuales.js` + `web/css/deudasMensuales.css`; sidebar con badge de vencidas; `deudas.js` muestra resumen y sección mensual por entidad; `panelControl.js` muestra pagos de los próximos 7 días con modal de pago rápido.
+- Tests: `tests/test_deudas_mensuales.py` cubre recurrente, estados de pago, movimiento/saldo/resumen, plan y centavos, lote, cancelar/editar/eliminar, entidad, aislamiento y orden de `/proximas`; fixtures `crear_deuda_mensual`/`obtener_tipo_deudas` en `tests/conftest.py`.
+
+## Key refactors (Fase 5 — Frontend conectado)
 
 - Token storage unified: `guardarToken()`, `obtenerToken()`, `cerrarSesion()` in `funciones.js`
 - Bearer token auto-injected in every `request()` via `Authorization` header (except `PUBLIC_PATHS`)
@@ -78,13 +91,20 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - Frontend uses `sessionStorage` for token (key: `auth_token`) and `localStorage` for `remember_session` flag.
 - `obtener_usuario_por_token()` only checks the **first** `Sesion` row → single active session by design; isolation tests log in users sequentially.
 - **No usar `backdrop-filter`/`backdrop-blur` en el frontend:** en Qt WebEngine/Windows provoca parpadeo de toda la vista al interactuar (bug de compositor GPU). Usar fondos translúcidos sin blur.
+- `DeudaMensual` no tiene `direccion`: pagar una cuota mensual siempre crea un **gasto** (`monto` negativo), aunque la plantilla esté ligada a una entidad.
+- `PagoCuotaMensual.cuota_id` y `movimiento_id` son únicos → una cuota admite un solo pago; el pago debe ser completo (`validar_monto_pago`).
+- Editar un pago recalcula `CuotaMensual.estado_pago`; eliminar un pago devuelve la cuota a `pendiente` y borra el movimiento.
+- `moneda_distinta` solo avisa si la cuenta de pago usa otra moneda; no hay conversión, igual que en Deudas.
+- Las cuotas recurrentes se auto-sincronizan al leer; abrir la app en un mes posterior puede generar cuotas nuevas sin una acción explícita.
 
 ## Tests (Fase 6)
 
 - `pytest` + `httpx` + `ruff` in `requirements-dev.txt`; config in `pyproject.toml`.
 - `tests/conftest.py` sets `os.environ["APPDATA"]` to a temp dir **before** importing app modules, so the global `engine` binds to a temp SQLite; an autouse `reset_db` fixture drops/recreates schema + seeds per test.
-- API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`, `test_entidades`, `test_deudas`, `test_reportes`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
-- `tests/conftest.py` incluye fixtures `crear_entidad`, `crear_deuda`, `crear_pago` y `obtener_moneda` para la Fase 9.
+- API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`, `test_entidades`, `test_deudas`, `test_deudas_mensuales`, `test_reportes`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
+- `tests/conftest.py` incluye fixtures `crear_entidad`, `crear_deuda`, `crear_pago`, `obtener_moneda`, `crear_deuda_mensual` y `obtener_tipo_deudas`.
+- Estado actual: 86 tests pasan, incluidos 13 de deudas mensuales.
+- Se ejecutó además un E2E del flujo de deudas mensuales vía `TestClient` sobre BD temporal; la prueba visual en PyQt6 WebEngine sigue pendiente.
 - Dates sent to the API use `dd-mm-YYYY` (parsed by `DateFromString`).
 - Lint is scoped to `tests/` + `api/mainApi.py` (ruff `select = ["E", "F", "I"]`).
 
@@ -97,7 +117,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 
 ## What's missing / planned
 
-See `porHacer.md` for full roadmap. Priority items: connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB).
+See `porhacer3.md` for the current roadmap. Pending: cerrar `10.10 Archivos principales`, prueba manual end-to-end de deudas mensuales y Fase 7.5 (inteligencia financiera) de `PorHacerv2.md`.
 
 ## MCP Knowledge Graph (codebase-memory-mcp)
 
@@ -143,7 +163,3 @@ MATCH (f:Function {is_entry_point: true}) RETURN f.name, f.file_path
 - El MCP server usa SQLite en `~/.cache/codebase-memory-mcp/`
 - Auto-sync: el watcher detecta cambios automáticamente
 - `-p <project>` sobreescribe el proyecto autodetectado
-
-## What's missing / planned
-
-See `porHacer.md` for full roadmap. Priority items: connect all web pages to real API, add tests (suggested: pytest with temp SQLite DB).
