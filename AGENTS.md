@@ -71,9 +71,18 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - Edición: cambios estructurales (`modalidad`, `fecha_inicio`, `cuotas_totales`, `monto_total`) bloqueados si hay pagos; el resto solo afecta cuotas futuras impagas. Cancelar conserva pagadas y cancela futuras impagas. Eliminar borra cuotas/pagos/movimientos y revierte saldos. `pagar-lote` es todo-o-nada.
 - Entidades: `GET /entidades/{id}` incluye `deudas_mensuales` con detalle y pagos; los saldos las suman como `en_contra` (recurrente: solo cuotas ya aparecidas; plan: todas las impagas); `deudas_pendientes` y `proximo_vencimiento` también las consideran; DELETE de entidad bloqueado si tiene plantillas mensuales.
 - API `/deudas-mensuales` (protegida): CRUD de plantillas, `GET /proximas?dias=7&moneda_id=`, `GET /resumen?moneda_id=`, `POST /{id}/cancelar`, `POST /pagar-lote`, `POST /cuotas/{cuota_id}/pagar`, `PUT|DELETE /cuotas/{cuota_id}/pagos/{pago_id}`. DTOs en `api/routers/dtos/deudaMensualDto.py`; fechas de entrada `dd-mm-YYYY`, respuestas ISO.
-- Migración `alembic/versions/20261114_0004_deudas_mensuales.py` (`down_revision=0003`): crea `deudamensual`, `cuotamensual`, `pagocuotamensual`, índices y FKs; agregadas a `APP_TABLES`. Sin `ondelete`; el CRUD elimina en orden. `bd/migrations.py` lleva la base a `head` al iniciar (BD local actual en 0004).
+- Migración `alembic/versions/20261114_0004_deudas_mensuales.py` (`down_revision=0003`): crea `deudamensual`, `cuotamensual`, `pagocuotamensual`, índices y FKs; agregadas a `APP_TABLES`. Sin `ondelete`; el CRUD elimina en orden. `bd/migrations.py` lleva la base a `head` al iniciar (BD local actual en 0005).
 - Frontend: `web/pages/deudasMensuales.html` + `web/js/deudasMensuales.js` + `web/css/deudasMensuales.css`; sidebar con badge de vencidas; `deudas.js` muestra resumen y sección mensual por entidad; `panelControl.js` muestra pagos de los próximos 7 días con modal de pago rápido.
 - Tests: `tests/test_deudas_mensuales.py` cubre recurrente, estados de pago, movimiento/saldo/resumen, plan y centavos, lote, cancelar/editar/eliminar, entidad, aislamiento y orden de `/proximas`; fixtures `crear_deuda_mensual`/`obtener_tipo_deudas` en `tests/conftest.py`.
+
+## Key refactors (Fase 11 — Rendimiento)
+
+- Migración `alembic/versions/20261118_0005_indices_rendimiento.py` (`down_revision=0004`, head actual): índices compuestos `movimiento (user_id, fecha)`, `(user_id, cuenta_id, fecha)`, `(user_id, tipo_id, fecha)`, `(user_id, es_deuda, fecha)`, `cuotamensual (user_id, estado, fecha_limite)` y `pagocuotamensual (user_id, fecha)`.
+- Se eliminó `ix_movimiento_es_deuda` (simple): ninguna consulta filtra por `es_deuda` sin `user_id`. El compuesto también sirve a `es_deuda=false` (dashboard).
+- Los índices se declaran con `sa.Index` en `__table_args__` de `bd/models/movimiento.py` y `bd/models/deudaMensual.py`, así `alembic check` queda limpio y `create_all` (tests) los genera.
+- Medición de referencia (35k movimientos / 7.2k cuotas): lista de movimientos 94x, resumen mensual 35x, filtro por tipo 56x, filtro `es_deuda` 89x, dashboard 14x.
+- Descartados por medición: índice parcial de `es_deuda`, `(deuda_mensual_id, estado)` en cuotas, `(user_id, fecha_limite)` en cuotas y `sesion.token` (la sesión se lee con `first()`, sin filtro por token).
+- **Ojo**: `bd/migrations.py` corre `alembic upgrade head` al iniciar; una instalación nueva llega a 0005 sin pasos manuales.
 
 ## Key refactors (Fase 5 — Frontend conectado)
 

@@ -1,6 +1,7 @@
 from datetime import date, datetime, timezone
 from typing import TYPE_CHECKING, List, Optional
 
+from sqlalchemy import Index
 from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 if TYPE_CHECKING:
@@ -62,6 +63,12 @@ class CuotaMensual(SQLModel, table=True):
         UniqueConstraint(
             "deuda_mensual_id", "numero", name="uq_cuotamensual_deuda_numero"
         ),
+        Index(
+            "ix_cuotamensual_user_estado_fecha_limite",
+            "user_id",
+            "estado",
+            "fecha_limite",
+        ),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -88,6 +95,7 @@ class PagoCuotaMensual(SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("cuota_id", name="uq_pagocuotamensual_cuota"),
         UniqueConstraint("movimiento_id", name="uq_pagocuotamensual_movimiento"),
+        Index("ix_pagocuotamensual_user_fecha", "user_id", "fecha"),
     )
 
     id: Optional[int] = Field(default=None, primary_key=True)
