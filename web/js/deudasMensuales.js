@@ -239,8 +239,17 @@ function dmRenderResumen() {
 
     const boton = dmEl("dmBtnPagarAtrasadas");
     if (boton) {
-        boton.classList.toggle("hidden", !(vencidas.cantidad > 0));
-        boton.classList.toggle("inline-flex", vencidas.cantidad > 0);
+        const mostrar = vencidas.cantidad > 0;
+        const yaVisible = !boton.classList.contains("hidden");
+        boton.classList.toggle("hidden", !mostrar);
+        boton.classList.toggle("inline-flex", mostrar);
+
+        if (mostrar && !yaVisible) {
+            boton.classList.remove("fade-in-suave");
+            void boton.offsetWidth;
+            boton.classList.add("fade-in-suave");
+        }
+
         dmEl("dmBtnPagarAtrasadasTexto").textContent = `Pagar atrasadas (${vencidas.cantidad})`;
     }
 }

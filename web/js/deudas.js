@@ -439,7 +439,7 @@ async function cargarResumenMensuales() {
             ? `${vencidas.cantidad} · ${formatoResumenMensual(vencidas.monto)}`
             : "0";
 
-        card.classList.remove("hidden");
+        card.classList.remove("hidden", "opacity-0", "pointer-events-none");
     } catch (error) {
         card.classList.add("hidden");
         console.warn("No se pudo cargar el resumen de deudas mensuales:", error.message);
@@ -1221,14 +1221,16 @@ async function recargarTodo() {
 
     renderResumenGlobal();
     renderListaEntidades();
-    await cargarResumenMensuales();
 
-    if (deudasState.entidadSeleccionadaId != null) {
-        await cargarDetalleEntidad(deudasState.entidadSeleccionadaId, true);
-    } else {
-        deudasState.entidad = null;
-        renderDetalleEntidad();
-    }
+    const seleccionada = deudasState.entidadSeleccionadaId;
+    const cargarDetalle = seleccionada != null
+        ? cargarDetalleEntidad(seleccionada, true)
+        : Promise.resolve().then(() => {
+            deudasState.entidad = null;
+            renderDetalleEntidad();
+        });
+
+    await Promise.all([cargarResumenMensuales(), cargarDetalle]);
 }
 
 function configurarFiltroMonedas() {

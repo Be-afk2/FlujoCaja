@@ -56,7 +56,7 @@ desktop.ini
 # Excluidos del proyecto
 /tools
 AGENTS.md
-/planes
+
 template-agents
 /bugs
 idea.md
