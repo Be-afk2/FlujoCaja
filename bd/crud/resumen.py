@@ -1,7 +1,8 @@
 from datetime import date
 from typing import Optional
 
-from sqlmodel import Session, func, select
+from sqlalchemy import case, delete
+from sqlmodel import Session, and_, func, select
 
 from bd.database import engine
 from bd.models import Cuenta, Movimiento, ResumenMensual, User
@@ -89,13 +90,21 @@ def actualizar_por_movimiento(
         r.neto = r.total_ingresos - r.total_gastos
 
 
+def _rango_mes(anio: int, mes: int) -> tuple[date, date]:
+    """Primer dia del mes y primer dia del mes siguiente (rango half-open)."""
+    inicio = date(anio, mes, 1)
+    fin = date(anio + 1, 1, 1) if mes == 12 else date(anio, mes + 1, 1)
+    return inicio, fin
+
+
 def recalcular_mes(session: Session, user_id: str, cuenta_id: int, anio: int, mes: int) -> ResumenMensual | None:
+    inicio, fin = _rango_mes(anio, mes)
     resultados = session.exec(
         select(Movimiento.monto, Movimiento.es_deuda).where(
             Movimiento.user_id == user_id,
             Movimiento.cuenta_id == cuenta_id,
-            func.extract("year", Movimiento.fecha) == anio,
-            func.extract("month", Movimiento.fecha) == mes,
+            Movimiento.fecha >= inicio,
+            Movimiento.fecha < fin,
         )
     ).all()
 
@@ -130,29 +139,84 @@ def recalcular_mes(session: Session, user_id: str, cuenta_id: int, anio: int, me
 
 
 def recalcular_todos(user: User) -> int:
+    """Recalcula todos los resumenes del usuario en una sola pasada.
+
+    Agrega los movimientos con un unico GROUP BY por (cuenta, anio, mes) y
+    reescribe la tabla de resumenes. Antes se hacia una consulta por cada
+    combinacion (N+1), lo que hacia el costo cuadratico con la cantidad de
+    movimientos.
+    """
+    user_id = str(user.id)
+    anio = func.extract("year", Movimiento.fecha)
+    mes = func.extract("month", Movimiento.fecha)
+    ingresos = func.sum(
+        case((Movimiento.monto > 0, Movimiento.monto), else_=0.0)
+    )
+    gastos = func.sum(
+        case((Movimiento.monto < 0, -Movimiento.monto), else_=0.0)
+    )
+    ingresos_deuda = func.sum(
+        case(
+            (and_(Movimiento.es_deuda, Movimiento.monto > 0), Movimiento.monto),
+            else_=0.0,
+        )
+    )
+    gastos_deuda = func.sum(
+        case(
+            (and_(Movimiento.es_deuda, Movimiento.monto < 0), -Movimiento.monto),
+            else_=0.0,
+        )
+    )
+
     with Session(engine) as session:
         filas = session.exec(
             select(
                 Movimiento.cuenta_id,
-                func.extract("year", Movimiento.fecha),
-                func.extract("month", Movimiento.fecha),
+                anio,
+                mes,
+                ingresos,
+                gastos,
+                ingresos_deuda,
+                gastos_deuda,
             )
-            .where(Movimiento.user_id == str(user.id))
-            .distinct()
+            .where(Movimiento.user_id == user_id)
+            .group_by(Movimiento.cuenta_id, anio, mes)
         ).all()
 
-        for r in session.exec(select(ResumenMensual).where(ResumenMensual.user_id == str(user.id))).all():
-            session.delete(r)
-        session.flush()
+        session.execute(delete(ResumenMensual).where(ResumenMensual.user_id == user_id))
 
-        count = 0
-        for cuenta_id, anio, mes in filas:
-            recalcular_mes(session, str(user.id), int(cuenta_id), int(anio), int(mes))
-            count += 1
+        creados = 0
+        for cuenta_id, f_anio, f_mes, ing, gas, ing_deuda, gas_deuda in filas:
+            ing = float(ing or 0.0)
+            gas = float(gas or 0.0)
+            ing_deuda = float(ing_deuda or 0.0)
+            gas_deuda = float(gas_deuda or 0.0)
+            if (
+                ing == 0
+                and gas == 0
+                and ing_deuda == 0
+                and gas_deuda == 0
+            ):
+                continue
+
+            session.add(
+                ResumenMensual(
+                    user_id=user_id,
+                    cuenta_id=int(cuenta_id),
+                    anio=int(f_anio),
+                    mes=int(f_mes),
+                    total_ingresos=ing,
+                    total_gastos=gas,
+                    total_ingresos_deuda=ing_deuda,
+                    total_gastos_deuda=gas_deuda,
+                    neto=ing - gas,
+                )
+            )
+            creados += 1
 
         session.commit()
 
-    return count
+    return creados
 
 
 def _filtro_moneda(moneda_id: Optional[int], user_id: str) -> list:

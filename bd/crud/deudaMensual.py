@@ -211,18 +211,36 @@ def _crear_cuotas_sesion(
 
 
 def _numeros_existentes(session: Session, deuda_mensual_id: int) -> set[int]:
-    numeros = session.exec(
-        select(CuotaMensual.numero).where(
-            CuotaMensual.deuda_mensual_id == deuda_mensual_id
+    return _numeros_por_deuda(session, [deuda_mensual_id]).get(
+        deuda_mensual_id, set()
+    )
+
+
+def _numeros_por_deuda(
+    session: Session, deuda_ids: list[int]
+) -> dict[int, set[int]]:
+    """Numeros de cuota ya creados para varias plantillas en una sola consulta."""
+    if not deuda_ids:
+        return {}
+
+    filas = session.exec(
+        select(CuotaMensual.deuda_mensual_id, CuotaMensual.numero).where(
+            CuotaMensual.deuda_mensual_id.in_(deuda_ids)
         )
     ).all()
-    return {int(numero) for numero in numeros}
+
+    numeros: dict[int, set[int]] = {}
+    for deuda_id, numero in filas:
+        numeros.setdefault(int(deuda_id), set()).add(int(numero))
+    return numeros
 
 
 def _sincronizar_cuotas_sesion(
     session: Session,
     deuda: DeudaMensual,
     hoy: Optional[date] = None,
+    *,
+    existentes: Optional[set[int]] = None,
 ) -> int:
     """Genera las cuotas que falten sin hacer commit."""
     if deuda.estado != ESTADO_DEUDA_ACTIVA:
@@ -230,7 +248,8 @@ def _sincronizar_cuotas_sesion(
 
     hoy = hoy or date.today()
     calculadas = _calcular_cuotas(deuda, hoy)
-    existentes = _numeros_existentes(session, deuda.id)
+    if existentes is None:
+        existentes = _numeros_existentes(session, deuda.id)
     faltantes = [c for c in calculadas if c.numero not in existentes]
     if not faltantes:
         return 0
@@ -244,12 +263,35 @@ def sincronizar_cuotas_sesion(
     deudas: list[DeudaMensual],
     hoy: Optional[date] = None,
 ) -> int:
-    """Genera las cuotas faltantes de varias plantillas sin hacer commit."""
+    """Genera las cuotas faltantes de varias plantillas sin hacer commit.
+
+    Los numeros existentes se cargan en una sola consulta (`IN (...)`) en
+    lugar de una por plantilla.
+    """
     hoy = hoy or date.today()
+    numeros = _numeros_por_deuda(session, [deuda.id for deuda in deudas])
     total = 0
     for deuda in deudas:
-        total += _sincronizar_cuotas_sesion(session, deuda, hoy)
+        total += _sincronizar_cuotas_sesion(
+            session, deuda, hoy, existentes=numeros.get(deuda.id, set())
+        )
     return total
+
+
+def sincronizar_deudas_mensuales(user: User, hoy: Optional[date] = None) -> int:
+    """Genera las cuotas faltantes del usuario y persiste solo si hubo cambios."""
+    hoy = hoy or date.today()
+    with Session(engine) as session:
+        deudas = session.exec(
+            select(DeudaMensual).where(
+                DeudaMensual.user_id == str(user.id),
+                DeudaMensual.estado == ESTADO_DEUDA_ACTIVA,
+            )
+        ).all()
+        creadas = sincronizar_cuotas_sesion(session, deudas, hoy)
+        if creadas:
+            session.commit()
+        return creadas
 
 
 def _cuotas_por_deuda(
@@ -712,9 +754,6 @@ def listar_deudas_mensuales(
             .order_by(DeudaMensual.created_at.desc(), DeudaMensual.id.desc())
         ).all()
 
-        if sincronizar_cuotas_sesion(session, deudas, hoy):
-            session.commit()
-
         cuotas_por_deuda = _cuotas_por_deuda(
             session, [deuda.id for deuda in deudas]
         )
@@ -735,9 +774,6 @@ def obtener_deuda_mensual(user: User, deuda_mensual_id: int) -> dict:
     hoy = date.today()
     with Session(engine) as session:
         deuda = _validar_deuda_mensual(session, deuda_mensual_id, user)
-        if _sincronizar_cuotas_sesion(session, deuda, hoy):
-            session.commit()
-
         cuotas = session.exec(
             select(CuotaMensual)
             .where(CuotaMensual.deuda_mensual_id == deuda.id)
@@ -789,18 +825,25 @@ def proximas_cuotas(
             select(DeudaMensual).where(*condiciones_deuda)
         ).all()
 
-        if sincronizar_cuotas_sesion(session, deudas, hoy):
-            session.commit()
-
         deudas_por_id = {deuda.id: deuda for deuda in deudas}
+        condiciones_cuota = [
+            CuotaMensual.user_id == str(user.id),
+            CuotaMensual.estado == ESTADO_CUOTA_PENDIENTE,
+            CuotaMensual.fecha_limite <= limite,
+        ]
+        # Las cuotas ya pertenecen al usuario; solo hace falta acotar por
+        # moneda, y se resuelve con una subconsulta en vez de un IN con todos
+        # los ids de las plantillas (que es lo que encarecia esta lectura).
+        if moneda_id is not None:
+            condiciones_cuota.append(
+                CuotaMensual.deuda_mensual_id.in_(
+                    select(DeudaMensual.id).where(*condiciones_deuda)
+                )
+            )
+
         cuotas = session.exec(
             select(CuotaMensual)
-            .where(
-                CuotaMensual.user_id == str(user.id),
-                CuotaMensual.deuda_mensual_id.in_(list(deudas_por_id)),
-                CuotaMensual.estado == ESTADO_CUOTA_PENDIENTE,
-                CuotaMensual.fecha_limite <= limite,
-            )
+            .where(*condiciones_cuota)
             .order_by(CuotaMensual.fecha_limite)
         ).all()
 
@@ -840,16 +883,18 @@ def resumen_deudas_mensuales(
             select(DeudaMensual).where(*condiciones_deuda)
         ).all()
 
-        if sincronizar_cuotas_sesion(session, deudas, hoy):
-            session.commit()
-
         deudas_por_id = {deuda.id: deuda for deuda in deudas}
+        condiciones_cuota = [CuotaMensual.user_id == str(user.id)]
+        if moneda_id is not None:
+            condiciones_cuota.append(
+                CuotaMensual.deuda_mensual_id.in_(
+                    select(DeudaMensual.id).where(*condiciones_deuda)
+                )
+            )
+
         cuotas = session.exec(
             select(CuotaMensual)
-            .where(
-                CuotaMensual.user_id == str(user.id),
-                CuotaMensual.deuda_mensual_id.in_(list(deudas_por_id)),
-            )
+            .where(*condiciones_cuota)
             .order_by(CuotaMensual.fecha_limite)
         ).all()
 
@@ -1150,3 +1195,18 @@ def moneda_distinta(
         )
         cuenta = _validar_cuenta(session, cuenta_id, user)
         return monedas_distintas(deuda.moneda_id, cuenta.moneda_id)
+
+
+def monedas_por_cuenta(user: User) -> dict[int, int]:
+    """Mapa ``cuenta_id -> moneda_id`` del usuario en una sola consulta.
+
+    Lo usan las respuestas de detalle para no abrir una sesion por cada pago
+    al calcular ``moneda_distinta``.
+    """
+    with Session(engine) as session:
+        filas = session.exec(
+            select(Cuenta.id, Cuenta.moneda_id).where(
+                Cuenta.user_id == str(user.id)
+            )
+        ).all()
+    return {int(cuenta_id): int(moneda_id) for cuenta_id, moneda_id in filas}

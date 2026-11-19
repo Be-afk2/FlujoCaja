@@ -4,10 +4,7 @@ from typing import Optional
 from sqlmodel import Session, select
 
 from bd.crud.deuda import abonos_por_deuda, pendiente_y_estado
-from bd.crud.deudaMensual import (
-    resumen_deuda_mensual,
-    sincronizar_cuotas_sesion,
-)
+from bd.crud.deudaMensual import resumen_deuda_mensual
 from bd.crud.exceptions import RecursoNoEncontradoError
 from bd.database import engine
 from bd.domain.deuda import calcular_saldos_por_moneda, validar_tipo_entidad
@@ -128,9 +125,6 @@ def _deudas_mensuales_por_entidad(
     ).all()
     if not deudas:
         return {}
-
-    if sincronizar_cuotas_sesion(session, deudas, hoy):
-        session.commit()
 
     cuotas = session.exec(
         select(CuotaMensual)

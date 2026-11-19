@@ -31,6 +31,7 @@ function obtenerToken() {
 
 function cerrarSesion() {
     sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem('deudas_mensuales_badge_cache');
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem("remember_session");
 }
@@ -127,6 +128,13 @@ async function get(path) {
  */
 async function post(path, data = {}) {
     return request(path, { method: 'POST', data });
+}
+
+/** Genera cuotas recurrentes pendientes antes de cargar vistas de deudas. */
+async function sincronizarDeudasMensuales() {
+    const resultado = await post('deudas-mensuales/sincronizar');
+    window.dispatchEvent(new CustomEvent('deudas-mensuales-actualizadas'));
+    return resultado;
 }
 
 /**

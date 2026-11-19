@@ -94,22 +94,22 @@ Decisiones resueltas:
 
 ### 11.2 Consultas y agregados
 
-- [ ] `bd/crud/movimiento.py` (`movimientos_filtrados`): reemplazar
+- [x] `bd/crud/movimiento.py` (`movimientos_filtrados`): reemplazar
       `select(Movimiento.id).all()` + `len()` por `select(func.count())`.
-- [ ] `bd/crud/resumen.py` (`recalcular_mes`): reemplazar
+- [x] `bd/crud/resumen.py` (`recalcular_mes`): reemplazar
       `func.extract("year"/"month", fecha)` por rango
       `fecha >= inicio AND fecha < inicio_mes_siguiente` (usa índice).
-- [ ] `bd/crud/resumen.py` (`recalcular_todos`): eliminar el bucle cuadrático
+- [x] `bd/crud/resumen.py` (`recalcular_todos`): eliminar el bucle cuadrático
       (N scans) y agrupar por `(cuenta_id, anio, mes)` en una sola consulta.
-- [ ] `bd/crud/deudaMensual.py` (`_numeros_existentes`): batchear todos los
+- [x] `bd/crud/deudaMensual.py` (`_numeros_existentes`): batchear todos los
       `deuda_mensual_id` en un solo `IN (...)` y pasar el set a
       `_sincronizar_cuotas_sesion`.
-- [ ] `bd/crud/deudaMensual.py` (`proximas_cuotas` / `resumen_deudas_mensuales`):
+- [x] `bd/crud/deudaMensual.py` (`proximas_cuotas` / `resumen_deudas_mensuales`):
       quitar el `deuda_mensual_id IN (...)` redundante (las deudas ya vienen
       filtradas por `user_id`); es el costo real que el índice no resuelve.
-- [ ] Revisar `listar_entidades` / `obtener_entidad` para evitar lazy loads y
+- [x] Revisar `listar_entidades` / `obtener_entidad` para evitar lazy loads y
       usar `selectinload` donde se accede a relaciones fuera de la sesión.
-- [ ] Gráfico del dashboard (`web/js/panelControl.js`, `renderGrafico`): usar
+- [x] Gráfico del dashboard (`web/js/panelControl.js`, `renderGrafico`): usar
       `GET /resumen/rango` (ya existe) en lugar de N llamadas a
       `/resumen/anual` (una por año).
 
@@ -124,18 +124,16 @@ Hoy `listar_deudas_mensuales`, `obtener_deuda_mensual`, `proximas_cuotas`,
 `resumen_deudas_mensuales`, `listar_entidades` y `obtener_entidad` hacen
 `commit()` durante un GET.
 
-- [ ] Elegir estrategia (decisión pendiente):
-  - [ ] (a) sincronizar una vez al iniciar la app,
-  - [ ] (b) endpoint explícito `POST /deudas-mensuales/sincronizar` invocado por
-        el frontend al entrar a Deudas mensuales / Inicio,
-  - [ ] (c) tarea periódica en el proceso de la API.
-- [ ] Dejar los GET sin escrituras (`session.flush()` como máximo, nunca
+- [x] Elegir estrategia: endpoint explícito `POST /deudas-mensuales/sincronizar`,
+      llamado al entrar a Inicio, Deudas y Deudas mensuales.
+- [x] Dejar los GET sin escrituras (`session.flush()` como máximo, nunca
       `commit`), manteniendo respuesta idéntica para el usuario.
-- [ ] Asegurar que la sincronización siga siendo idempotente y batcheada.
-- [ ] Badge del sidebar (`web/js/loadmenu.js`): no consultar
-      `/deudas-mensuales/resumen` en cada página; usar cache corto (ver Fase 12)
-      o un parámetro liviano (`?campos=vencidas`).
-- [ ] Tests: dos GET consecutivos no deben cambiar la cantidad de cuotas ni
+- [x] Asegurar que la sincronización siga siendo idempotente y batcheada; el
+      endpoint devuelve cuántas cuotas creó.
+- [x] Badge del sidebar (`web/js/loadmenu.js`): cachear el resumen por 30 s e
+      invalidarlo tras sincronizar o modificar deudas mensuales.
+- [x] Tests: comprobar que las lecturas no regeneren cuotas faltantes y que
+      dos sincronizaciones consecutivas no dupliquen cuotas ni cambien
       `fecha_limite`.
 
 ### 11.4 Configuración de SQLite
@@ -393,8 +391,8 @@ Alcance funcional:
 
 - [x] **Índices**: lista final confirmada midiendo con `EXPLAIN QUERY PLAN`
       sobre una base sintética de 35k movimientos / 7.2k cuotas; ver Fase 11.1.
-- [ ] **Auto-sync**: elegir entre sincronizar al iniciar, endpoint explícito o
-      tarea periódica (Fase 11.3).
+- [x] **Auto-sync**: `POST /deudas-mensuales/sincronizar`, llamado al entrar a
+      Inicio, Deudas y Deudas mensuales (Fase 11.3).
 - [ ] **Autenticación**: cache en memoria con TTL vs. token firmado sin estado.
 - [ ] **Iconos**: subset de Material Symbols vs. migración a Font Awesome.
 - [ ] **Tailwind**: precompilado con build vs. CDN en desarrollo + CSS en prod.
@@ -406,7 +404,7 @@ Alcance funcional:
 - [x] Fase 11.1: migración de índices y modelos.
 - [ ] Fase 11.2: consultas y agregados.
 - [ ] Fase 11.4: PRAGMAs de SQLite y backup/restaurar.
-- [ ] Fase 11.3: auto-sync fuera de los GET.
+- [x] Fase 11.3: auto-sync fuera de los GET.
 - [ ] Fase 11.5: cache de autenticación.
 - [ ] Fase 11.6: tests y cierre de la Fase 11.
 - [ ] Fase 12.1-12.2: cache de catálogos y sidebar.

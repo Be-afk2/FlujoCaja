@@ -40,7 +40,24 @@ async function cargarBadgeDeudasMensuales() {
     if (!badge || typeof get !== 'function' || typeof obtenerToken !== 'function' || !obtenerToken()) return;
 
     try {
-        const resumen = await get('deudas-mensuales/resumen');
+        const cacheKey = 'deudas_mensuales_badge_cache';
+        const cacheTtlMs = 30000;
+        let resumen = null;
+        try {
+            const cache = JSON.parse(sessionStorage.getItem(cacheKey) || 'null');
+            if (cache && Date.now() - cache.timestamp < cacheTtlMs) {
+                resumen = cache.resumen;
+            }
+        } catch (_) {
+            sessionStorage.removeItem(cacheKey);
+        }
+        if (!resumen) {
+            resumen = await get('deudas-mensuales/resumen');
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                timestamp: Date.now(),
+                resumen,
+            }));
+        }
         const cantidad = Number(resumen?.vencidas?.cantidad) || 0;
         badge.textContent = String(cantidad);
         badge.classList.toggle('hidden', cantidad === 0);
@@ -51,7 +68,10 @@ async function cargarBadgeDeudasMensuales() {
     }
 }
 
-window.addEventListener('deudas-mensuales-actualizadas', cargarBadgeDeudasMensuales);
+window.addEventListener('deudas-mensuales-actualizadas', () => {
+    sessionStorage.removeItem('deudas_mensuales_badge_cache');
+    cargarBadgeDeudasMensuales();
+});
 
 async function cargarNombreUsuario() {
     const nombreEl = document.getElementById('userName');

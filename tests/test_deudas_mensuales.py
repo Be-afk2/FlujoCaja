@@ -1,6 +1,10 @@
 from datetime import date, timedelta
 
 import pytest
+from sqlmodel import Session, select
+
+from bd.database import engine
+from bd.models import CuotaMensual
 
 
 def _fecha_api(fecha: date) -> str:
@@ -98,6 +102,82 @@ def test_recurrente_sin_entidad_genera_cuotas(
     assert client.get("/movimientos/", headers=headers).json()["total"] == 0
 
 
+def test_lecturas_no_sincronizan_cuotas_y_post_es_idempotente(
+    client, auth_headers, crear_entidad, crear_deuda_mensual
+):
+    headers = auth_headers("mensual_sync_explicito")
+    entidad = crear_entidad(headers, nombre="Entidad sync")
+    deuda = crear_deuda_mensual(
+        headers, entidad_id=entidad["id"], monto_cuota=120.0
+    )
+
+    with Session(engine) as session:
+        cuotas = session.exec(
+            select(CuotaMensual)
+            .where(CuotaMensual.deuda_mensual_id == deuda["id"])
+            .order_by(CuotaMensual.numero)
+        ).all()
+        assert cuotas
+        cuota_eliminada = cuotas[-1]
+        cuota_id, numero = cuota_eliminada.id, cuota_eliminada.numero
+        cuotas_esperadas = [
+            (cuota.id, cuota.fecha_limite)
+            for cuota in cuotas[:-1]
+        ]
+        session.delete(cuota_eliminada)
+        session.commit()
+
+    # Las lecturas no generan ni cambian cuotas, aunque falte una ocurrencia.
+    assert client.get("/deudas-mensuales/", headers=headers).status_code == 200
+    assert client.get(
+        f"/deudas-mensuales/{deuda['id']}", headers=headers
+    ).status_code == 200
+    assert client.get("/deudas-mensuales/proximas", headers=headers).status_code == 200
+    assert client.get("/deudas-mensuales/resumen", headers=headers).status_code == 200
+    assert client.get("/entidades/", headers=headers).status_code == 200
+    assert client.get(
+        f"/entidades/{entidad['id']}", headers=headers
+    ).status_code == 200
+    with Session(engine) as session:
+        assert session.get(CuotaMensual, cuota_id) is None
+        cuotas_leidas = session.exec(
+            select(CuotaMensual.id, CuotaMensual.fecha_limite).where(
+                CuotaMensual.deuda_mensual_id == deuda["id"]
+            )
+        ).all()
+        assert {
+            (int(id_leida), fecha_limite)
+            for id_leida, fecha_limite in cuotas_leidas
+        } == set(cuotas_esperadas)
+
+    sincronizada = client.post(
+        "/deudas-mensuales/sincronizar", headers=headers
+    )
+    assert sincronizada.status_code == 200, sincronizada.text
+    assert sincronizada.json()["cuotas_creadas"] == 1
+    with Session(engine) as session:
+        restaurada = session.exec(
+            select(CuotaMensual).where(
+                CuotaMensual.deuda_mensual_id == deuda["id"],
+                CuotaMensual.numero == numero,
+            )
+        ).first()
+        assert restaurada is not None
+        fecha_limite = restaurada.fecha_limite
+
+    segunda = client.post("/deudas-mensuales/sincronizar", headers=headers)
+    assert segunda.status_code == 200, segunda.text
+    assert segunda.json()["cuotas_creadas"] == 0
+    with Session(engine) as session:
+        restaurada = session.exec(
+            select(CuotaMensual).where(
+                CuotaMensual.deuda_mensual_id == deuda["id"],
+                CuotaMensual.numero == numero,
+            )
+        ).first()
+        assert restaurada.fecha_limite == fecha_limite
+
+
 @pytest.mark.parametrize(
     "modo,esperado",
     [
@@ -179,6 +259,43 @@ def test_pago_crea_movimiento_categoria_saldo_y_resumen(
     assert totales["total_gastos"] == 1200.0
     assert totales["total_ingresos_deuda"] == 0.0
     assert totales["total_gastos_deuda"] == 1200.0
+
+
+def test_detalle_marca_moneda_distinta_en_pagos_de_cuotas(
+    client,
+    auth_headers,
+    crear_cuenta,
+    crear_entidad,
+    crear_deuda_mensual,
+    obtener_moneda,
+):
+    headers = auth_headers("mensual_moneda")
+    moneda_deuda = obtener_moneda(headers)
+    moneda_otra = obtener_moneda(headers, indice=1)
+    entidad = crear_entidad(headers, nombre="Inmobiliaria")
+    cuenta_otra = crear_cuenta(headers, nombre="Cuenta en otra moneda", moneda=moneda_otra)
+
+    deuda = crear_deuda_mensual(
+        headers,
+        moneda_id=moneda_deuda,
+        entidad_id=entidad["id"],
+        monto_cuota=500.0,
+    )
+    cuota = _cuota(_detalle(client, headers, deuda["id"]))
+    pago = _pagar_cuota(client, headers, cuota["id"], cuenta_otra["id"])
+    assert pago["moneda_distinta"] is True
+
+    # El detalle resuelve la moneda de todas las cuentas en una sola consulta
+    # (sin abrir una sesion por pago).
+    cuota_pagada = _cuota(_detalle(client, headers, deuda["id"]))
+    assert [p["id"] for p in cuota_pagada["pagos"]] == [pago["id"]]
+    assert cuota_pagada["pagos"][0]["moneda_distinta"] is True
+
+    detalle_entidad = client.get(
+        f"/entidades/{entidad['id']}", headers=headers
+    ).json()
+    mensual = detalle_entidad["deudas_mensuales"][0]
+    assert mensual["cuotas"][0]["pagos"][0]["moneda_distinta"] is True
 
 
 def test_plan_divide_total_ajusta_centavos_y_finaliza(

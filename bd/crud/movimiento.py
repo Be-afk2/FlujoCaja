@@ -1,13 +1,13 @@
 from datetime import date
-from typing import Optional
+from typing import Iterator, Optional
 
 from sqlalchemy.orm import selectinload
-from sqlmodel import Session, and_, select
+from sqlmodel import Session, and_, func, select
 
 from bd.crud.cuenta import actualizar_saldo
 from bd.crud.resumen import actualizar_por_movimiento
 from bd.database import engine
-from bd.models import Cuenta, Movimiento, Subtipo, User
+from bd.models import Cuenta, Movimiento, Subtipo, Tipo, User
 
 
 def fecha_hoy() -> tuple[int, int, int]:
@@ -272,6 +272,44 @@ def delete_movimiento(movimiento_id: int, user: User) -> bool:
     return True
 
 
+def _condiciones_movimientos(
+    user: User,
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    cuenta_id: Optional[int] = None,
+    moneda_id: Optional[int] = None,
+    tipo_id: Optional[int] = None,
+    subtipo_id: Optional[int] = None,
+    es_ingreso: Optional[bool] = None,
+    es_deuda: Optional[bool] = None,
+) -> list:
+    """Filtros compartidos por el listado paginado y la exportacion CSV."""
+    condiciones = [Movimiento.user_id == str(user.id)]
+
+    if fecha_desde:
+        condiciones.append(Movimiento.fecha >= fecha_desde)
+    if fecha_hasta:
+        condiciones.append(Movimiento.fecha <= fecha_hasta)
+    if cuenta_id is not None:
+        condiciones.append(Movimiento.cuenta_id == cuenta_id)
+    if moneda_id is not None:
+        subquery = select(Cuenta.id).where(
+            Cuenta.moneda_id == moneda_id,
+            Cuenta.user_id == str(user.id),
+        )
+        condiciones.append(Movimiento.cuenta_id.in_(subquery))
+    if tipo_id is not None:
+        condiciones.append(Movimiento.tipo_id == tipo_id)
+    if subtipo_id is not None:
+        condiciones.append(Movimiento.subtipo_id == subtipo_id)
+    if es_ingreso is not None:
+        condiciones.append(Movimiento.es_ingreso == es_ingreso)
+    if es_deuda is not None:
+        condiciones.append(Movimiento.es_deuda == es_deuda)
+
+    return condiciones
+
+
 def movimientos_filtrados(
     user: User,
     pagina: int = 1,
@@ -286,30 +324,19 @@ def movimientos_filtrados(
     es_deuda: Optional[bool] = None,
 ):
     offset = (pagina - 1) * cantidad
+    condiciones = _condiciones_movimientos(
+        user,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        cuenta_id=cuenta_id,
+        moneda_id=moneda_id,
+        tipo_id=tipo_id,
+        subtipo_id=subtipo_id,
+        es_ingreso=es_ingreso,
+        es_deuda=es_deuda,
+    )
 
     with Session(engine) as session:
-        condiciones = [Movimiento.user_id == str(user.id)]
-
-        if fecha_desde:
-            condiciones.append(Movimiento.fecha >= fecha_desde)
-        if fecha_hasta:
-            condiciones.append(Movimiento.fecha <= fecha_hasta)
-        if cuenta_id is not None:
-            condiciones.append(Movimiento.cuenta_id == cuenta_id)
-        if moneda_id is not None:
-            subquery = select(Cuenta.id).where(
-                Cuenta.moneda_id == moneda_id,
-                Cuenta.user_id == str(user.id),
-            )
-            condiciones.append(Movimiento.cuenta_id.in_(subquery))
-        if tipo_id is not None:
-            condiciones.append(Movimiento.tipo_id == tipo_id)
-        if subtipo_id is not None:
-            condiciones.append(Movimiento.subtipo_id == subtipo_id)
-        if es_ingreso is not None:
-            condiciones.append(Movimiento.es_ingreso == es_ingreso)
-        if es_deuda is not None:
-            condiciones.append(Movimiento.es_deuda == es_deuda)
         statement = (
             select(Movimiento)
             .options(selectinload(Movimiento.tipo))
@@ -319,7 +346,81 @@ def movimientos_filtrados(
             .order_by(Movimiento.fecha.desc())
         )
 
-        total = session.exec(select(Movimiento.id).where(and_(*condiciones))).all()
+        # count(*) lo resuelve SQLite con el indice (user_id, fecha) sin
+        # materializar todas las filas como hacia `select(Movimiento.id).all()`.
+        total = session.exec(
+            select(func.count()).select_from(Movimiento).where(and_(*condiciones))
+        ).one()
         resultados = session.exec(statement).all()
 
-    return resultados, len(total)
+    return resultados, int(total)
+
+
+def _csv_escape(valor) -> str:
+    texto = "" if valor is None else str(valor)
+    if any(caracter in texto for caracter in (",", '"', "\n", "\r")):
+        return '"' + texto.replace('"', '""') + '"'
+    return texto
+
+
+def exportar_movimientos_csv(
+    user: User,
+    fecha_desde: Optional[date] = None,
+    fecha_hasta: Optional[date] = None,
+    cuenta_id: Optional[int] = None,
+    moneda_id: Optional[int] = None,
+    tipo_id: Optional[int] = None,
+    subtipo_id: Optional[int] = None,
+    es_ingreso: Optional[bool] = None,
+    es_deuda: Optional[bool] = None,
+) -> Iterator[str]:
+    """Genera el CSV completo de los movimientos filtrados, sin paginar.
+
+    Se resuelve en el servidor con un JOIN a tipo y cuenta, asi el frontend no
+    necesita pedir `cantidad=100000` ni cruzar los nombres en memoria.
+    """
+    condiciones = _condiciones_movimientos(
+        user,
+        fecha_desde=fecha_desde,
+        fecha_hasta=fecha_hasta,
+        cuenta_id=cuenta_id,
+        moneda_id=moneda_id,
+        tipo_id=tipo_id,
+        subtipo_id=subtipo_id,
+        es_ingreso=es_ingreso,
+        es_deuda=es_deuda,
+    )
+    statement = (
+        select(
+            Movimiento.fecha,
+            Movimiento.monto,
+            Tipo.nombre,
+            Cuenta.nombre,
+            Movimiento.descripcion,
+        )
+        .join(Tipo, Tipo.id == Movimiento.tipo_id)
+        .join(Cuenta, Cuenta.id == Movimiento.cuenta_id)
+        .where(and_(*condiciones))
+        .order_by(Movimiento.fecha.desc(), Movimiento.id.desc())
+    )
+
+    def generar() -> Iterator[str]:
+        yield "\ufefffecha,monto,tipo,cuenta,descripcion\r\n"
+        with Session(engine) as session:
+            for fecha, monto, tipo, cuenta, descripcion in session.exec(
+                statement
+            ).yield_per(1000):
+                yield (
+                    ",".join(
+                        [
+                            _csv_escape(fecha.isoformat()),
+                            f"{float(monto):.2f}",
+                            _csv_escape(tipo),
+                            _csv_escape(cuenta),
+                            _csv_escape(descripcion),
+                        ]
+                    )
+                    + "\r\n"
+                )
+
+    return generar()

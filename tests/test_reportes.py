@@ -206,3 +206,34 @@ def test_movimiento_de_deuda_no_se_edita_ni_elimina_desde_movimientos(
     mov = client.get(f"/movimientos/{mov_id}", headers=headers)
     assert mov.status_code == 200
     assert mov.json()["es_deuda"] is True
+
+
+def test_recalcular_resumen_reconstruye_totales_por_mes(
+    client, auth_headers, crear_cuenta, crear_tipo, crear_movimiento, obtener_moneda
+):
+    headers = auth_headers("reporte_recalcular")
+    moneda_id = obtener_moneda(headers)
+    cuenta = crear_cuenta(headers)
+    tipo = crear_tipo(headers, nombre="Recalculo")
+    anio = date.today().year
+
+    crear_movimiento(headers, cuenta["id"], 400.0, tipo_id=tipo["id"], fecha=f"15-01-{anio}")
+    crear_movimiento(headers, cuenta["id"], 1000.0, tipo_id=tipo["id"], fecha=f"15-02-{anio}")
+    crear_movimiento(headers, cuenta["id"], -250.0, tipo_id=tipo["id"], fecha=f"15-02-{anio}")
+
+    r = client.post("/resumen/recalcular", headers=headers)
+    assert r.status_code == 200, r.text
+    assert "2" in r.json()["message"]
+
+    # Idempotente: recalcular otra vez no duplica filas.
+    assert client.post("/resumen/recalcular", headers=headers).status_code == 200
+
+    filas = client.get(
+        "/resumen/anual",
+        params={"anio": anio, "moneda_id": moneda_id},
+        headers=headers,
+    ).json()
+    assert len(filas) == 2
+    assert _sumar(filas, "total_ingresos") == 1400.0
+    assert _sumar(filas, "total_gastos") == 250.0
+    assert _sumar(filas, "total_gastos_deuda") == 0.0

@@ -12,13 +12,16 @@ from bd.crud.deudaMensual import (
     eliminar_pago,
     listar_deudas_mensuales,
     moneda_distinta,
+    monedas_por_cuenta,
     obtener_deuda_mensual,
     pagar_cuota,
     pagar_cuotas,
     proximas_cuotas,
     resumen_deudas_mensuales,
+    sincronizar_deudas_mensuales,
 )
 from bd.crud.exceptions import RecursoNoEncontradoError
+from bd.domain.deuda import monedas_distintas
 from bd.models.user import User
 
 from .dtos.deudaMensualDto import (
@@ -35,6 +38,15 @@ from .dtos.deudaMensualDto import (
 )
 
 router = APIRouter(prefix="/deudas-mensuales", tags=["Deudas mensuales"])
+
+
+@router.post(
+    "/sincronizar",
+    summary="Generar cuotas mensuales faltantes",
+)
+def sincronizar(user: User = Depends(validate_token)):
+    """Sincroniza las cuotas activas fuera de los endpoints de lectura."""
+    return {"cuotas_creadas": sincronizar_deudas_mensuales(user)}
 
 
 def _deuda_mensual_base(deuda) -> dict:
@@ -60,7 +72,23 @@ def _deuda_mensual_base(deuda) -> dict:
     }
 
 
-def _pago_response(pago, user: User) -> dict:
+def _pago_response(
+    pago,
+    user: User,
+    *,
+    moneda_deuda: Optional[int] = None,
+    monedas_cuentas: Optional[dict[int, int]] = None,
+) -> dict:
+    # En las respuestas de detalle el mapa de monedas ya viene precargado:
+    # evita abrir una sesion por cada pago (N+1).
+    if moneda_deuda is not None and monedas_cuentas is not None:
+        distinta = monedas_distintas(
+            moneda_deuda,
+            monedas_cuentas.get(pago.cuenta_id, moneda_deuda),
+        )
+    else:
+        distinta = moneda_distinta(user, pago.cuota_id, pago.cuenta_id)
+
     return {
         "id": pago.id,
         "cuota_id": pago.cuota_id,
@@ -69,13 +97,18 @@ def _pago_response(pago, user: User) -> dict:
         "cuenta_id": pago.cuenta_id,
         "movimiento_id": pago.movimiento_id,
         "descripcion": pago.descripcion,
-        "moneda_distinta": moneda_distinta(
-            user, pago.cuota_id, pago.cuenta_id
-        ),
+        "moneda_distinta": distinta,
     }
 
 
-def _cuota_response(cuota, user: User, pagos=None) -> dict:
+def _cuota_response(
+    cuota,
+    user: User,
+    pagos=None,
+    *,
+    moneda_deuda: Optional[int] = None,
+    monedas_cuentas: Optional[dict[int, int]] = None,
+) -> dict:
     return {
         "id": cuota.id,
         "deuda_mensual_id": cuota.deuda_mensual_id,
@@ -88,7 +121,13 @@ def _cuota_response(cuota, user: User, pagos=None) -> dict:
         "estado": cuota.estado,
         "estado_pago": cuota.estado_pago,
         "pagos": [
-            _pago_response(pago, user) for pago in (pagos or [])
+            _pago_response(
+                pago,
+                user,
+                moneda_deuda=moneda_deuda,
+                monedas_cuentas=monedas_cuentas,
+            )
+            for pago in (pagos or [])
         ],
     }
 
@@ -105,8 +144,15 @@ def _deuda_mensual_list_item(item: dict, user: User) -> dict:
     }
 
 
-def deuda_mensual_detalle_response(item: dict, user: User) -> dict:
+def deuda_mensual_detalle_response(
+    item: dict,
+    user: User,
+    *,
+    monedas_cuentas: Optional[dict[int, int]] = None,
+) -> dict:
     """Serializa el detalle para el router de entidades y el propio."""
+    deuda_mensual = item["deuda_mensual"]
+    moneda_deuda = deuda_mensual.moneda_id
     cuotas = []
     for entry in item.get("cuotas", []):
         if isinstance(entry, dict):
@@ -115,16 +161,33 @@ def deuda_mensual_detalle_response(item: dict, user: User) -> dict:
         else:
             cuota = entry
             pagos = []
-        cuotas.append(_cuota_response(cuota, user, pagos))
+        cuotas.append(
+            _cuota_response(
+                cuota,
+                user,
+                pagos,
+                moneda_deuda=moneda_deuda,
+                monedas_cuentas=monedas_cuentas,
+            )
+        )
 
     proxima = item.get("proxima")
     return {
-        **_deuda_mensual_base(item["deuda_mensual"]),
+        **_deuda_mensual_base(deuda_mensual),
         "pendiente": item["pendiente"],
         "pagado": item["pagado"],
         "vencidas": item["vencidas"],
         "vencidas_monto": item["vencidas_monto"],
-        "proxima": _cuota_response(proxima, user) if proxima else None,
+        "proxima": (
+            _cuota_response(
+                proxima,
+                user,
+                moneda_deuda=moneda_deuda,
+                monedas_cuentas=monedas_cuentas,
+            )
+            if proxima
+            else None
+        ),
         "cuotas": cuotas,
     }
 
@@ -265,7 +328,9 @@ def detalle(
         item = obtener_deuda_mensual(user, deuda_mensual_id)
     except ValueError as e:
         raise _error(e) from e
-    return deuda_mensual_detalle_response(item, user)
+    return deuda_mensual_detalle_response(
+        item, user, monedas_cuentas=monedas_por_cuenta(user)
+    )
 
 
 @router.put(

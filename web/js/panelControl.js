@@ -203,8 +203,17 @@ function mesesDelAnioActual() {
     return NOMBRES_MESES.map((label, i) => ({ anio, mes: i + 1, label }));
 }
 
-async function obtenerResumenAnual(anio, monedaId, incluirDeudas) {
-    const r = await get(`resumen/anual?anio=${anio}&moneda_id=${monedaId}`);
+async function obtenerResumenRango(meses, monedaId, incluirDeudas) {
+    // `meses` puede venir en orden descendente (ultimosNMeses), asi que el
+    // rango se arma ordenando las claves y no por posicion.
+    const claves = meses
+        .map(m => `${m.anio}-${String(m.mes).padStart(2, '0')}`)
+        .sort();
+    const desde = claves[0];
+    const hasta = claves[claves.length - 1];
+
+    // Una sola peticion para todo el rango (antes: una por cada anio visible).
+    const r = await get(`resumen/rango?desde=${desde}&hasta=${hasta}&moneda_id=${monedaId}`);
     const porMes = {};
     (r || []).forEach(item => {
         const clave = `${item.anio}-${item.mes}`;
@@ -224,10 +233,8 @@ async function renderGrafico() {
     const meses = rango === '6m' ? ultimosNMeses(6) : mesesDelAnioActual();
 
     try {
-        const anios = [...new Set(meses.map(m => m.anio))];
         const incluirDeudas = incluirDeudasEnTotales();
-        const mapas = await Promise.all(anios.map(a => obtenerResumenAnual(a, monedaId, incluirDeudas)));
-        const porMes = Object.assign({}, ...mapas);
+        const porMes = await obtenerResumenRango(meses, monedaId, incluirDeudas);
 
         const datos = meses.map(m => ({
             label: m.label,
@@ -863,10 +870,17 @@ function initPanel() {
         if (select && select.options[0]) select.options[0].textContent = 'Todas';
     });
 
-    cargarDatosMaestros().then(() => {
-        cargarDashboard();
-        cargarMovimientos();
-        cargarPagosMensuales();
+    cargarDatosMaestros().then(async () => {
+        try {
+            await sincronizarDeudasMensuales();
+        } catch (error) {
+            console.error('Error sincronizando cuotas mensuales:', error);
+        }
+        await Promise.all([
+            cargarDashboard(),
+            cargarMovimientos(),
+            cargarPagosMensuales(),
+        ]);
     });
 }
 

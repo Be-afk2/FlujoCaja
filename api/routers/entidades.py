@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from api.dependencies import validate_token
+from bd.crud.deudaMensual import monedas_por_cuenta
 from bd.crud.entidad import (
     crear_entidad,
     editar_entidad,
@@ -123,6 +124,7 @@ def detalle(entidad_id: int, user: User = Depends(validate_token)):
     except ValueError as e:
         raise _error(e) from e
 
+    monedas_cuentas = monedas_por_cuenta(user)
     return {
         **_entidad_base(item["entidad"]),
         "saldos": _saldos(item["saldos"]),
@@ -130,7 +132,9 @@ def detalle(entidad_id: int, user: User = Depends(validate_token)):
         "proximo_vencimiento": item["proximo_vencimiento"],
         "deudas": [_deuda_detalle(deuda) for deuda in item["deudas"]],
         "deudas_mensuales": [
-            deuda_mensual_detalle_response(deuda, user)
+            deuda_mensual_detalle_response(
+                deuda, user, monedas_cuentas=monedas_cuentas
+            )
             for deuda in item["deudas_mensuales"]
         ],
     }

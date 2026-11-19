@@ -1403,6 +1403,7 @@ async function initDeudas() {
 
     try {
         await cargarCatalogos();
+        await sincronizarDeudasMensuales();
         await recargarTodo();
     } catch (error) {
         console.error("Error inicializando deudas:", error);

@@ -1338,6 +1338,7 @@ async function dmInit() {
 
     try {
         await dmCargarCatalogos();
+        await sincronizarDeudasMensuales();
 
         const params = new URLSearchParams(window.location.search);
         const deudaId = params.get("deuda");
