@@ -138,14 +138,17 @@ Hoy `listar_deudas_mensuales`, `obtener_deuda_mensual`, `proximas_cuotas`,
 
 ### 11.4 Configuración de SQLite
 
-- [ ] En `bd/database.py`, agregar listener `connect` con:
+- [x] En `bd/database.py`, agregar listener `connect` con:
       `journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`,
       `busy_timeout=5000`.
-- [ ] Revisar `connect_args` / pool para uso desde el threadpool de uvicorn.
-- [ ] Ajustar `api/routers/datos.py` (backup/restaurar): forzar
+- [x] Revisar `connect_args` / pool para uso desde el threadpool de uvicorn;
+      usar `check_same_thread=False` y timeout de conexión de 5 segundos.
+- [x] Ajustar `api/routers/datos.py` (backup/restaurar): forzar
       `PRAGMA wal_checkpoint(TRUNCATE)` antes de copiar el archivo y contemplar
-      los archivos `-wal` / `-shm` al restaurar.
-- [ ] Confirmar que `PRAGMA integrity_check` sigue pasando tras restaurar.
+      los archivos `-wal` / `-shm` al restaurar; validar la copia antes del
+      reemplazo atómico del archivo activo.
+- [x] Agregar pruebas automatizadas para los PRAGMA de conexión y para
+      `PRAGMA integrity_check` tras restaurar.
 
 ### 11.5 Autenticación por petición
 
@@ -403,7 +406,7 @@ Alcance funcional:
 
 - [x] Fase 11.1: migración de índices y modelos.
 - [ ] Fase 11.2: consultas y agregados.
-- [ ] Fase 11.4: PRAGMAs de SQLite y backup/restaurar.
+- [x] Fase 11.4: PRAGMAs de SQLite y backup/restaurar.
 - [x] Fase 11.3: auto-sync fuera de los GET.
 - [ ] Fase 11.5: cache de autenticación.
 - [ ] Fase 11.6: tests y cierre de la Fase 11.

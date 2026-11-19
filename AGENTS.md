@@ -91,6 +91,11 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - `health/token` changed from query-param to `Depends(validate_token)` (Bearer)
 - `funciones.js` cleaned: removed demo event listeners, unused `get()` `data` param (127 lines)
 
+## Configuración SQLite (Fase 11.4)
+
+- `bd/database.py` configura cada conexión con WAL, `synchronous=NORMAL`, claves foráneas y `busy_timeout=5000`; el engine usa `check_same_thread=False` y timeout de 5 s para el threadpool de Uvicorn.
+- Backup intenta `wal_checkpoint(TRUNCATE)` y usa `sqlite3.Connection.backup`. Restaurar valida una copia temporal con `integrity_check`, dispone el engine, elimina sidecars `-wal`/`-shm` obsoletos y reemplaza `database.db` atómicamente.
+
 ## Notable quirks
 
 - `User.id` is `uuid.UUID`; other model PKs are `int`.
