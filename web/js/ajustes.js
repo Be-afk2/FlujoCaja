@@ -274,11 +274,6 @@ async function cargarAcercaDe() {
 
 // ==================== DATOS (BACKUP / RESTAURAR / EXPORTAR) ====================
 
-function csvEscape(v) {
-    const s = String(v ?? '');
-    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-}
-
 async function exportarCSV() {
     const btn = document.getElementById('btnExportarCSV');
     if (!btn) return;
@@ -287,40 +282,12 @@ async function exportarCSV() {
     btn.textContent = 'Generando...';
 
     try {
-        const [resp, cuentas, tipos] = await Promise.all([
-            get('movimientos/?cantidad=100000'),
-            get('cuentas/'),
-            get('tipos/?cantidad=50'),
-        ]);
-
-        const cuentasMap = {};
-        cuentas.forEach(c => { cuentasMap[c.id] = c.nombre; });
-        const tiposMap = {};
-        tipos.forEach(t => { tiposMap[t.id] = t.nombre; });
-
-        const lineas = [['fecha', 'monto', 'tipo', 'cuenta', 'descripcion']];
-        (resp.data || []).forEach(m => {
-            lineas.push([
-                m.fecha,
-                m.monto,
-                tiposMap[m.tipo_id] || '',
-                cuentasMap[m.cuenta_id] || '',
-                m.descripcion || '',
-            ].map(csvEscape).join(','));
-        });
-
-        const csv = '\ufeff' + lineas.join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `movimientos_${fechaHoyISO()}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        mostrarNotificacion(`Exportados ${resp.total} movimientos`);
+        // Generado en el servidor: no depende del tope de pagina del listado.
+        await downloadFile(
+            'movimientos/exportar',
+            `movimientos_${fechaHoyISO()}.csv`
+        );
+        mostrarNotificacion('Movimientos exportados');
     } catch (error) {
         console.error('Error exportando CSV:', error);
         mostrarNotificacion(error.message || 'Error al exportar CSV', 'error');

@@ -1,11 +1,15 @@
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 
 from api.dependencies import validate_token
 from bd.crud.movimiento import (
     crear_movimiento,
     crear_movimientos_bulk,
     delete_movimiento,
+    exportar_movimientos_csv,
     get_movimiento,
     movimientos_filtrados,
     update_movimiento,
@@ -14,6 +18,7 @@ from bd.models.user import User
 
 from .dtos.movimientoDto import (
     MovimientoCreate,
+    MovimientoExportFilter,
     MovimientoFilter,
     MovimientoImportRequest,
     MovimientoImportResponse,
@@ -64,6 +69,30 @@ def crear(datos: MovimientoCreate, user: User = Depends(validate_token)):
 def importar(datos: MovimientoImportRequest, user: User = Depends(validate_token)):
     filas = [fila.model_dump() for fila in datos.filas]
     return crear_movimientos_bulk(filas, user)
+
+
+@router.get("/exportar", summary="Exportar movimientos filtrados a CSV")
+def exportar(
+    filtros: MovimientoExportFilter = Depends(),
+    user: User = Depends(validate_token),
+):
+    contenido = exportar_movimientos_csv(
+        user,
+        fecha_desde=filtros.fecha_desde,
+        fecha_hasta=filtros.fecha_hasta,
+        cuenta_id=filtros.cuenta_id,
+        moneda_id=filtros.moneda_id,
+        tipo_id=filtros.tipo_id,
+        subtipo_id=filtros.subtipo_id,
+        es_ingreso=filtros.es_ingreso,
+        es_deuda=filtros.es_deuda,
+    )
+    nombre = f"movimientos_{date.today().isoformat()}.csv"
+    return StreamingResponse(
+        contenido,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="{nombre}"'},
+    )
 
 
 @router.get("/{movimiento_id}", response_model=MovimientoResponse, summary="Obtener movimiento por ID")

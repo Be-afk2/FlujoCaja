@@ -237,3 +237,58 @@ def test_recalcular_resumen_reconstruye_totales_por_mes(
     assert _sumar(filas, "total_ingresos") == 1400.0
     assert _sumar(filas, "total_gastos") == 250.0
     assert _sumar(filas, "total_gastos_deuda") == 0.0
+
+
+def test_listado_rechaza_cantidad_fuera_del_tope(client, auth_headers):
+    headers = auth_headers("reporte_tope")
+
+    excedido = client.get(
+        "/movimientos/", params={"cantidad": 100000}, headers=headers
+    )
+    assert excedido.status_code == 422
+
+    valido = client.get(
+        "/movimientos/", params={"cantidad": 1000}, headers=headers
+    )
+    assert valido.status_code == 200
+
+
+def test_exportar_movimientos_csv_respeta_filtros(
+    client, auth_headers, crear_cuenta, crear_tipo, crear_movimiento
+):
+    headers = auth_headers("reporte_export")
+    cuenta = crear_cuenta(headers)
+    tipo = crear_tipo(headers, nombre="Export")
+    crear_movimiento(
+        headers,
+        cuenta["id"],
+        1500.0,
+        tipo_id=tipo["id"],
+        descripcion="Sueldo, marzo",
+    )
+    crear_movimiento(
+        headers,
+        cuenta["id"],
+        -200.0,
+        tipo_id=tipo["id"],
+        descripcion="Luz",
+    )
+
+    r = client.get("/movimientos/exportar", headers=headers)
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/csv")
+    assert "attachment" in r.headers["content-disposition"]
+
+    lineas = r.content.decode("utf-8-sig").strip().splitlines()
+    assert lineas[0] == "fecha,monto,tipo,cuenta,descripcion"
+    assert len(lineas) == 3
+    # El nombre del tipo/cuenta se resuelve en el servidor y la coma se escapa.
+    assert any('"Sueldo, marzo"' in linea for linea in lineas)
+    assert any("Export" in linea and cuenta["nombre"] in linea for linea in lineas)
+
+    solo_gastos = client.get(
+        "/movimientos/exportar", params={"es_ingreso": "false"}, headers=headers
+    )
+    lineas_gastos = solo_gastos.content.decode("utf-8-sig").strip().splitlines()
+    assert len(lineas_gastos) == 2
+    assert "Luz" in lineas_gastos[1]

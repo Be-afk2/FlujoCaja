@@ -4,18 +4,23 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer
 
 from api.dependencies import validate_token
-from bd.crud.user import login_user, crear_usuario, actualizar_perfil, cambiar_contrasena
-from bd.crud.sesion import guardar_sesion_bd, eliminar_sesion_bd, obtener_usuario_por_token
+from bd.crud.sesion import (
+    eliminar_sesion_bd,
+    guardar_sesion_bd,
+    invalidar_cache_auth,
+    obtener_usuario_por_token,
+)
+from bd.crud.user import actualizar_perfil, cambiar_contrasena, crear_usuario, login_user
 from bd.models.user import User
 
 from .dtos.userDto import (
+    MeResponse,
+    PasswordChange,
     UserDTO,
     UserLogin,
+    UserProfileUpdate,
     UserPublic,
     UserWithToken,
-    MeResponse,
-    UserProfileUpdate,
-    PasswordChange,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,6 +71,8 @@ def actualizar_datos(
     )
     if not actualizado:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # El usuario cacheado tiene los datos viejos hasta que expire el TTL.
+    invalidar_cache_auth()
     return actualizado
 
 
@@ -81,6 +88,7 @@ def cambiar_password(
     )
     if not ok:
         raise HTTPException(status_code=400, detail="La contraseña actual no es correcta")
+    invalidar_cache_auth()
     return {"message": "Contraseña actualizada"}
 
 

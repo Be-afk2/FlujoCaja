@@ -42,7 +42,8 @@ Alcance funcional:
 
 ### 11.1 Índices y migración
 
-Estado: **hecho** (migración `20261118_0005_indices_rendimiento`, head actual).
+Estado: **hecho** (migración `20261118_0005_indices_rendimiento`; head actual
+`20261120_0006_user_id_texto`).
 
 - [x] Crear `alembic/versions/20261118_0005_indices_rendimiento.py` con
       `down_revision = "20261114_0004_deudas_mensuales"`.
@@ -94,6 +95,8 @@ Decisiones resueltas:
 
 ### 11.2 Consultas y agregados
 
+Estado: **hecho**.
+
 - [x] `bd/crud/movimiento.py` (`movimientos_filtrados`): reemplazar
       `select(Movimiento.id).all()` + `len()` por `select(func.count())`.
 - [x] `bd/crud/resumen.py` (`recalcular_mes`): reemplazar
@@ -113,10 +116,13 @@ Decisiones resueltas:
       `GET /resumen/rango` (ya existe) en lugar de N llamadas a
       `/resumen/anual` (una por año).
 
-Decisiones pendientes:
+Decisiones resueltas:
 
-- [ ] Definir si `/movimientos` mantiene el límite actual por página o si se
-      agrega un tope duro para exportaciones.
+- [x] **Tope de `/movimientos`**: se agregó un tope duro de `cantidad <= 1000`
+      (`MAX_MOVIMIENTOS_POR_PAGINA` en `api/routers/dtos/movimientoDto.py`) y
+      un endpoint `GET /movimientos/exportar` que arma el CSV completo en el
+      servidor (`StreamingResponse` + `yield_per(1000)`), así las
+      exportaciones no dependen del tamaño de página.
 
 ### 11.3 Auto-sync de cuotas fuera del camino de lectura
 
@@ -149,44 +155,59 @@ Hoy `listar_deudas_mensuales`, `obtener_deuda_mensual`, `proximas_cuotas`,
       reemplazo atómico del archivo activo.
 - [x] Agregar pruebas automatizadas para los PRAGMA de conexión y para
       `PRAGMA integrity_check` tras restaurar.
+- [x] Corregir el formato de `user.id`: se guardaba como `CHAR(32)` (hex sin
+      guiones) y los `user_id` con guiones, así que al activar
+      `foreign_keys=ON` todo INSERT hijo fallaba. Ahora el modelo usa un
+      `GUID` (`VARCHAR(36)`) y la migración `20261120_0006_user_id_texto`
+      normaliza la base existente.
+- [x] Cerrar la conexión de validación en `POST /datos/restaurar`: el
+      context manager de `sqlite3` no cierra y en Windows el `unlink` del
+      temporal fallaba con `PermissionError`.
 
 ### 11.5 Autenticación por petición
 
-- [ ] `api/dependencies.py`: cachear `token → User` en memoria con TTL corto
-      (5-10 s) para evitar 2 SELECT por request.
-- [ ] Invalidar el cache en login, logout y `actualizar_token_bd`.
-- [ ] Alternativa a evaluar: token firmado (HMAC) con expiración para no tocar
-      la base en cada request.
-- [ ] El fixture `reset_db` de los tests debe limpiar el cache entre casos.
+Estado: **hecho** (cache TTL 5 s; HMAC descartado).
+
+- [x] `api/dependencies.py` / `bd/crud/sesion.py`: cachear `token → User` en
+      memoria con TTL de 5 s (`TTL_CACHE_AUTH`) para evitar 2 SELECT por
+      request.
+- [x] Invalidar el cache en login, logout, `actualizar_token_bd` y en los
+      cambios de perfil/contraseña.
+- [x] Alternativa evaluada y descartada: token firmado (HMAC) con expiración.
+      El logout y la sesión única siguen necesitando la base, y agrega manejo
+      de secreto y compatibilidad con tokens viejos.
+- [x] El fixture `reset_db` de los tests limpia el cache entre casos.
 
 ### 11.6 Tests de la fase
 
 - [ ] Test de migración `0004 ↔ 0005` sobre base temporal.
 - [ ] Tests de regresión de resumen y saldos tras agregar índices.
 - [ ] Test de sync idempotente y de GET sin escrituras.
-- [ ] Test de cache de autenticación (login, request, logout → 401).
-- [ ] Ejecutar `python -m pytest tests -v` y `python -m ruff check ...`.
+- [x] Test de cache de autenticación (login, request, logout → 401).
+- [x] Ejecutar `python -m pytest tests -v` y `python -m ruff check ...`.
 
 ### 11.7 Documentación
 
-- [ ] Actualizar `AGENTS.md`: índices, PRAGMAs, estrategia de sync y cache de
+- [x] Actualizar `AGENTS.md`: índices, PRAGMAs, estrategia de sync y cache de
       autenticación.
-- [ ] Registrar en `porHacer4.md` la versión de migración en `head`.
+- [x] Registrar en `porHacer4.md` la versión de migración en `head` (0006).
 
 ### 11.8 Archivos principales
 
-- [ ] `alembic/versions/<fecha>_0005_indices_rendimiento.py`
-- [ ] `bd/models/movimiento.py`
-- [ ] `bd/models/deudaMensual.py`
-- [ ] `bd/database.py`
-- [ ] `bd/crud/movimiento.py`
-- [ ] `bd/crud/resumen.py`
-- [ ] `bd/crud/deudaMensual.py`
-- [ ] `bd/crud/sesion.py`
-- [ ] `api/dependencies.py`
-- [ ] `api/routers/datos.py`
-- [ ] `web/js/panelControl.js`
-- [ ] `web/js/loadmenu.js`
+- [x] `alembic/versions/20261118_0005_indices_rendimiento.py`
+- [x] `alembic/versions/20261120_0006_user_id_texto.py`
+- [x] `bd/models/movimiento.py`
+- [x] `bd/models/deudaMensual.py`
+- [x] `bd/models/user.py`
+- [x] `bd/database.py`
+- [x] `bd/crud/movimiento.py`
+- [x] `bd/crud/resumen.py`
+- [x] `bd/crud/deudaMensual.py`
+- [x] `bd/crud/sesion.py`
+- [x] `api/dependencies.py`
+- [x] `api/routers/datos.py`
+- [x] `web/js/panelControl.js`
+- [x] `web/js/loadmenu.js`
 
 ---
 

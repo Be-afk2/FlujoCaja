@@ -76,8 +76,14 @@ async def restaurar_db(file: UploadFile, user: User = Depends(validate_token)):
             tmp.write(contenido)
             tmp_path = Path(tmp.name)
 
-        with sqlite3.connect(str(tmp_path), timeout=5) as con:
+        # sqlite3.connect() como context manager no cierra la conexion (solo
+        # hace commit/rollback); en Windows el archivo queda bloqueado y el
+        # unlink posterior falla con PermissionError.
+        con = sqlite3.connect(str(tmp_path), timeout=5)
+        try:
             resultado = con.execute("PRAGMA integrity_check").fetchone()
+        finally:
+            con.close()
         if not resultado or resultado[0] != "ok":
             raise HTTPException(
                 status_code=400,

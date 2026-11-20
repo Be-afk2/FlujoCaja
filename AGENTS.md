@@ -77,12 +77,12 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 
 ## Key refactors (Fase 11 — Rendimiento)
 
-- Migración `alembic/versions/20261118_0005_indices_rendimiento.py` (`down_revision=0004`, head actual): índices compuestos `movimiento (user_id, fecha)`, `(user_id, cuenta_id, fecha)`, `(user_id, tipo_id, fecha)`, `(user_id, es_deuda, fecha)`, `cuotamensual (user_id, estado, fecha_limite)` y `pagocuotamensual (user_id, fecha)`.
+- Migración `alembic/versions/20261118_0005_indices_rendimiento.py` (`down_revision=0004`): índices compuestos `movimiento (user_id, fecha)`, `(user_id, cuenta_id, fecha)`, `(user_id, tipo_id, fecha)`, `(user_id, es_deuda, fecha)`, `cuotamensual (user_id, estado, fecha_limite)` y `pagocuotamensual (user_id, fecha)`.
 - Se eliminó `ix_movimiento_es_deuda` (simple): ninguna consulta filtra por `es_deuda` sin `user_id`. El compuesto también sirve a `es_deuda=false` (dashboard).
 - Los índices se declaran con `sa.Index` en `__table_args__` de `bd/models/movimiento.py` y `bd/models/deudaMensual.py`, así `alembic check` queda limpio y `create_all` (tests) los genera.
 - Medición de referencia (35k movimientos / 7.2k cuotas): lista de movimientos 94x, resumen mensual 35x, filtro por tipo 56x, filtro `es_deuda` 89x, dashboard 14x.
 - Descartados por medición: índice parcial de `es_deuda`, `(deuda_mensual_id, estado)` en cuotas, `(user_id, fecha_limite)` en cuotas y `sesion.token` (la sesión se lee con `first()`, sin filtro por token).
-- **Ojo**: `bd/migrations.py` corre `alembic upgrade head` al iniciar; una instalación nueva llega a 0005 sin pasos manuales.
+- **Ojo**: `bd/migrations.py` corre `alembic upgrade head` al iniciar; una instalación nueva llega a 0006 sin pasos manuales.
 
 ## Key refactors (Fase 5 — Frontend conectado)
 
@@ -95,10 +95,19 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 
 - `bd/database.py` configura cada conexión con WAL, `synchronous=NORMAL`, claves foráneas y `busy_timeout=5000`; el engine usa `check_same_thread=False` y timeout de 5 s para el threadpool de Uvicorn.
 - Backup intenta `wal_checkpoint(TRUNCATE)` y usa `sqlite3.Connection.backup`. Restaurar valida una copia temporal con `integrity_check`, dispone el engine, elimina sidecars `-wal`/`-shm` obsoletos y reemplaza `database.db` atómicamente.
+- Activar `foreign_keys=ON` destapó que `user.id` se guardaba como `CHAR(32)` sin guiones mientras los `user_id` usan `str(uuid)` con guiones: todo INSERT en `cuenta`/`movimiento` fallaba. La migración `20261120_0006_user_id_texto` normaliza los ids existentes a `VARCHAR(36)` y el downgrade hace lo inverso sobre las columnas relacionadas.
+
+## Autenticación por petición (Fase 11.5)
+
+- `bd/crud/sesion.py` cachea `token → User` en memoria con `TTL_CACHE_AUTH = 5.0` s y lock (`threading.Lock`). Un request autenticado pasa de 2 SELECT a 0 dentro del TTL.
+- `invalidar_cache_auth(token=None)` limpia todo el cache o una entrada; se llama en `guardar_sesion_bd` (login), `actualizar_token_bd`, `eliminar_sesion_bd` (logout) y en `PUT /auth/me` + `PUT /auth/me/password`.
+- El cache es por proceso: asume un solo worker de Uvicorn (la sesión también es única en la base). Un token firmado HMAC se descartó porque el logout sigue necesitando la base y agrega manejo de secreto.
+- `tests/conftest.py` limpia el cache en `reset_db` (antes y después de cada test) para que un token viejo no sobreviva al `drop_all`.
+- Exportación: `GET /movimientos/exportar` genera el CSV completo en el servidor (`StreamingResponse` + `yield_per(1000)`); `GET /movimientos` tiene tope duro `cantidad <= 1000` (`MAX_MOVIMIENTOS_POR_PAGINA`).
 
 ## Notable quirks
 
-- `User.id` is `uuid.UUID`; other model PKs are `int`.
+- `User.id` is `uuid.UUID` en Python pero se guarda como texto con guiones (`GUID` en `bd/models/user.py`, `VARCHAR(36)`), igual que los `user_id`; NO volver al `Uuid` por defecto de SQLAlchemy (32 hex) porque rompe las FKs.
 - Password hashing uses `passlib.hash.bcrypt`.
 - `Movimiento.es_ingreso` inferred from `monto > 0`.
 - Tailwind configured via inline `<script>` in `index.html` (no build step).
@@ -117,7 +126,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - `tests/conftest.py` sets `os.environ["APPDATA"]` to a temp dir **before** importing app modules, so the global `engine` binds to a temp SQLite; an autouse `reset_db` fixture drops/recreates schema + seeds per test.
 - API tests (`test_auth`, `test_cuentas`, `test_movimientos`, `test_aislamiento`, `test_entidades`, `test_deudas`, `test_deudas_mensuales`, `test_reportes`) use `TestClient`; unit tests (`test_movimiento_unit`) call `bd/crud/*` directly (saldo + `ResumenMensual`).
 - `tests/conftest.py` incluye fixtures `crear_entidad`, `crear_deuda`, `crear_pago`, `obtener_moneda`, `crear_deuda_mensual` y `obtener_tipo_deudas`.
-- Estado actual: 86 tests pasan, incluidos 13 de deudas mensuales.
+- Estado actual: 94 tests pasan, incluidos 13 de deudas mensuales, 3 del cache de autenticación y 2 de exportación/tope de movimientos.
 - Se ejecutó además un E2E del flujo de deudas mensuales vía `TestClient` sobre BD temporal; la prueba visual en PyQt6 WebEngine sigue pendiente.
 - Dates sent to the API use `dd-mm-YYYY` (parsed by `DateFromString`).
 - Lint is scoped to `tests/` + `api/mainApi.py` (ruff `select = ["E", "F", "I"]`).
@@ -127,7 +136,7 @@ python -m ruff check tests api/mainApi.py   # lint scoped (or .\run_lint.ps1)
 - `POST /movimientos/importar` recibe `{"filas": [MovimientoImport]}` y crea movimientos en bulk (`crear_movimientos_bulk` en `bd/crud/movimiento.py`); devuelve `{"importados", "errores": [{"fila", "error"}]}` — sin auto-rollback, el usuario decide.
 - DTO `MovimientoImport` (monto, fecha, tipo_id, cuenta_id, descripcion) en `api/routers/dtos/movimientoDto.py`.
 - Dashboard: card "Flujo Neto Mensual" (ingresos - gastos del mes, verde/rojo según signo).
-- Transacciones: filtros por cuenta + rango de fecha (`filtroCuenta`, `filtroDesde`, `filtroHasta` → query params `cuenta_id`, `fecha_desde`, `fecha_hasta`), botones Exportar CSV (descarga con BOM UTF-8 para Excel) e Importar CSV (mapea nombres de cuenta/tipo → ids, acepta fechas ISO o `dd-mm-YYYY`).
+- Transacciones: filtros por cuenta + rango de fecha (`filtroCuenta`, `filtroDesde`, `filtroHasta` → query params `cuenta_id`, `fecha_desde`, `fecha_hasta`), botones Exportar CSV (`GET /movimientos/exportar`, CSV con BOM UTF-8 generado en el servidor) e Importar CSV (mapea nombres de cuenta/tipo → ids, acepta fechas ISO o `dd-mm-YYYY`).
 
 ## What's missing / planned
 

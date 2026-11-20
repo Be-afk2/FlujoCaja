@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from sqlmodel import SQLModel
 
 from api.mainApi import app
+from bd.crud.sesion import invalidar_cache_auth
 from bd.database import engine
 from bd.seeds import seed_db
 from config import DATA_DIR
@@ -18,11 +19,14 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 @pytest.fixture(autouse=True)
 def reset_db():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    # El cache de auth vive en memoria y sobrevive al drop de las tablas.
+    invalidar_cache_auth()
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     seed_db()
     yield
     SQLModel.metadata.drop_all(engine)
+    invalidar_cache_auth()
 
 
 @pytest.fixture()
