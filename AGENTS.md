@@ -148,29 +148,67 @@ El proyecto usa un grafo de conocimiento MCP (`codebase-memory-mcp`) para respon
 
 **Nombre MCP de este proyecto:** `C-Users-cleoe-OneDrive-Documentos-GitHub-FlujoCaja`. Usa este nombre exacto al llamar herramientas MCP; el nombre corto `FlujoCaja` no se reconoce. Antes de indexar, consulta `list_projects` o intenta consultar el grafo con el nombre exacto para confirmar que sigue disponible.
 
-**Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP.
+**Regla:** Antes de usar `Grep`/`Glob`/`Read`, consultar primero el grafo MCP. Si vas a citar líneas de código, confirma con `index_status` que el índice es más reciente que el último commit; si no, reindexa con `mcp index`.
 
-### Helper (portable)
+### Herramientas nativas (OpenCode)
 
-El script `tools/mcp.py` es portable: se para en el directorio raíz de cualquier proyecto indexado y funciona automáticamente. También puedes copiarlo a `%USERPROFILE%\.local\bin\mcp.py` para usarlo globalmente.
+El servidor está registrado como MCP `codebase-memory` en `~/.config/opencode/opencode.json`, así que las herramientas están disponibles directamente (sin pasar por el CLI):
+
+| Herramienta | Para qué |
+|---|---|
+| `search_graph` | Localizar símbolos por nombre/texto |
+| `trace_path` | Callers/callees de una función (`direction`, `depth`) |
+| `get_code_snippet` | Código fuente de un `qualified_name` |
+| `query_graph` | Cypher multi-hop sobre nodos y aristas |
+| `get_architecture` | Vista general por capas/módulos |
+| `index_status` / `check_index_coverage` | Frescura y cobertura por archivo |
+| `index_repository` | Reindexar (`--repo-path`, `--mode`) |
+| `detect_changes` | Impacto de un diff Git (archivos → símbolos → tests) |
+| `list_projects`, `compare_graphs`, `delete_project` | Administración del índice |
+
+En sesiones de OpenCode se invocan como `codebase-memory.<tool>` (o `tools["codebase-memory"]` desde `execute`).
+
+### Helper global (cualquier proyecto)
+
+El helper vive ahora en `%USERPROFILE%\.local\bin\mcp.py` (ya no en `tools/`), junto al shim `mcp.cmd`. Esa carpeta está en el PATH de usuario, así que funciona desde cualquier repositorio indexado:
 
 ```powershell
-# Desde el directorio del proyecto (auto-detecta)
-python ruta/a/tools/mcp.py search <patron>
-python ruta/a/tools/mcp.py query "<cypher>"
-python ruta/a/tools/mcp.py trace <funcion>
-python ruta/a/tools/mcp.py arch
-python ruta/a/tools/mcp.py code <patron>
-python ruta/a/tools/mcp.py schema
-python ruta/a/tools/mcp.py projects
-python ruta/a/tools/mcp.py index   # re-indexar
+cd <raiz-del-proyecto>
+mcp search <patron>
+mcp query "<cypher>"
+mcp trace <funcion> --direction both --depth 2
+mcp arch
+mcp code <qualified_name>
+mcp schema
+mcp projects
+mcp status
+mcp index                     # reindexar la raíz detectada
 
-# Para este proyecto, si la herramienta requiere nombre explícito
-python ruta/a/tools/mcp.py -p C-Users-cleoe-OneDrive-Documentos-GitHub-FlujoCaja search "<patron>"
+# Sin shim / otro intérprete
+python "$env:USERPROFILE\.local\bin\mcp.py" search "<patron>"
 
-# Para otro proyecto (por nombre)
-python ruta/a/tools/mcp.py -p Otro-Proyecto search "class .*"
+# Forzar proyecto por nombre (útil desde cualquier carpeta)
+mcp -p C-Users-cleoe-OneDrive-Documentos-GitHub-FlujoCaja search "<patron>"
+mcp -p Otro-Proyecto search "class .*"
 ```
+
+- Detecta la raíz subiendo desde el cwd hasta el primer `.git`; `MCP_PROJECT_ROOT=<ruta>` la sobreescribe.
+- `index` indexa esa raíz, no el cwd, así que se puede lanzar desde un subdirectorio.
+
+### Instalación y diagnóstico
+
+```powershell
+python -m pip install --user codebase-memory-mcp==0.12.1
+codebase-memory-mcp --version        # 0.12.1 (binario en %USERPROFILE%\.local\bin)
+mcp projects                         # confirma que el grafo responde
+python "$env:USERPROFILE\.local\bin\mcp.py" -p <proyecto> status
+```
+
+- El helper busca el binario en `PATH` y luego en `~/.local/bin`, `%APPDATA%\Python\Python3XX\Scripts` y `Scripts` del intérprete. La versión anterior asumía `Python314` y fallaba con Python 3.13.
+- Base SQLite por proyecto en `~/.cache/codebase-memory-mcp/<proyecto>.db`; logs en `logs/`.
+- Auto-sync: el watcher solo vigila el proyecto de la sesión MCP activa. Si trabajas desde otra carpeta (`watch: not_session_project` / `cli_session`), el índice no se refresca solo: usa `mcp index` o `index_repository`.
+- `tools/`, `venv/`, `.git/` y las cachés quedan excluidos del índice.
+- Estado de referencia: 1579 nodos / 6499 aristas (v0.12.1, 2026-11-20).
 
 ### Consultas Cypher útiles
 
@@ -184,5 +222,5 @@ MATCH (f:Function {is_entry_point: true}) RETURN f.name, f.file_path
 ### Info de contacto
 
 - El MCP server usa SQLite en `~/.cache/codebase-memory-mcp/`
-- Auto-sync: el watcher detecta cambios automáticamente
-- `-p <project>` sobreescribe el proyecto autodetectado
+- Auto-sync: el watcher solo actúa sobre el proyecto de la sesión activa; en el resto de casos reindexa con `mcp index`
+- `-p <project>` sobreescribe el proyecto autodetectado; `MCP_PROJECT_ROOT` sobreescribe la raíz
